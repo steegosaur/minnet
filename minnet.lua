@@ -11,9 +11,9 @@ bot = {
     nick  = "Minnet",
     uname = "Minnet",
     rname = "Minnet",
-    cmdstring = "^%%",
+    cmdstring = "^#",
     nets  = {
-        --{ name = "furnet", addr = "eu.irc.furnet.org", c = { "#geekfurs", } },
+        --{ name = "furnet", addr = "eu.irc.furnet.org", c = { "#geekfurs", } },
         { name = "scoutlink", addr = "irc.scoutlink.org", c = { "#test", } },
     },
     cmds  = {
@@ -52,12 +52,17 @@ function wit(n, u, chan, m)
     if string.match(m, bot.cmdstring) then
         m = string.gsub(m, bot.cmdstring, "")
     end
+    cmdFound = false
     for i = 1, #bot.cmds do
         if m == bot.cmds[i].name then -- Improve this for argument support!
             print("Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
             if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep); print(os.date("%F/%T:") .. m) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
+            cmdFound = true
         end
+    end
+    if ( cmdFound == false ) then
+        c.net[n]:sendChat(chan, "Nevermore!")
     end
 end
 -- Create msg.help() function in local scope
@@ -96,6 +101,7 @@ for i = 1, #bot.nets do
     end
     -- Register hooks
     c.net[i]:hook("OnChat", function(u, chan, m)
+        msg = false
         local net = i
         if ( chan == c.net[net].nick ) then msg = true; chan = u.nick end
         if ( msg == true ) or string.match(m, bot.cmdstring ) then wit(net, u, chan, m) end end)
