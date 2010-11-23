@@ -5,10 +5,10 @@ Roadmap:
         Connects with set userinfo to table-defined servers and channels
     0.0.5
         Initial command reception code
-        Uses SSL
     0.1.0
         Takes commands in channels and /msg
         Configuration in separate file
+        Uses SSL
         
     0.2.0
-        
+        Help command
