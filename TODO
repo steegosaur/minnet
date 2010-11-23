@@ -1,4 +1,4 @@
-TODO file for minnet, the lua-based irc bot
+TODO file for minnet, a lua-based irc bot
 
 Roadmap:
     0.0.1
@@ -13,3 +13,4 @@ Roadmap:
     0.2.0
         Help command
         Commands take arguments
+        Quit command is protected (user recognition?)
