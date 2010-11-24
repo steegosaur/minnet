@@ -2,7 +2,12 @@
 -- husken.lua - config file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 c   = { net = {} } -- Connection list
+ctcp= {}
 vchan = "Lakorv"
+msg = {
+    noargs = "invalid arguments specified. See --help",
+    notowner = "Hey, I'm not taking commands from you."
+}
 owner = {
     uname1 = "a6af798b68",
     uname2 = "~Staeld",
@@ -35,10 +40,27 @@ bot = {
                         smile = " :("
                     elseif string.match(m, "%s+happy$") then
                         smile = " :D"
+                    elseif string.match(m, "%s+angry$") then
+                        smile = " >:|"
+                    elseif string.match(m, "%s+dumb$") then
+                        smile = " :B"
                     else
                         smile = ""
                     end
-                    c.net[n]:send("PRIVMSG " .. chan .. " :\001ACTION is " .. arg .. smile .. "\001")
+                    ctcp.action(n, chan, "is " .. arg .. smile)
+                end
+            end
+        },
+        {
+            name    = "join",
+            comment = "make me join a channel.",
+            action  = function(n, u, chan, m)
+                m = getarg(m)
+                if isowner(u) then
+                    ctcp.action(n, chan, "flaps off to " .. m)
+                    c.net[n]:join(m)
+                else
+                    c.net[n]:sendChat(chan, msg.notowner)
                 end
             end
         },
@@ -59,13 +81,13 @@ bot = {
             name    = "quit",
             comment = "shut down bot",
             action  = function(n, u, chan, m)
-                if ( u.username == owner.uname1 ) or ( u.username == owner.uname2 ) and string.match(u.host, owner.host) then
+                if isowner(u) then
                     c.net[n]:sendChat(chan, "Bye.")
                     for i = 1, #c.net do
                         c.net[i]:disconnect("Minnet quitting..")
                     end
                 else
-                    c.net[n]:sendChat(chan, "Hey, I'm not taking commands from you.")
+                    c.net[n]:sendChat(chan, msg.notowner)
                 end
             end
         }
@@ -101,51 +123,5 @@ table.insert(bot.cmds,{
         end
     end
 })
-msg = {
-    noargs = "invalid arguments specified. See --help",
-}
-
--- Functions
---[[
-function err(msg, f)
-    if f then f = " " .. f else f = "" end
-    print("error: " .. msg .. f)
-    os.exit(1)
-end
-function getarg(m)
-    local arg = string.match(m, "%s+(%S+.*)")
-    return arg
-end
-function wit(n, u, chan, m) -- Hook function for reacting to normal commands
-    if string.match(m, bot.cmdstring) then
-        m = string.gsub(m, bot.cmdstring, "")
-    end
-    if ( m == "" ) or string.match(m, "^%s+") then return nil end
-    cmdFound = false
-    for i = 1, #bot.cmds do
-        if string.match(m, "^" .. bot.cmds[i].name) then -- Improve this for argument support!
-            print(os.date("%F/%T: ") .. "Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
-            if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
-            if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
-            cmdFound = true
-        end
-    end
-    if ( cmdFound == false ) then
-        c.net[n]:sendChat(chan, "Nevermore!")
-    end
-end
--- Create msg.help() function
-name = ""
-io.input(arg[0])
-while not string.match(name, "^%-%-%s-(minnet%.lua.*)$") or not io.read() do
-    name = io.read()
-end
-name = string.gsub(name, "^%W*", "")
-msg.help = function()
-    print(name)
-    print("Usage: " .. arg[0] .. " [--help]")
-    os.exit()
-end
---]]
 -- }}}
 -- EOF

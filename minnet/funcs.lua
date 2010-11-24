@@ -11,6 +11,13 @@ function getarg(m)
     local arg = string.match(m, "%s+(%S+.*)")
     return arg
 end
+function isowner(u)
+    if ( u.username == owner.uname1 ) or ( u.username == owner.uname2 ) and string.match(u.host, owner.host) then
+        return true
+    else
+        return false
+    end
+end
 function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     if string.match(m, bot.cmdstring) then
         m = string.gsub(m, bot.cmdstring, "")
@@ -18,7 +25,7 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     if ( m == "" ) or string.match(m, "^%s+") then return nil end
     cmdFound = false
     for i = 1, #bot.cmds do
-        if string.match(m, "^" .. bot.cmds[i].name) then -- Improve this for argument support!
+        if string.match(m, "^" .. bot.cmds[i].name) then
             print(os.date("%F/%T: ") .. "Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
             if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
@@ -28,6 +35,9 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     if ( cmdFound == false ) then
         c.net[n]:sendChat(chan, "Nevermore!")
     end
+end
+function ctcp.action(n, chan, act)
+    c.net[n]:send("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
 end
 -- Create msg.help() function
 name = ""
