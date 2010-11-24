@@ -1,15 +1,16 @@
 #!/usr/bin/env lua
--- minnet.lua 0.1.3 - personal irc bot written in lua
+-- minnet.lua 0.1.5 - personal irc bot written in lua
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- {{{ Init
 conf  = "minnet.config"
 funcs = "minnet.funcs"
-
+commands = "minnet.commands"
 require("irc")
 require("socket")
 require("ssl")
 require(conf)
 require(funcs)
+require(commands)
 -- }}}
 
 -- {{{ Run
