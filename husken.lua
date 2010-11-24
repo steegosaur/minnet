@@ -13,8 +13,8 @@ bot = {
     rname = "Minnet",
     cmdstring = "^%%",
     nets  = {
-        { name = "furnet", addr = "eu.irc.furnet.org", c = { "#dilldall" } },
---        { name = "scoutlink", addr = "irc.scoutlink.org", c = { "#test" } }
+--        { name = "furnet", addr = "eu.irc.furnet.org", c = { "#dilldall" } },
+        { name = "scoutlink", addr = "irc.scoutlink.org", c = { "#test" } }
     },
     cmds  = {
         {
@@ -72,7 +72,6 @@ table.insert(bot.cmds,{
 })
 msg = {
     noargs = "invalid arguments specified. See --help",
-    noconf = "could not find config file",
 }
 
 -- Functions
