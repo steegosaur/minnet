@@ -3,7 +3,6 @@
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- {{{ Init
 conf  = "minnet.config"
-hooks = "minnet/hooks.lua"
 funcs = "minnet.funcs"
 
 require("irc")
