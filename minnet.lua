@@ -5,7 +5,7 @@
 require("irc")
 require("socket")
 require("ssl")
-conf = "minnet.conf"
+conf = "husken"
 require(conf)
 --[[if not io.open(conf .. ".lua", "r") then
     print("Cannot find config file " .. conf .. ".lua" in PWD")
