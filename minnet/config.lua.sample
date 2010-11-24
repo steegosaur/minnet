@@ -1,17 +1,18 @@
 #!/usr/bin/env lua
 -- husken.lua - config file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
+-- Released under the GPLv3
 c   = { net = {} } -- Connection list
 ctcp= {}
-vchan = "Lakorv"
+vchan = ""
 msg = {
     noargs = "invalid arguments specified. See --help",
     notowner = "Hey, I'm not taking commands from you."
 }
 owner = {
-    uname1 = "a6af798b68",
-    uname2 = "~Staeld",
-    host = "%.id%.au$"
+    uname1 = "username", -- remember: nick!username@host
+    uname2 = "usern2", -- because I am on two networks; set to empty or edit minnet.lua appropriately
+    host = "your.host.here.as.detailed.as.possible"
 }
 bot = {
     nick  = "Minnet",
@@ -19,10 +20,10 @@ bot = {
     rname = "Minnet",
     cmdstring = "^%%",
     nets  = {
-        { name = "furnet", addr = "eu.irc.furnet.org", c = { } },
---        { name = "scoutlink", addr = "irc.scoutlink.org", c = { "#test" } }
+        { name = "dummyNetwork", addr = "irc.dummynetwork.com", c = { "#Chan1", "#Chan2" } },
+        { name = "net2", addr = "irc.net2.net", c = { "#Channel" } }
     },
-    cmds  = {
+    cmds  = { -- Commands that the bot understands; nothing should need editing below this line
         {
             name    = "test",
             comment = "dummy command",
