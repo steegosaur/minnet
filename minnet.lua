@@ -3,7 +3,7 @@
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- {{{ Init
 conf  = "minnet.config"
-hooks = "minnet.hooks"
+hooks = "minnet/hooks.lua"
 funcs = "minnet.funcs"
 
 require("irc")
@@ -31,8 +31,6 @@ for i = 1, #bot.nets do
         c.net[i]:join(bot.nets[i].c[j])
     end
     -- Register hooks
-    require(hooks)
---[[
     c.net[i]:hook("OnChat", "wit", function(u, chan, m)
         msg = false
         local n = i
@@ -47,7 +45,6 @@ for i = 1, #bot.nets do
             c.net[n]:sendChat(vchan, reply)
         end
     end)
---]]
 end
 print("All networks connected. Awaiting commands.")
 while true do
