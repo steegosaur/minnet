@@ -1,12 +1,16 @@
 #!/usr/bin/env lua
--- minnet.lua 0.1.0 - personal irc bot written in lua
+-- minnet.lua 0.1.3 - personal irc bot written in lua
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- {{{ Init
-conf = "husken"
+conf  = "minnet.config"
+hooks = "minnet.hooks"
+funcs = "minnet.funcs"
+
 require("irc")
 require("socket")
 require("ssl")
 require(conf)
+require(funcs)
 -- }}}
 
 -- {{{ Run
@@ -27,12 +31,23 @@ for i = 1, #bot.nets do
         c.net[i]:join(bot.nets[i].c[j])
     end
     -- Register hooks
-    c.net[i]:hook("OnChat", function(u, chan, m)
+    require(hooks)
+--[[
+    c.net[i]:hook("OnChat", "wit", function(u, chan, m)
         msg = false
         local n = i
         if ( chan == c.net[n].nick ) then msg = true; chan = u.nick end
         if ( msg == true ) or string.match(m, bot.cmdstring) then wit(n, u, chan, m) end
     end)
+    c.net[i]:hook("OnRaw", "versionparse", function(l)
+        local n = i
+        if string.match(l, "\001VERSION%s.*") then
+            local reply = string.match(l, "VERSION%s?(.*)%\001$")
+            if not reply then reply = "no understandable VERSION reply" end
+            c.net[n]:sendChat(vchan, reply)
+        end
+    end)
+--]]
 end
 print("All networks connected. Awaiting commands.")
 while true do
