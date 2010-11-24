@@ -2,15 +2,11 @@
 -- minnet.lua 0.0.7 - personal irc bot written in lua
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- {{{ Init
+conf = "husken"
 require("irc")
 require("socket")
 require("ssl")
-conf = "husken"
 require(conf)
---[[if not io.open(conf .. ".lua", "r") then
-    print("Cannot find config file " .. conf .. ".lua" in PWD")
-    os.exit(1)
-end--]]
 
 -- {{{ Run
 if ( arg[1] == "--help" ) then
@@ -18,7 +14,6 @@ if ( arg[1] == "--help" ) then
 elseif not ( arg[1] or arg[1] == "--run" ) then
     err(msg.noargs)
 end
--- Not exited yet because of args, so we assume green light:
 -- Create c.net list containing connections
 print("Starting minnet..")
 for i = 1, #bot.nets do
