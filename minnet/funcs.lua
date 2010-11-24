@@ -40,7 +40,7 @@ function ctcp.action(n, chan, act)
     c.net[n]:send("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
 end
 function ctcp.version(n, arg)
-    arg = string.match(arg, "^(%S+)"
+    arg = string.match(arg, "^(%S+)")
     c.net[n]:send("PRIVMSG " .. arg .. " :\001VERSION\001")
 end
 -- Create msg.help() function
