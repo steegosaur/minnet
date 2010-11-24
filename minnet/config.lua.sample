@@ -73,7 +73,7 @@ bot = {
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Version who?")
                 else
-                    c.net[n]:send("PRIVMSG " .. arg .. " :\001VERSION\001")
+                    ctcp.version(n, arg)
                     vchan = chan
                 end
             end
