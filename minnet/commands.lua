@@ -16,17 +16,13 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
             if not arg then
                 c.net[n]:sendChat(chan, u.nick .. ": Be what?")
             else
-                if string.match(m, "%s+sad$") then
-                    smile = " :("
-                elseif string.match(m, "%s+happy$") then
-                    smile = " :D"
-                elseif string.match(m, "%s+angry$") then
-                    smile = " >:|"
-                elseif string.match(m, "%s+dumb$") then
-                    smile = " :B"
-                else
-                    smile = ""
+                for i = 1, #bot.smiles do
+                    if string.match(m, "%s+" .. bot.smiles[i].text) then
+                        smile = " " .. bot.smiles[i].face
+                        break
+                    end
                 end
+                if not smile then smile = "" end
                 ctcp.action(n, chan, "is " .. arg .. smile)
             end
         end
@@ -37,8 +33,12 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         action  = function(n, u, chan, m)
             m = getarg(m)
             if isowner(u) then
-                ctcp.action(n, chan, "flaps off to " .. m)
-                c.net[n]:join(m)
+                if not arg then
+                    c.net[n]:sendChat(chan, u.nick .. ": Join which channel?")
+                else
+                    ctcp.action(n, chan, "flaps off to " .. m)
+                    c.net[n]:join(m)
+                end
             else
                 c.net[n]:sendChat(chan, msg.notowner)
             end

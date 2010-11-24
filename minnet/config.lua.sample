@@ -22,6 +22,15 @@ bot = {
     nets  = {
         { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" } },
         { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" } }
+    },
+    smiles = {
+        { text = "sad", face = ":(" },
+        { text = "happy", face = ":D" },
+        { text = "angry", face = ">:|" },
+        { text = "annoyed", face = ":|" },
+        { text = "dumb", face = ":B" },
+        { text = "sexy", face = ";)" },
+        { text = "smart", face = "8)" }
     }
 }
 -- }}}
