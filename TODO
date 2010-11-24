@@ -6,11 +6,10 @@ Roadmap:
     0.0.5
         Initial command reception code
     0.1.0
+        Help command
+        Quit command is protected (user recognition)
         Takes commands in channels and /msg
         Configuration in separate file
-        Uses SSL
-        
     0.2.0
-        Help command
         Commands take arguments
-        Quit command is protected (user recognition?)
+        Uses SSL
