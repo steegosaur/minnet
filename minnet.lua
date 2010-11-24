@@ -30,8 +30,6 @@ for i = 1, #bot.nets do
         print("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
         c.net[i]:join(bot.nets[i].c[j])
     end
-    c.net[i]:sendChat("Staeld", "Done connecting to " .. bot.nets[i].name)
-
     -- Register hooks
     c.net[i]:hook("OnChat", function(u, chan, m)
         msg = false
