@@ -22,7 +22,7 @@ end
 -- Create c.net list containing connections
 print("Starting minnet..")
 for i = 1, #bot.nets do
-    print("Adding irc-net " .. bot.nets[i].name)
+    print("Adding net " .. bot.nets[i].name)
     c.net[i] = irc.new{ nick = bot.nick, username = bot.uname, realname = bot.rname }
     print("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
     c.net[i]:connect(bot.nets[i].addr)
