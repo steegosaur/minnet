@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.0.7 - personal irc bot written in lua
+-- minnet.lua 0.1.0 - personal irc bot written in lua
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- {{{ Init
 conf = "husken"
@@ -7,6 +7,7 @@ require("irc")
 require("socket")
 require("ssl")
 require(conf)
+-- }}}
 
 -- {{{ Run
 if ( arg[1] == "--help" ) then
