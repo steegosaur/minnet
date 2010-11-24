@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- husken.lua - config file for minnet
+-- config.lua.sample - config file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- Released under the GPLv3
 c   = { net = {} } -- Connection list
@@ -10,9 +10,9 @@ msg = {
     notowner = "Hey, I'm not taking commands from you."
 }
 owner = {
-    uname1 = "username", -- remember: nick!username@host
-    uname2 = "usern2", -- because I am on two networks; set to empty or edit minnet.lua appropriately
-    host = "your.host.here.as.detailed.as.possible"
+    uname1 = "uname1", -- remember: nick!username@host
+    uname2 = "me2", -- because I am on two networks; set to empty or edit minnet.lua appropriately
+    host = "yourhost%.com$"
 }
 bot = {
     nick  = "Minnet",
@@ -20,8 +20,8 @@ bot = {
     rname = "Minnet",
     cmdstring = "^%%",
     nets  = {
-        { name = "dummyNetwork", addr = "irc.dummynetwork.com", c = { "#Chan1", "#Chan2" } },
-        { name = "net2", addr = "irc.net2.net", c = { "#Channel" } }
+        { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" } },
+        { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" } }
     },
     cmds  = { -- Commands that the bot understands; nothing should need editing below this line
         {
