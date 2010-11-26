@@ -7,15 +7,21 @@ function err(m, f)
     print("error: " .. m .. f)
     os.exit(1)
 end
+function log(n, u, chan, t)
+    if not t then t = "" end
+    print(os.date("%F/%T: ") .. t)
+end
 function getarg(m)
     local arg = string.match(m, "%s+(%S+.*)")
     return arg
 end
-function isowner(u)
-    if ( u.username == owner.uname1 ) or ( u.username == owner.uname2 ) and string.match(u.host, owner.host) then
-        return true
-    else
+function isowner(n, u, chan)
+    if not ( u.username == owner.uname1 ) or ( u.username == owner.uname2 ) and string.match(u.host, owner.host) then
+        c.net[n]:sendChat(chan, msg.notowner)
+        log("Unauthorised command received from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
         return false
+    else
+        return true
     end
 end
 function wit(n, u, chan, m) -- Hook function for reacting to normal commands

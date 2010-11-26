@@ -12,7 +12,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "be",
         comment = "make me be what you think I should be.",
         action  = function(n, u, chan, m)
-            arg = getarg(m)
+            local arg = getarg(m)
+            local smile
             if not arg then
                 c.net[n]:sendChat(chan, u.nick .. ": Be what?")
             else
@@ -23,6 +24,9 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     end
                 end
                 if not smile then smile = "" end
+                local arg1 = string.match(arg, "^%s-(#%S+)%s+%S+")
+                if arg1 then chan = arg1; arg = string.match(arg, "^%s-%S+%s+(.*)$") end
+                arg = string.gsub(arg, "%%", "%%%%")
                 ctcp.action(n, chan, "is " .. arg .. smile)
             end
         end
@@ -31,8 +35,9 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "join",
         comment = "make me join a channel.",
         action  = function(n, u, chan, m)
-            local arg = getarg(m)
-            if isowner(u) then
+            local pwnd = isowner(n, u, chan)
+            if pwnd then
+                local arg = getarg(m)
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Join which channel?")
                 else
@@ -45,8 +50,6 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                         c.net[n]:join(t)
                     end
                 end
-            else
-                c.net[n]:sendChat(chan, msg.notowner)
             end
         end
     },
@@ -54,7 +57,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "part",
         comment = "make me part a channel (just 'part' uses current channel).",
         action  = function(n, u, chan, m)
-            if isowner(u) then
+            local pwnd = isowner(n, u, chan)
+            if pwnd then
                 local arg = getarg(m)
                 if not arg then
                     c.net[n]:sendChat(chan, msg.bye)
@@ -63,8 +67,6 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     c.net[n]:sendChat(chan, "Leaving " .. arg)
                     c.net[n]:part(arg)
                 end
-            else
-                c.net[n]:sendChat(chan, msg.notowner)
             end
         end
     },
@@ -72,7 +74,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "say",
         comment = "make me say something. [say [#channame] msg]",
         action  = function(n, u, chan, m)
-            if isowner(u) then
+            local pwnd = isowner(n, u, chan)
+            if pwnd then
                 local arg = getarg(m)
                 if not arg then
                     cpnet[n]:sendChat(chan. u.nick .. ": Say what?")
@@ -87,8 +90,6 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     end
                     c.net[n]:sendChat(t, say)
                 end
-            else
-                c.net[n]:sendChat(chan, msg.notowner)
             end
         end
     },
@@ -96,7 +97,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "version",
         comment = "ctcp version someone and hear the result in current channel.",
         action  = function(n, u, chan, m)
-            if isowner(u) then
+            local pwnd = isowner(n, u, chan)
+            if pwnd then
                 local arg = getarg(m)
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Version who?")
@@ -104,8 +106,6 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     ctcp.version(n, arg)
                     vchan = chan
                 end
-            else
-                c.net[n]:sendChat(chan, msg.notowner)
             end
         end
     },
@@ -113,14 +113,13 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "quit",
         comment = "shut me down.",
         action  = function(n, u, chan, m)
-            if isowner(u) then
+            local pwnd = isowner(n, u, chan)
+            if pwnd then
                 c.net[n]:sendChat(chan, msg.bye)
                 for i = 1, #c.net do
                     c.net[i]:disconnect(msg.quitting)
                 end
                 print(msg.quitting)
-            else
-                c.net[n]:sendChat(chan, msg.notowner)
             end
         end
     }

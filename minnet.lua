@@ -31,11 +31,23 @@ for i = 1, #bot.nets do
         c.net[i]:join(bot.nets[i].c[j])
     end
     -- Register hooks
+    c.net[i]:hook("OnChat", "happy", function(u, chan, m)
+        local n = i
+        if ( chan == c.net[n].nick ) then chan = u.nick end
+        if string.match(m, "^[Bb]e%s+happy%p?%s-[Dd]on%'?t%s+worry") or string.match(m, "^[Dd]on%'?t%s+worry%p?%s-[Bb]e%s+happy") then
+            ctcp.action(n, chan, "doesn't worry, is happy! :D")
+        end
+    end)
     c.net[i]:hook("OnChat", "wit", function(u, chan, m)
         local ismsg = false
         local n = i
         if ( chan == c.net[n].nick ) then ismsg = true; chan = u.nick end
         if ( ismsg == true ) or string.match(m, bot.cmdstring) then wit(n, u, chan, m) end
+    end)
+    c.net[i]:hook("OnNotice", "notice", function(u, chan, m)
+        local n = i
+        if ( chan == c.net[n].nick ) then chan = u.nick end
+        wit(n, u, chan, m)
     end)
     c.net[i]:hook("OnRaw", "versionparse", function(l)
         local n = i
