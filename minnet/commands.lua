@@ -36,7 +36,7 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Join which channel?")
                 else
-                    ctcp.action(n, chan, "flaps off to " .. m)
+                    ctcp.action(n, chan, msg.joining .. m)
                     c.net[n]:join(m)
                 end
             else
@@ -45,28 +45,49 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         end
     },
     {
-        name    = "version",
-        comment = "ctcp version someone.",
+        name    = "part",
+        comment = "make me part a channel (just 'part' means leaving current channel).",
         action  = function(n, u, chan, m)
-            arg = getarg(m)
-            if not arg then
-                c.net[n]:sendChat(chan, u.nick .. ": Version who?")
+            if isowner(u) then
+                arg = getarg(m)
+                if not arg then
+                    c.net[n]:sendChat(chan, msg.bye)
+                    c.net[n]:part(chan)
+                else
+                    c.net[n]:sendChat(chan, "Leaving " .. arg)
+                    c.net[n]:part(arg)
+                end
             else
-                ctcp.version(n, arg)
-                vchan = chan
+                c.net[n]:sendChat(chan, msg.notowner)
+            end
+        end
+    {
+        name    = "version",
+        comment = "ctcp version someone and hear the result in current channel.",
+        action  = function(n, u, chan, m)
+            if isowner(u) then
+                arg = getarg(m)
+                if not arg then
+                    c.net[n]:sendChat(chan, u.nick .. ": Version who?")
+                else
+                    ctcp.version(n, arg)
+                    vchan = chan
+                end
+            else
+                c.net[n]:sendChat(chan, msg.notowner)
             end
         end
     },
     {
         name    = "quit",
-        comment = "shut down bot.",
+        comment = "shut me down.",
         action  = function(n, u, chan, m)
             if isowner(u) then
-                c.net[n]:sendChat(chan, "Bye.")
+                c.net[n]:sendChat(chan, msg.bye)
                 for i = 1, #c.net do
-                    c.net[i]:disconnect("Minnet quitting..")
+                    c.net[i]:disconnect(msg.quitting)
                 end
-                print("Minnet quitting..")
+                print(msg.quitting)
             else
                 c.net[n]:sendChat(chan, msg.notowner)
             end
