@@ -1,0 +1,41 @@
+--- asyncoperations.lua	2010-11-26 21:07:39.855453779 +0100
++++ /usr/share/lua/5.1/irc/asyncoperations.lua	2010-11-26 21:09:14.837089075 +0100
+@@ -1,7 +1,5 @@
+ local table = table
+-
+ module "irc"
+-
+ local meta = _META
+ 
+ function meta:send(fmt, ...)
+@@ -15,10 +13,11 @@
+ end
+ 
+ local function verify(str, errLevel)
++	if not str then str = "" end
++
+ 	if str:find("^:") or str:find("%s%z") then
+ 		error(("malformed parameter '%s' to irc command"):format(str), errLevel)
+ 	end
+-
+ 	return str
+ end
+ 
+@@ -60,13 +59,15 @@
+ 		end
+ 	end
+ end
+-
+ function meta:setMode(t)
+ 	local target = t.target or self.nick
+ 	local mode = ""
+ 	local add, rem = t.add, t.remove
+ 
+-	assert(add or rem, "table contains neither 'add' nor 'remove'")
++	--assert(add or rem, "table contains neither 'add' nor 'remove'")
++	if not ( add or rem ) then
++		error("table contains neither 'add' nor 'remove'")
++	end
+ 
+ 	if add then
+ 		mode = table.concat{"+", verify(add, 3)}
