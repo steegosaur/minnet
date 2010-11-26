@@ -2,3 +2,8 @@ Readme for minnet
 
 This should hold some information about the project, what it can do and how to 
 make it do so.
+
+NOTE: To use Minnet, you will need to patch your lua irc module with the file 
+in this repo (asyncoperations.lua.patch). This is some strange design flaw in 
+the module, and should not be necessary, but I'm lazy and apparently, the 
+author of this module is, too.
