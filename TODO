@@ -10,6 +10,17 @@ Roadmap:
         Quit command is protected (user recognition)
         Takes commands in channels and /msg
         Configuration in separate file
-    0.2.0
         Commands take arguments
-        Uses SSL
+    0.2.0
+        Has a useful TODO and README
+        Has commands for part, say, etc
+    0.3.0
+        Has a working (statically configured) privelige system
+
+Todo atm:
+    Make README
+    New commands (part, say)
+    Notices - reading, sending
+
+Wishlist:
+    SSL
