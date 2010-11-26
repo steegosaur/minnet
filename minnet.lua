@@ -19,7 +19,6 @@ if ( arg[1] == "--help" ) then
 elseif not ( arg[1] or arg[1] == "--run" ) then
     err(msg.noargs)
 end
--- Create c.net list containing connections
 print("Starting minnet..")
 for i = 1, #bot.nets do
     print("Adding net " .. bot.nets[i].name)
@@ -57,6 +56,9 @@ for i = 1, #bot.nets do
             c.net[n]:sendChat(vchan, reply)
         end
     end)
+    print("Setting mode +pxB")
+    c.net[i]:setMode({ target = bot.nick, add = "pxB" })
+
 end
 print("All networks connected. Awaiting commands.")
 while true do
