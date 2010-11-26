@@ -19,8 +19,8 @@ Roadmap:
 
 Todo atm:
     Make README
-    New commands (part, say)
-    Notices - reading, sending
+    Dynamic setMode() on connection, per-network via config.lua
 
 Wishlist:
+    User (priv) database
     SSL
