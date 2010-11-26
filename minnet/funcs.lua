@@ -52,7 +52,7 @@ end
 name = string.gsub(name, "^%W*", "")
 msg.help = function()
     print(name)
-    print("Usage: " .. arg[0] .. " [--help]")
+    print("Usage: " .. arg[0] .. " [--help|--run]")
     os.exit()
 end
 
