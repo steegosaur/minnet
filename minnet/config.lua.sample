@@ -11,7 +11,7 @@ msg = {
     bye = "Bye.",
     leaving = "Minnet leaving..",
     quitting = "Minnet quitting..",
-    joining = " flaps off to " -- Is an action, will be merged with channel name
+    joining = "flaps off to " -- Is an action, will be merged with channel name
 }
 owner = {
     uname1 = "uname1", -- remember: nick!username@host

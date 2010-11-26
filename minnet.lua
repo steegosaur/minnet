@@ -7,7 +7,7 @@ funcs = "minnet.funcs"
 commands = "minnet.commands"
 require("irc")
 require("socket")
-require("ssl")
+--require("ssl")
 require(conf)
 require(funcs)
 require(commands)

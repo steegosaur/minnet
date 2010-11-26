@@ -31,13 +31,19 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "join",
         comment = "make me join a channel.",
         action  = function(n, u, chan, m)
-            m = getarg(m)
+            local arg = getarg(m)
             if isowner(u) then
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Join which channel?")
                 else
-                    ctcp.action(n, chan, msg.joining .. m)
-                    c.net[n]:join(m)
+                    local t = string.match(arg, "^(%S+)")
+                    local k = string.match(arg, "^" .. t .. "%s+(%S+)")
+                    ctcp.action(n, chan, msg.joining .. t)
+                    if k then
+                        c.net[n]:join(t, k)
+                    else
+                        c.net[n]:join(t)
+                    end
                 end
             else
                 c.net[n]:sendChat(chan, msg.notowner)
@@ -46,7 +52,7 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
     },
     {
         name    = "part",
-        comment = "make me part a channel (just 'part' means leaving current channel).",
+        comment = "make me part a channel (just 'part' uses current channel).",
         action  = function(n, u, chan, m)
             if isowner(u) then
                 local arg = getarg(m)
@@ -64,17 +70,22 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
     },
     {
         name    = "say",
-        comment = "make me say something (somewhere). [say [#channame] msg]",
+        comment = "make me say something. [say [#channame] msg]",
         action  = function(n, u, chan, m)
             if isowner(u) then
                 local arg = getarg(m)
                 if not arg then
                     cpnet[n]:sendChat(chan. u.nick .. ": Say what?")
                 else
+                    local say = ""
                     local t = string.match(arg, "^%s-(#%S+)%s+%S+")
-                    local message = string.match(arg, "^%s-" .. t .. "%s+(%S+.*)$")
-                    if not t then t = chan end
-                    c.net[n]:sendChat(t, message)
+                    if t then
+                        say = string.match(arg, "^%s-" .. t .. "%s+(%S+.*)$")
+                    else
+                        t = chan
+                        say = string.match(arg, "^(.*)$")
+                    end
+                    c.net[n]:sendChat(t, say)
                 end
             else
                 c.net[n]:sendChat(chan, msg.notowner)

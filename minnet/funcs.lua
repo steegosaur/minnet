@@ -2,9 +2,9 @@
 -- Functions file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- Released under the GPLv3+
-function err(msg, f)
+function err(m, f)
     if f then f = " " .. f else f = "" end
-    print("error: " .. msg .. f)
+    print("error: " .. m .. f)
     os.exit(1)
 end
 function getarg(m)
