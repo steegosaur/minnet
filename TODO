@@ -19,7 +19,6 @@ Roadmap:
 
 Todo atm:
     Make README
-    Dynamic setMode() on connection, per-network via config.lua
 
 Wishlist:
     User (priv) database

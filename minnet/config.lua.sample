@@ -1,7 +1,8 @@
 #!/usr/bin/env lua
 -- config.lua.sample - config file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
--- Released under the GPLv3
+-- This file is part of Minnet.  
+-- Minnet is released under the GPLv3 - see ../COPYING 
 c   = { net = {} } -- Connection list
 ctcp= {}
 vchan = ""
@@ -24,18 +25,20 @@ bot = {
     rname = "Minnet",
     cmdstring = "^%%",
     nets  = {
-        { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" } },
-        { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" } }
+        { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" }, modes = "pxB" },
+        { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" }, modes = "iB" }
     },
     smiles = {
-        { text = "sad", face = ":(" },
-        { text = "happy", face = ":D" },
-        { text = "angry", face = ">:|" },
+        { text = "sad",     face = ":(" },
+        { text = "happy",   face = ":D" },
+        { text = "angry",   face = ">:|"},
         { text = "annoyed", face = ":|" },
-        { text = "dumb", face = ":B" },
-        { text = "sexy", face = ";)" },
-        { text = "smart", face = "8)" }
+        { text = "dumb",    face = ":B" },
+        { text = "stupid",  face = ":B" },
+        { text = "sexy",    face = ";)" },
+        { text = "smart",   face = "8)" }
     }
 }
 -- }}}
 -- EOF
+

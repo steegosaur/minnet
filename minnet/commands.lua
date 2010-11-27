@@ -1,7 +1,8 @@
 #!/usr/bin/env lua
 -- commands.lua - config file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
--- Released under the GPLv3
+-- This file is part of Minnet.  
+-- Minnet is released under the GPLv3 - see ../COPYING 
 bot.cmds  = { -- Commands that the bot understands; nothing should need editing below this line
     {
         name    = "test",

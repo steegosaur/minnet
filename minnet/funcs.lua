@@ -1,7 +1,8 @@
 #!/usr/bin/env lua
--- Functions file for minnet
+-- funcs.lua - functions file for minnet
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
--- Released under the GPLv3+
+-- This file is part of Minnet. 
+-- Minnet is released under the GPLv3 - see ../COPYING 
 function err(m, f)
     if f then f = " " .. f else f = "" end
     print("error: " .. m .. f)
