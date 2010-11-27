@@ -21,12 +21,15 @@
 conf  = "minnet.config"
 funcs = "minnet.funcs"
 commands = "minnet.commands"
+dbfuncs  = "minnet.db"
 require("irc")
 require("socket")
 require("lsqlite3")
+require("crypto")
 require(conf)
 require(funcs)
 require(commands)
+require(dbfuncs)
 -- }}}
 
 -- {{{ Run

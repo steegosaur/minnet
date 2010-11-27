@@ -3,14 +3,14 @@
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- This file is part of Minnet. 
 -- Minnet is released under the GPLv3 - see ../COPYING 
+function log(m)
+    if not t then t = "" end
+    print(os.date("%F/%T: ") .. m)
+end
 function err(m, f)
     if f then f = " " .. f else f = "" end
-    print("error: " .. m .. f)
+    log("error: " .. m .. f)
     os.exit(1)
-end
-function log(n, u, chan, t)
-    if not t then t = "" end
-    print(os.date("%F/%T: ") .. t)
 end
 function getarg(m)
     local arg = string.match(m, "%s+(%S+.*)")
@@ -33,7 +33,7 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     cmdFound = false
     for i = 1, #bot.cmds do
         if string.match(m, "^" .. bot.cmds[i].name) then
-            print(os.date("%F/%T: ") .. "Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
+            log("Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
             if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
             cmdFound = true
@@ -45,10 +45,16 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
 end
 function ctcp.action(n, chan, act)
     c.net[n]:send("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
+    log("Sent ctcp.action " .. act .. " to " .. bot.nets[n].name .. "/" .. chan)
 end
 function ctcp.version(n, arg)
     arg = string.match(arg, "^(%S+)")
     c.net[n]:send("PRIVMSG " .. arg .. " :\001VERSION\001")
+    log("Sent ctcp.version to " .. arg .. " on " .. bot.nets[n].name)
+end
+function passgen(p)
+    local h = crypto.evp.digest("sha1", p)
+    return h
 end
 -- Create msg.help() function
 name = ""
@@ -62,4 +68,4 @@ msg.help = function()
     print("Usage: " .. arg[0] .. " [--help|--run]")
     os.exit()
 end
-
+-- EOF
