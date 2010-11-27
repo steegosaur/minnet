@@ -61,11 +61,6 @@ for i = 1, #bot.nets do
         if ( chan == c.net[n].nick ) then ismsg = true; chan = u.nick end
         if ( ismsg == true ) or string.match(m, bot.cmdstring) then wit(n, u, chan, m) end
     end)
-    c.net[i]:hook("OnNotice", "notice", function(u, chan, m)
-        local n = i
-        if ( chan == c.net[n].nick ) then chan = u.nick end
-        wit(n, u, chan, m)
-    end)
     c.net[i]:hook("OnRaw", "versionparse", function(l)
         local n = i
         if string.match(l, "\001VERSION%s.*") then
