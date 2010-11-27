@@ -23,7 +23,7 @@ funcs = "minnet.funcs"
 commands = "minnet.commands"
 require("irc")
 require("socket")
---require("ssl")
+require("lsqlite3")
 require(conf)
 require(funcs)
 require(commands)
