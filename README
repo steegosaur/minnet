@@ -43,8 +43,8 @@ built and have taken into account that not all computers are POSIX compliant.
 
 To use Minnet, you will need to patch your lua irc module with the file 
 in this repo (asyncoperations.lua.patch). This is some strange design flaw in 
-the module, and should not be necessary, but I'm lazy and apparently, the 
-author of this module is, too.
+the module. It should not be necessary, but I'm lazy, and apparently, so is  
+the author of the module.
 
 
 3 Installation
