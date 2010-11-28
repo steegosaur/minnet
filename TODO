@@ -15,11 +15,16 @@ Roadmap:
         Has a useful TODO and README
         Has commands for part, say, etc
     0.3.0
-        Has a working (statically configured) privelige system
+        Uses a working SQL user database system
+    0.3.5
+        Has UDB functions like OTL in the case of an empty database
 
 Todo atm:
-    Make README
+    Get SQL queries working
+    Design how the db functions should be used
+    Redesign some of the commands - do we need passwords?
+    Provide documentation of what the bloody commands actually do
+    Use the database to check for privileges
 
 Wishlist:
-    User (priv) database
     SSL
