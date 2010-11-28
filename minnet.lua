@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.1.8 - the unuseful lua irc bot
+-- minnet.lua 0.2.2 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -30,6 +30,7 @@ require(conf)
 require(funcs)
 require(commands)
 require(dbfuncs)
+udb = sqlite3.open(db.file)
 -- }}}
 
 -- {{{ Run
@@ -40,6 +41,7 @@ elseif not ( arg[1] or arg[1] == "--run" ) then
 end
 print("Starting minnet..")
 for i = 1, #bot.nets do
+    db.check(i)
     print("Adding net " .. bot.nets[i].name)
     c.net[i] = irc.new{ nick = bot.nick, username = bot.uname, realname = bot.rname }
     print("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
