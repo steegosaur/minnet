@@ -111,6 +111,50 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         end
     },
     {
+        name    = "db",
+        comment = "database management.",
+        action  = function(n, u, chan, m)
+            local pwnd = isowner(n, u, chan)
+            if pwnd then
+                if string.match(chan, "^#") then
+                    c.net[n]:sendChat(chan, "I can't let you do database operations in a channel, sorry.")
+                    return nil
+                end
+                local arg = getarg(m) or ""
+                local cmd = string.match(arg, "^%s-(%S+)") or ""
+                local arg = string.match(arg, "^" .. cmd .. "%s-(%S+.*)") or ""
+                if ( cmd == "set" ) then
+                    --local nick, level, host, passhash, email = string.match(arg, "(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)")
+                    local nick      = string.match(arg, "^(%S+)") or ""
+                    local level     = string.match(arg, "^" .. nick .. "%s+(%S+)") or ""
+                    local host      = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
+                    local passhash  = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
+                    local email     = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
+                    local passhash  = passgen(passhash)
+                    db.set_user(n, u, nick, level, host, passhash, email)
+                elseif ( cmd == "update" ) then
+                    local nick, host = string.match(arg, "(%S+)%s+(%S+)")
+                    db.upd_user(n, u, u.nick, nick, host)
+                elseif ( cmd == "add" ) then
+                    --local nick, level, host, passhash, email = string.match(arg, "(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)")
+                    local nick      = string.match(arg, "^(%S+)") or ""
+                    local level     = string.match(arg, "^" .. nick .. "%s+(%S+)") or ""
+                    local host      = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
+                    local passhash  = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
+                    local email     = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
+                    local passhash  = passgen(passhash)
+                    db.add_user(n, u, nick, level, host, passhash, email)
+                elseif ( cmd == "help" ) then
+                    c.net[n]:sendChat(chan, "Syntax: db (set|update|add)")
+                    c.net[n]:sendChat(chan, "Set and add need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces.")
+                    c.net[n]:sendChat(chan, "Update needs NICK and HOST.")
+                else
+                    c.net[n]:sendChat(chan, "I don't know what you meant I should do with the database. Maybe you should ask for help.")
+                end
+            end
+        end
+    },
+    {
         name    = "quit",
         comment = "shut me down.",
         action  = function(n, u, chan, m)
