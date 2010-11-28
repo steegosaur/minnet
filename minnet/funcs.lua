@@ -13,7 +13,7 @@ function err(m, f)
     os.exit(1)
 end
 function getarg(m)
-    local arg = string.match(m, "%s+(%S+.*)")
+    local arg = string.match(m, "^%S+%s+(%S+.*)")
     return arg
 end
 function isowner(n, u, chan)
@@ -32,15 +32,16 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     if ( m == "" ) or string.match(m, "^%s+") then return nil end
     cmdFound = false
     for i = 1, #bot.cmds do
-        if string.match(m, "^" .. bot.cmds[i].name) then
+        if string.match(m, "^" .. bot.cmds[i].name .. "%s-$") or string.match(m, "^" .. bot.cmds[i].name .. "%s+") then
             log("Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
             if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
             cmdFound = true
+            break
         end
     end
     if ( cmdFound == false ) then
-        c.net[n]:sendChat(chan, "Nevermore!")
+        c.net[n]:sendChat(chan, "Excuse me?")
     end
 end
 function ctcp.action(n, chan, act)
@@ -53,6 +54,7 @@ function ctcp.version(n, arg)
     log("Sent ctcp.version to " .. arg .. " on " .. bot.nets[n].name)
 end
 function passgen(p)
+    if ( not p ) or ( p == "" ) then return nil end
     local h = crypto.evp.digest("sha1", p)
     return h
 end
