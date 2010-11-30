@@ -39,17 +39,17 @@ if ( arg[1] == "--help" ) then
 elseif not ( arg[1] or arg[1] == "--run" ) then
     err(msg.noargs)
 end
-print("Starting minnet..")
+log("Starting minnet..")
 for i = 1, #bot.nets do
     db.check(i)
-    print("Adding net " .. bot.nets[i].name)
+    log("Adding net " .. bot.nets[i].name)
     c.net[i] = irc.new{ nick = bot.nick, username = bot.uname, realname = bot.rname }
-    print("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
+    log("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
     c.net[i]:connect(bot.nets[i].addr)
-    print("Setting mode +" .. bot.nets[i].modes)
+    log("Setting mode +" .. bot.nets[i].modes)
     c.net[i]:setMode({ target = bot.nick, add = bot.nets[i].modes })
     for j = 1, #bot.nets[i].c do
-        print("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
+        log("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
         c.net[i]:join(bot.nets[i].c[j])
     end
     -- Register hooks
@@ -75,7 +75,7 @@ for i = 1, #bot.nets do
         end
     end)
 end
-print("All networks connected. Awaiting commands.")
+log("All networks connected. Awaiting commands.")
 while true do
     for n = 1, #c.net do
         c.net[n]:think()
