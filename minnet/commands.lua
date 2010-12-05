@@ -27,7 +27,6 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                 if not smile then smile = "" end
                 local arg1 = string.match(arg, "^%s-(#%S+)%s+%S+")
                 if arg1 then chan = arg1; arg = string.match(arg, "^%s-%S+%s+(.*)$") end
-                arg = string.gsub(arg, "%%", "%%%%")
                 ctcp.action(n, chan, "is " .. arg .. smile)
             end
         end
@@ -56,7 +55,7 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
     },
     {
         name    = "part",
-        comment = "make me part a channel (just 'part' uses current channel).",
+        comment = "make me part a channel.",
         action  = function(n, u, chan, m)
             local pwnd = isowner(n, u, chan)
             if pwnd then
@@ -73,7 +72,7 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
     },
     {
         name    = "say",
-        comment = "make me say something. [say [#channame] msg]",
+        comment = "make me say something.",
         action  = function(n, u, chan, m)
             local pwnd = isowner(n, u, chan)
             if pwnd then
@@ -112,10 +111,10 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
     },
     {
         name    = "db",
-        comment = "database management.",
+        comment = "database management. ('db help' for more info)",
         action  = function(n, u, chan, m)
-            local pwnd = isowner(n, u, chan)
-            if pwnd then
+--            local pwnd = isowner(n, u, chan)
+--            if pwnd then
                 if string.match(chan, "^#") then
                     c.net[n]:sendChat(chan, "I can't let you do database operations in a channel, sorry.")
                     return nil
@@ -123,48 +122,54 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                 local arg = getarg(m) or ""
                 local cmd = string.match(arg, "^%s-(%S+)") or ""
                 local arg = string.match(arg, "^" .. cmd .. "%s-(%S+.*)") or ""
-                if ( cmd == "set" ) then
-                    --local nick, level, host, passhash, email = string.match(arg, "(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)")
+                if ( cmd == "mod" ) or ( cmd == "add" ) then
+                    -- Just bloody fix this inefficiency, please? FIXME: INEFFICIENT
+                    -- (Possibly, try using catches and %n
                     local nick      = string.match(arg, "^(%S+)") or ""
                     local level     = string.match(arg, "^" .. nick .. "%s+(%S+)") or ""
                     local host      = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
                     local passhash  = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
                     local email     = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
                     local passhash  = passgen(passhash)
-                    db.set_user(n, u, nick, level, host, passhash, email)
+                    db.set_data(n, u, cmd, nick, level, host, passhash, email)
+                elseif ( cmd == "get" ) then
+                    local name = string.match(arg, "(%S+)")
+                    db.show_user(n, u, name)
+                elseif ( cmd == "set" ) then
+                    local mode, value = string.match(arg, "(%S+)%s+(%S+)")
+                    db.set_user(n, u, mode, value)
                 elseif ( cmd == "update" ) then
                     local nick, host = string.match(arg, "(%S+)%s+(%S+)")
                     db.upd_user(n, u, u.nick, nick, host)
-                elseif ( cmd == "add" ) then
-                    --local nick, level, host, passhash, email = string.match(arg, "(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)")
-                    local nick      = string.match(arg, "^(%S+)") or ""
-                    local level     = string.match(arg, "^" .. nick .. "%s+(%S+)") or ""
-                    local host      = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
-                    local passhash  = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
-                    local email     = string.match(arg, "^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
-                    local passhash  = passgen(passhash)
-                    db.add_user(n, u, nick, level, host, passhash, email)
                 elseif ( cmd == "help" ) then
-                    c.net[n]:sendChat(chan, "Syntax: db (set|update|add)")
-                    c.net[n]:sendChat(chan, "Set and add need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces.")
-                    c.net[n]:sendChat(chan, "Update needs NICK and HOST.")
+                    c.net[n]:sendChat(chan, "Syntax: db (set|update|get|mod|add)")
+                    c.net[n]:sendChat(chan, "Add and mod are admin-level, and need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces.")
+                    c.net[n]:sendChat(chan, "Get needs NICK, and shows the registered information for that nick.")
+                    c.net[n]:sendChat(chan, "Set needs MODE and VALUE. It allows you to set you email and password.")
+                    c.net[n]:sendChat(chan, "Update needs NICK and HOST, and update your information automatically.")
                 else
-                    c.net[n]:sendChat(chan, "I don't know what you meant I should do with the database. Maybe you should ask for help.")
+                    c.net[n]:sendChat(chan, "I don't know what you meant I should do with the database. Maybe you need some help?")
                 end
             end
-        end
+--        end
     },
     {
         name    = "quit",
         comment = "shut me down.",
         action  = function(n, u, chan, m)
-            local pwnd = isowner(n, u, chan)
-            if pwnd then
+            --local pwnd = isowner(n, u, chan)
+            --if pwnd then
+            if db.check_auth(n, u, "admin") then
+                if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then
+                    db.error(n, u, "Could not close database: " .. udb:errcode() .. " - " .. udb:errmsg())
+                end
                 c.net[n]:sendChat(chan, msg.bye)
                 for i = 1, #c.net do
                     c.net[i]:disconnect(msg.quitting)
                 end
-                print(msg.quitting)
+                log(msg.quitting)
+            else
+                db.error(n, u, msg.notauth)
             end
         end
     }
