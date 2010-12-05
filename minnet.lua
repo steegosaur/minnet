@@ -18,10 +18,10 @@
 -- along with Minnet. If not, see <http://www.gnu.org/licenses/>.
 
 -- {{{ Init
-conf  = "minnet.config"
-funcs = "minnet.funcs"
-commands = "minnet.commands"
-dbfuncs  = "minnet.db"
+conf    = "minnet.config"
+funcs   = "minnet.funcs"
+commands= "minnet.commands"
+dbfuncs = "minnet.db"
 require("irc")
 require("socket")
 require("lsqlite3")
@@ -33,17 +33,41 @@ require(dbfuncs)
 udb = sqlite3.open(db.file)
 -- }}}
 
--- {{{ Run
+-- {{{ Runtime arg check
 if ( arg[1] == "--help" ) then
     msg.help()
-elseif not ( arg[1] or arg[1] == "--run" ) then
+elseif ( arg[1] == "--licence" ) then
+    local read = { list  = { "/bin/less", "/bin/more", "/usr/bin/nano", "/usr/bin/emacs", "/usr/bin/vim", "/usr/bin/vi", "/bin/cat" },
+        cmd = nil }
+    for i = 1, #read.list do
+        if io.open(read.list[i], "r") then
+            read.cmd = read.list[i]
+            break
+        end
+    end
+    if read.cmd then
+        os.execute(read.cmd .. " COPYING")
+    else
+        print("Could not find a program for viewing the licence file; please take a look at the GPL v3 yourself. It can be found in the file COPYING in the Minnet main directory.")
+    end
+    os.exit()
+elseif ( arg[1] == "--dry" ) then
+    run = false
+    require("dryrun")
+    print("Entering debug mode - dryrun variables for u and c.net[1] set.")
+    print("Remember to use `lua -i' to enter interactive mode.")
+elseif ( arg[1] ~= "--run" ) then
     err(msg.noargs)
 end
+-- }}}
+
+-- {{{ Run
+if ( run ~= false ) then
 log("Starting minnet..")
 for i = 1, #bot.nets do
     db.check(i)
     log("Adding net " .. bot.nets[i].name)
-    c.net[i] = irc.new{ nick = bot.nick, username = bot.uname, realname = bot.rname }
+    c.net[i] = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
     log("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
     c.net[i]:connect(bot.nets[i].addr)
     log("Setting mode +" .. bot.nets[i].modes)
@@ -81,6 +105,7 @@ while true do
         c.net[n]:think()
         socket.sleep(1)
     end
+end
 end
 -- }}}
 -- EOF
