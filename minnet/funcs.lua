@@ -3,9 +3,18 @@
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 -- This file is part of Minnet. 
 -- Minnet is released under the GPLv3 - see ../COPYING 
-function log(m)
-    if not t then t = "" end
-    print(os.date("%F/%T: ") .. m)
+function log(m, u)
+    if not m then
+        err("No error message provided in call to log()")
+        return nil
+    end
+    local mask
+    if u then
+        mask = u.nick .. "!" .. u.username .. "@" .. u.host .. ": "
+    else
+        mask = ""
+    end
+    print(os.date("%F/%T : ") .. mask .. m)
 end
 function err(m, f)
     if f then f = " " .. f else f = "" end
@@ -16,16 +25,18 @@ function getarg(m)
     local arg = string.match(m, "^%S+%s+(%S+.*)")
     return arg
 end
+-- Deprecated, should be replaced by intricate and horrible privilege checking through sqlite3/udb
 function isowner(n, u, chan)
     if not ( u.username == owner.uname1 ) or ( u.username == owner.uname2 ) and string.match(u.host, owner.host) then
         c.net[n]:sendChat(chan, msg.notowner)
-        log("Unauthorised command received from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
+        log("Unauthorised command received on " .. bot.nets[n].name .. "/" .. chan, u)
         return false
     else
         return true
     end
 end
-function wit(n, u, chan, m) -- Hook function for reacting to normal commands
+--]]
+function wit(n, u, chan, m) -- Main hook function for reacting to commands
     if string.match(m, bot.cmdstring) then
         m = string.gsub(m, bot.cmdstring, "")
     end
@@ -33,7 +44,7 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     cmdFound = false
     for i = 1, #bot.cmds do
         if string.match(m, "^" .. bot.cmds[i].name .. "%s-$") or string.match(m, "^" .. bot.cmds[i].name .. "%s+") then
-            log("Received command " .. m .. " from " .. u.nick .. "!" .. u.username .. "@" .. u.host .. " on " .. bot.nets[n].name .. "/" .. chan)
+            log("Received command " .. m .. " on " .. bot.nets[n].name .. "/" .. chan, u)
             if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
             cmdFound = true
@@ -45,13 +56,14 @@ function wit(n, u, chan, m) -- Hook function for reacting to normal commands
     end
 end
 function ctcp.action(n, chan, act)
+    act = string.gsub(act, "%%", "%%%%")
     c.net[n]:send("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
-    log("Sent ctcp.action " .. act .. " to " .. bot.nets[n].name .. "/" .. chan)
+    log("Sent ctcp.action " .. act .. " to " .. bot.nets[n].name .. "/" .. chan, u)
 end
 function ctcp.version(n, arg)
     arg = string.match(arg, "^(%S+)")
     c.net[n]:send("PRIVMSG " .. arg .. " :\001VERSION\001")
-    log("Sent ctcp.version to " .. arg .. " on " .. bot.nets[n].name)
+    log("Sent ctcp.version to " .. arg .. " on " .. bot.nets[n].name, u)
 end
 function passgen(p)
     if ( not p ) or ( p == "" ) then return nil end
