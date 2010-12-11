@@ -53,9 +53,14 @@ elseif ( arg[1] == "--licence" ) then
     os.exit()
 elseif ( arg[1] == "--dry" ) then
     run = false
-    require("dryrun")
-    print("Entering debug mode - dryrun variables for u and c.net[1] set.")
-    print("Remember to use `lua -i' to enter interactive mode.")
+    if not ( arg[-1] == "-i" ) then
+        print("Attempting to re-run self in interactive mode..")
+        print("If this doesn't work, run lua manually, specifying -i for interactive execution.")
+        os.execute("lua -i " .. arg[0] .. " --dry")
+    else
+        require("dryrun")
+        print("Entering debug mode - dryrun variables for u and c.net set.")
+    end
 elseif ( arg[1] ~= "--run" ) then
     err(msg.noargs)
 end
@@ -72,6 +77,7 @@ for i = 1, #bot.nets do
     c.net[i]:connect(bot.nets[i].addr)
     log("Setting mode +" .. bot.nets[i].modes)
     c.net[i]:setMode({ target = bot.nick, add = bot.nets[i].modes })
+    log("Current nick on " .. bot.nets[i].name .. ": " .. c.net[i].nick)
     for j = 1, #bot.nets[i].c do
         log("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
         c.net[i]:join(bot.nets[i].c[j])
