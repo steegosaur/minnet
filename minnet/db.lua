@@ -25,20 +25,17 @@ function db.sanitise(...)
         arg[i] = string.lower(arg[i])
         arg[i] = string.gsub(arg[i], "[,;']+", "")
         arg[i] = string.gsub(arg[i], "(%p)", "\\%1")
---        print("sanitised " .. arg[i])
     end
     return arg
 end
 function db.revsan(...)
     for i = 1, #arg do
         arg[i] = string.gsub(arg[i], "(\\)", "%%")
-        --print("Sanitised arg[i] into " .. arg[i])
     end
     return arg
 end
 function db.get_user(n, nick)
     nick = db.sanitise(nick)[1]
-    --print("Checking info for " .. nick)
     for userinfo in udb:nrows("SELECT nick,level,host,passhash,email,cur_nick FROM " .. bot.nets[n].name .. " WHERE cur_nick='" .. nick .. "' OR nick='" .. nick .. "' LIMIT 1;") do
         return userinfo
     end
@@ -48,14 +45,13 @@ function db.check_auth(n, u, level) -- Does not use authentication, only checks 
     if not info then
         return false
     end
-    local nick = db.sanitise(u.nick)[1]
-    info.host = db.revsan(info.host)[1]
-    if ( ( info.nick == nick ) or ( info.cur_nick == nick ) ) and string.match(u.host, info.host .. "$") and ( info.level == level ) then
+    if ( bot.levels[level] >= bot.levels[info.level] ) then
         return true
     else
         return false
     end
 end
+
 -- getting info on users through irc
 function db.show_user(n, u, name)
     if not db.check_auth(n, u, "admin") then
@@ -114,7 +110,6 @@ function db.set_data(n, u, mode, nick, level, host, passhash, email, cur_nick)
             end
         end
 
-        --local list = db.sanitise(level .. " " .. host .. " " .. passhash .. " " .. email)
         local list = db.sanitise(level, host, passhash, email)
         level, host, passhash, email = list[1], list[2], list[3], list[4]
 
