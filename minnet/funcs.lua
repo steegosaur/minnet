@@ -22,10 +22,11 @@ function err(m, f)
     os.exit(1)
 end
 function getarg(m)
-    local arg = string.match(m, "^%S+%s+(%S+.*)")
+    local arg = m:match("^%S+%s+(%S+.*)")
     return arg
 end
 -- Deprecated, should be replaced by intricate and horrible privilege checking through sqlite3/udb
+--[[
 function isowner(n, u, chan)
     if not ( u.username == owner.uname1 ) or ( u.username == owner.uname2 ) and string.match(u.host, owner.host) then
         c.net[n]:sendChat(chan, msg.notowner)
@@ -37,13 +38,13 @@ function isowner(n, u, chan)
 end
 --]]
 function wit(n, u, chan, m) -- Main hook function for reacting to commands
-    if string.match(m, bot.cmdstring) then
-        m = string.gsub(m, bot.cmdstring, "")
+    if m:match(bot.cmdstring) then
+        m = m:gsub(bot.cmdstring .. "%S-", "")
     end
-    if ( m == "" ) or string.match(m, "^%s+") then return nil end
+    if ( m == "" ) or m:match("^%s+") then return nil end
     cmdFound = false
     for i = 1, #bot.cmds do
-        if string.match(m, "^" .. bot.cmds[i].name .. "%s-$") or string.match(m, "^" .. bot.cmds[i].name .. "%s+") then
+        if m:match("^" .. bot.cmds[i].name .. "%s-$") or m:match("^" .. bot.cmds[i].name .. "%s+") then
             log("Received command " .. m .. " on " .. bot.nets[n].name .. "/" .. chan, u)
             if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
