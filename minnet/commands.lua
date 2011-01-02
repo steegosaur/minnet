@@ -35,8 +35,9 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "join",
         comment = "make me join a channel.",
         action  = function(n, u, chan, m)
-            local pwnd = isowner(n, u, chan)
-            if pwnd then
+            --local pwnd = isowner(n, u, chan)
+            --if pwnd then
+            if db.check_auth(n, u, "admin") then
                 local arg = getarg(m)
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Join which channel?")
@@ -50,6 +51,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                         c.net[n]:join(t)
                     end
                 end
+            else
+                db.error(n, u, wsg.notauth)
             end
         end
     },
@@ -57,8 +60,9 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "part",
         comment = "make me part a channel.",
         action  = function(n, u, chan, m)
-            local pwnd = isowner(n, u, chan)
-            if pwnd then
+            --local pwnd = isowner(n, u, chan)
+            --if pwnd then
+            if db.check_auth(n, u, "admin") then
                 local arg = getarg(m)
                 if not arg then
                     c.net[n]:sendChat(chan, msg.bye)
@@ -67,6 +71,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     c.net[n]:sendChat(chan, "Leaving " .. arg)
                     c.net[n]:part(arg)
                 end
+            else
+                db.error(n, u, wsg.notauth)
             end
         end
     },
@@ -74,8 +80,9 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "say",
         comment = "make me say something.",
         action  = function(n, u, chan, m)
-            local pwnd = isowner(n, u, chan)
-            if pwnd then
+            --local pwnd = isowner(n, u, chan)
+            --if pwnd then
+            if db.check_auth(n, u, "oper") then
                 local arg = getarg(m)
                 if not arg then
                     cpnet[n]:sendChat(chan. u.nick .. ": Say what?")
@@ -90,6 +97,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     end
                     c.net[n]:sendChat(t, say)
                 end
+            else
+                db.error(n, u, msg.notauth)
             end
         end
     },
@@ -97,8 +106,9 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
         name    = "version",
         comment = "ctcp version someone and hear the result in current channel.",
         action  = function(n, u, chan, m)
-            local pwnd = isowner(n, u, chan)
-            if pwnd then
+            --local pwnd = isowner(n, u, chan)
+            --if pwnd then
+            if db.check_auth(n, u, "oper") then
                 local arg = getarg(m)
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Version who?")
@@ -106,6 +116,8 @@ bot.cmds  = { -- Commands that the bot understands; nothing should need editing 
                     ctcp.version(n, arg)
                     vchan = chan
                 end
+            else
+                db.error(n, u, msg.notauth)
             end
         end
     },
