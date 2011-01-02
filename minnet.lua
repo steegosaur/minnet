@@ -86,7 +86,7 @@ for i = 1, #bot.nets do
     c.net[i]:hook("OnChat", "happy", function(u, chan, m)
         local n = i
         if ( chan == c.net[n].nick ) then chan = u.nick end
-        if string.match(m, "^[Bb]e%s+happy%p?%s-[Dd]on%'?t%s+worry") or string.match(m, "^[Dd]on%'?t%s+worry%p?%s-[Bb]e%s+happy") then
+        if m:match("^[Bb]e%s+happy%p?%s-[Dd]on%'?t%s+worry") or m:match("^[Dd]on%'?t%s+worry%p?%s-[Bb]e%s+happy") then
             ctcp.action(n, chan, "doesn't worry, is happy! :D")
         end
     end)
@@ -94,14 +94,14 @@ for i = 1, #bot.nets do
         local ismsg = false
         local n = i
         if ( chan == c.net[n].nick ) then ismsg = true; chan = u.nick end
-        if ( ismsg == true ) or string.match(m, bot.cmdstring) then wit(n, u, chan, m) end
+        if ( ismsg == true ) or m:match(bot.cmdstring) then wit(n, u, chan, m) end
     end)
     c.net[i]:hook("OnRaw", "versionparse", function(l)
         local n = i
         if string.match(l, "\001VERSION%s.*") then
-            local reply = string.match(l, "VERSION%s?(.*)%\001$")
+            local reply = l:match("VERSION%s?(.*)%\001$")
             if not reply then reply = "No understandable VERSION reply" end
-            c.net[n]:sendChat(vchan, reply)
+            c.net[n]:sendChat(vchan, "VERSION reply: " .. reply)
         end
     end)
 end
