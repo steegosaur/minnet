@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.2.2 - the unuseful lua irc bot
+-- minnet.lua 0.3.2 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -31,6 +31,7 @@ require(funcs)
 require(commands)
 require(dbfuncs)
 udb = sqlite3.open(db.file)
+bot.start = os.time()
 -- }}}
 
 -- {{{ Runtime arg check
@@ -68,7 +69,7 @@ end
 
 -- {{{ Run
 if ( run ~= false ) then
-log("Starting minnet..")
+log("Starting Minnet..")
 for i = 1, #bot.nets do
     db.check(i)
     log("Adding net " .. bot.nets[i].name)
@@ -81,6 +82,7 @@ for i = 1, #bot.nets do
     for j = 1, #bot.nets[i].c do
         log("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
         c.net[i]:join(bot.nets[i].c[j])
+        channel_add(i, bot.nets[i].c[j])
     end
     -- Register hooks
     c.net[i]:hook("OnChat", "happy", function(u, chan, m)
@@ -104,8 +106,10 @@ for i = 1, #bot.nets do
             c.net[n]:sendChat(vchan, "VERSION reply: " .. reply)
         end
     end)
+    print()
 end
 log("All networks connected. Awaiting commands.")
+print()
 while true do
     for n = 1, #c.net do
         c.net[n]:think()
