@@ -1,4 +1,4 @@
-TODO file for minnet, a lua-based irc bot
+TODO file for Minnet
 
 Roadmap:
     0.0.1
@@ -18,13 +18,19 @@ Roadmap:
         Uses a working SQL user database system
     0.3.5
         Has UDB functions like OTL in the case of an empty database
+    0.4.0
+        Has liberal recognition of commands (hooks that look for keywords)
+        Has multiple possible commands per action ("(what|how long) uptime")
 
 Todo atm:
-    Get SQL queries working
-    Design how the db functions should be used
     Redesign some of the commands - do we need passwords?
     Provide documentation of what the bloody commands actually do
-    Use the database to check for privileges
+    Implement prepared SQL statements for secure lookups
+    Add statistics commands (system details, resource usage, ...)
+    
+    Make her parse for words in the whole message rather than command keywords
+        -Use several hooks, but keep wit() for simple commands that should stay
 
 Wishlist:
     SSL
+    AI :D
