@@ -35,8 +35,11 @@ Minnet requires Lua 5.1, and the packages 'irc' (irc-lua), 'socket'
 (lua-socket), 'lsqlite3' (lua-sqlite3), and 'crypto' (lua-crypto). lsqlite3 
 requires a working sqlite library to be installed, crypto requires openssl. 
 
-Minnet should be cross-platform, given all of the requirements are sanely 
-built and have taken into account that not all computers are POSIX compliant. 
+Minnet as of currently has only been tested on GNU/Linux, but depending on how 
+other systems handle certain things, it could work with little or no changes 
+made to the programme. Implementing support for BSD and OS X should be a matter
+of adding a few lines of code (provided the libraries required by Minnet work 
+properly on the platforms).
 
 
 2.1 NOTE
@@ -55,9 +58,15 @@ run Minnet thence, or you can copy the required files (./minnet/*lua),
 including the directory they reside in, to the place where you have your 
 global lua libraries (typically /usr/share/lua/5.1/).
 
-For the required modules, please refer to the documentation of your OS. In 
-Arch Linux, all packages are available through the standard repositories, plus 
-the AUR (as of 2010-11-26).
+As of currently, Minnet looks for the libraries it needs (including its own 
+configuration and function files) through the standard Lua paths library paths 
+as queried by require(). This means that if you do not copy the files to some- 
+where where Lua looks for them, you will need to run Minnet from its own 
+directory (eg. `cd ~/bin/minnet/ && ./minnet --run').
+
+For installing the required modules, please refer to the documentation of your 
+OS. In Arch Linux, all packages are available through the standard repositories
+plus the AUR (as of 2010-11-26).
 
 
 4 Use
