@@ -50,7 +50,7 @@ the module. It should not be necessary, but I'm lazy, and apparently, so is
 the author of the module.
 
 
-3 Installation
+3 INSTALLATION
 
 Minnet is purely written in Lua, and as such does not need compiling. You can 
 either place all the files as they are in a folder (like ~/bin/minnet), and 
@@ -58,11 +58,19 @@ run Minnet thence, or you can copy the required files (./minnet/*lua),
 including the directory they reside in, to the place where you have your 
 global lua libraries (typically /usr/share/lua/5.1/).
 
+To get the code, you can clone the git repo, which is located at 
+<https://github.com/staeld/minnet.git>. This repo, even its master branch, is 
+under heavy development, and there are no guarantees that the code will at any 
+given time be stable or usable. Code in the master branch should generally not 
+contain too many fatal bugs or inconsistencies, but it might have some. If you 
+find anything and would like it fixed, feel free to notify me, preferably with 
+a patch on your hand.
+
 As of currently, Minnet looks for the libraries it needs (including its own 
 configuration and function files) through the standard Lua paths library paths 
 as queried by require(). This means that if you do not copy the files to some- 
 where where Lua looks for them, you will need to run Minnet from its own 
-directory (eg. `cd ~/bin/minnet/ && ./minnet --run').
+directory (eg. `cd ~/bin/minnet/ && ./minnet.lua --run').
 
 For installing the required modules, please refer to the documentation of your 
 OS. In Arch Linux, all packages are available through the standard repositories

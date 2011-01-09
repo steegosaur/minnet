@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.3.2 - the unuseful lua irc bot
+-- minnet.lua 0.3.5 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -74,10 +74,13 @@ for i = 1, #bot.nets do
     db.check(i)
     log("Adding net " .. bot.nets[i].name)
     c.net[i] = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
+    db.ucheck(i)
     log("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
     c.net[i]:connect(bot.nets[i].addr)
-    log("Setting mode +" .. bot.nets[i].modes)
-    c.net[i]:setMode({ target = bot.nick, add = bot.nets[i].modes })
+    if ( bot.nets[i].modes ~= "" ) then
+        log("Setting mode +" .. bot.nets[i].modes)
+        c.net[i]:setMode({ target = bot.nick, add = bot.nets[i].modes })
+    end
     log("Current nick on " .. bot.nets[i].name .. ": " .. c.net[i].nick)
     for j = 1, #bot.nets[i].c do
         log("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
