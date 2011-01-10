@@ -188,7 +188,7 @@ function db.set_data(n, u, mode, allowed_level, nick, level, host, passhash, ema
         if nick:match("%%")     then nick  = nick:gsub("%%", "") end
         if level:match("%%")    then level = level:gsub("%%", "")  end
         if host:match("%%")     then host  = host:gsub("%%", "")   end
-        if email and email:match("%%") then email = email:gsub("%%") end
+        if email and email:match("%%") then email = email:gsub("%%", "") end
         local list = db.sanitise(level, host, passhash, email, nick)
         level, host, passhash, email, nick = list[1], list[2], list[3], list[4], list[5]
         local cur_nick = nick
@@ -216,6 +216,7 @@ function db.set_data(n, u, mode, allowed_level, nick, level, host, passhash, ema
                 db.error(n, u, "Could not insert user info: " .. udb:errcode() .. " - " .. udb:errmsg())
             else
                 log("Modified fields nick, level, host, passhash, email (" .. nick .. ", " .. level .. ", " .. host .. ", " .. passhash .. ", " .. email .. ") for user " .. nick .. " on net " .. bot.nets[n].name, u)
+                c.net[n]:sendChat(u.nick, "Got it.")
             end
         end
     end

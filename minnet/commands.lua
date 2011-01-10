@@ -78,7 +78,7 @@ bot.cmds  = {
                 if not arg then
                     c.net[n]:sendChat(chan, u.nick .. ": Go to what channel?")
                 else
-                    local cn = arg:match("%s+(#[^%s%.,]+)")
+                    local cn = arg:match("(#[^%s%.,]+)")
                     arg = arg:gsub("^.*channel%s+", "")
                     arg = arg:gsub("#%S+%s+", "")
                     --arg = arg:gsub("^with%s+", "")
@@ -242,7 +242,7 @@ bot.cmds  = {
                     c.net[n]:sendChat(u.nick, msg.notauth)
                     return nil
                 end
-                db.set_data(n, u, cmd, allowed_level, nick, level, host, passhash, _, email)
+                db.set_data(n, u, cmd, allowed_level, nick, level, host, passhash, email)
             elseif ( cmd == "otk" ) then
                 local key = arg:match("(%d+)")
                 if key and ( key:len() == 14 ) then
