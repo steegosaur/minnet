@@ -16,24 +16,33 @@ function ctcp.version(n, arg)
 end
 
 function ctcp.read(n, l)
-    local origin = l:match("^:(%S+)")
-    if l:match("\001%s*VERSION") then
-        if l:match("\001VERSION%s*%\001") then
-            log("Received CTCP VERSION request from " .. origin .. " on " .. bot.nets[n].name, "trivial")
-            sendRaw(n, "PRIVMSG " .. origin .. " :\001VERSION Minnet:" .. version .. ":using Sockets, irc.lua and black magic\001")
+    if not l then
+        return nil
+    end
+    local origin = l:match("^:(%S+)!") or ""
+    l = l:gsub("^%:" .. origin .. "%S+%s*", "")
+    -- local command = l:match("^(%S+)")
+    if l:match("%\001%s*VERSION") then
+        if l:match("%\001VERSION%s*%\001") then
+            log("Received CTCP VERSION request from " .. origin .. " on " .. bot.nets[n].name, "info")
+            sendRaw(n, "NOTICE " .. origin .. " :\001VERSION Minnet " .. version .. "\001")
         else
             local reply = l:match("VERSION%s*(.-)%\001")
             log("Received CTCP VERSION reply from " .. origin .. " on " .. bot.nets[n].name, "debug")
             send(n, vchan, "VERSION reply from " .. origin .. ": " .. reply)
         end
-    elseif l:match("\001%s*SOURCE%\001") then
+    elseif l:match("%\001%s*SOURCE%s*%\001") then
         log("Received CTCP SOURCE request from " .. origin .. " on " .. bot.nets[n].name, "info")
-        sendRaw(n, "PRIVMSG " .. origin .. " :\001SOURCE git://github.com/staeld/minnet/::\001")
-    elseif l:match("\001%s*TIME%s*%\001") then
+        sendRaw(n, "NOTICE " .. origin .. " :\001SOURCE git://github.com/staeld/minnet/\001")
+    elseif l:match("%\001%s*TIME%s*%\001") then
         log("Received CTCP TIME request from " .. origin .. " on " .. bot.nets[n].name, "info")
-        sendRaw(n, "PRIVMSG " .. origin .. " :\001TIME :" .. os.date("%F %T %Z") .. "\001")
+        sendRaw(n, "NOTICE " .. origin .. " :\001TIME " .. os.date("%F %T %Z") .. "\001")
+
+    --[[ Only for wip debugging
     else
-        log("Received unsupported CTCP notice from " .. origin .. " on " .. bot.nets[n].name .. ", ignoring..", "trivial")
+        if not origin or ( origin == "" ) then origin = "UNKNOWN" end
+        log("Received unsupported CTCP from " .. origin .. " on " .. bot.nets[n].name .. ", ignoring..", "debug")
+    --]]
     end
 end
 

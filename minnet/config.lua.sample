@@ -1,44 +1,60 @@
 #!/usr/bin/env lua
 -- config.lua.sample - config file for minnet
--- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 -- This file is part of Minnet.  
 -- Minnet is released under the GPLv3 - see ../COPYING 
-c   = { net = {} } -- Connection list
-ctcp= {}
-vchan = ""
-msg = {
-    noargs = "invalid arguments specified. See --help",
-    notowner = "Hey, I'm not taking commands from you.",
-    bye = "Bye.",
-    leaving = "Minnet leaving..",
-    quitting = "Minnet quitting..",
-    joining = "flaps off to " -- Is an action, will be merged with channel name
-}
-owner = {
-    uname1 = "uname1", -- remember: nick!username@host
-    uname2 = "me2", -- because I am on two networks; set to empty or edit minnet.lua appropriately
-    host = "yourhost%.com$"
-}
+
 bot = {
     nick  = "Minnet",
     uname = "Minnet",
     rname = "Minnet",
-    cmdstring = "^%%",
     nets  = {
         { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" }, modes = "pxB" },
         { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" }, modes = "iB" }
+    },
+    levels = {
+        admin   = 1,
+        oper    = 2,
+        user    = 9
     },
     smiles = {
         { text = "sad",     face = ":(" },
         { text = "happy",   face = ":D" },
         { text = "angry",   face = ">:|"},
         { text = "annoyed", face = ":|" },
+        { text = "annoying",face = ">:)"},
         { text = "dumb",    face = ":B" },
         { text = "stupid",  face = ":B" },
         { text = "sexy",    face = ";)" },
         { text = "smart",   face = "8)" }
     }
 }
--- }}}
--- EOF
+msg = {
+    noargs = "invalid arguments specified. See --help",
+    notowner = "Hey, I'm not taking commands from you.",
+    notauth = "Hey, you're not authorised for this operation!",
+    bye = "Okay, bye!",
+    leaving = "Minnet leaving..",
+    quitting = "Minnet quitting..",
+    joining = "flaps off to " -- Is an action, will be merged with channel name
+}
 
+--[[ ! Do not edit below this level
+    unless you know what you're doing --]]
+
+levels = {
+    error   = 0,
+    warn    = 1,
+    info    = 3,    -- The default value; config must have this!
+    trivial = 5,
+    debug   = 9,
+}
+verbosity = levels["info"]  -- Set initial value
+
+db    = { file = "users.minnet.db" }
+c     = { net = {} } -- Connection list
+ctcp  = {}
+otk   = {}
+vchan = ""
+
+-- EOF

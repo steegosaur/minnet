@@ -8,6 +8,6 @@ u = {
 }
 
 c.net = {
-    { sendChat = function(self, u, m) print(m) end }
+    { sendChat = function(self, u, m) print("Send: " .. m) end }
 }
 n = 1 -- For when you forget using 1 instead of n.

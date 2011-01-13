@@ -19,22 +19,28 @@ Roadmap:
     0.3.5
         Has UDB functions like OTL in the case of an empty database
     0.4.0
+        Is secured through prepared sql statements
+        Has several (at least 2) logging levels
+        Abstracts irc message sending into a function wrapper (send())
+    0.5.0
+        Dynamically uses config-defined levels to define allowed_level
         Has liberal recognition of commands (hooks that look for keywords)
         Has multiple possible commands per action ("(what|how long) uptime")
     1.0.0
-        Is secured through prepared sql statements and ssl
+        Uses ssl
         Has documentation
         Has a purpose
         Has no known bugs
         Causes a part of Hell to freeze over
 
 Todo atm:
-    ! Implement prepared SQL statements for secure lookups
-
+    ! Make allowed_level checking dynamically choose 1 level lower
+        -Use same system as for verbosity (levels[l])?
+    
+    Add connection port variable to config
     Provide documentation of what the bloody commands actually do
     Add statistics commands (system details, resource usage, ...)
         -Add weeks to uptime stats
-    
     Make her parse for words in the whole message rather than command keywords
         -Use several hooks, but keep wit() for simple commands that should stay
         -Or just remodel wit() to accomodate this?

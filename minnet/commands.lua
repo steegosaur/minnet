@@ -14,9 +14,9 @@ bot.cmds  = {
                 local diff = os.difftime(os.time(), bot.start)
                 local days, hours, mins = timecal(diff)
                 if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
-                    c.net[n]:sendChat(chan, u.nick .. ": I just got online!")
+                    send(n, chan, u.nick .. ": I just got online!")
                 else
-                    c.net[n]:sendChat(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
+                    send(n, chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
                 end
             elseif ( ( arg:match("%s+up[%s%p]+") or arg:match("uptime") or arg:match("running") ) and ( arg:match("system") or arg:match("server") or arg:match("computer") ) ) then
                 -- Custom response in style with query
@@ -37,13 +37,13 @@ bot.cmds  = {
                 utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
                 local days, hours, mins = timecal(utime)
                 if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
-                    c.net[n]:sendChat(chan, u.nick .. ": It was just booted!")
+                    send(n, chan, u.nick .. ": It was just booted!")
                 else
-                    c.net[n]:sendChat(chan, u.nick .. ": The " .. sysword .. " went up " .. days .. hours .. mins .. " ago.")
+                    send(n, chan, u.nick .. ": The " .. sysword .. " went up " .. days .. hours .. mins .. " ago.")
                 end
             else
-                c.net[n]:sendChat(chan, "Err, what?")
-                log("Could not recognise enough keywords, ignoring command")
+                send(n, chan, "Err, what?")
+                log("Could not recognise enough keywords for 'how long', ignoring command", "trivial")
             end
         end
     },
@@ -54,7 +54,7 @@ bot.cmds  = {
             local arg = getarg(m)
             local smile
             if not arg then
-                c.net[n]:sendChat(chan, u.nick .. ": Be what?")
+                send(n, chan, u.nick .. ": Be what?")
             else
                 for i = 1, #bot.smiles do
                     if string.match(m, "%s+" .. bot.smiles[i].text) then
@@ -76,7 +76,7 @@ bot.cmds  = {
             if db.check_auth(n, u, "admin") then
                 local arg = m:match("^go%s+to%s+(#.*)")
                 if not arg then
-                    c.net[n]:sendChat(chan, u.nick .. ": Go to what channel?")
+                    send(n, chan, u.nick .. ": Go to what channel?")
                 else
                     local cn = arg:match("(#[^%s%.,]+)")
                     arg = arg:gsub("^.*channel%s+", "")
@@ -88,11 +88,8 @@ bot.cmds  = {
                     elseif arg:match("word%s+%S+") then
                         k = arg:match("word%s+(%S+)")
                     end
---[[                    arg = arg:gsub("^[paskey]+word%s+", "")
-                    arg = arg:gsub("^key%s+", "")
-                    local k = arg:match("(%S+)") --]]
                     if check_joined(n, cn) then
-                        c.net[n]:sendChat(chan, "I'm already there!")
+                        send(n, chan, "I'm already there!")
                     else
                         channel_add(n, cn)
                         ctcp.action(n, chan, msg.joining .. cn)
@@ -104,7 +101,8 @@ bot.cmds  = {
                     end
                 end
             else
-                db.error(n, u, msg.notauth)
+                log("Received unauthorised join command", u, "warn")
+                send(n, u.nick, msg.notauth)
             end
         end
     },
@@ -116,27 +114,28 @@ bot.cmds  = {
                 m = m:lower()
                 local arg = m:match("^get%s+out[!%.]?%s-(of%s+#?[^%s%.!,]+)")
                 if ( not arg ) or arg:match("^of%s+here") then
-                    c.net[n]:sendChat(chan, msg.bye)
+                    send(n, chan, msg.bye)
                     c.net[n]:part(chan)
-                    log("Leaving channel " .. chan .. " on " .. bot.nets[n].name)
+                    log("Leaving channel " .. chan .. " on " .. bot.nets[n].name, "info")
                     if not channel_remove(n, chan) then
-                        log("Error: Could not remove channel " .. chan .. " from table bot.nets[" .. n .. "].joined (" .. bot.nets[n].name .. ")")
+                        log("Error: Could not remove channel " .. chan .. " from table bot.nets[" .. n .. "].joined (" .. bot.nets[n].name .. ")", "warn")
                     end
                 elseif arg:match("^of%s+#%S") then
                     arg = arg:match("^of%s+(#[^%s%.!,]+)")
-                    c.net[n]:sendChat(chan, "Leaving " .. arg)
-                    c.net[n]:sendChat(arg, msg.bye)
+                    send(n, chan, "Leaving " .. arg)
+                    send(n, arg, msg.bye)
                     c.net[n]:part(arg)
-                    log("Leaving channel " .. arg .. " on " .. bot.nets[n].name)
+                    log("Leaving channel " .. arg .. " on " .. bot.nets[n].name, "info")
                     if not channel_remove(n, arg) then
-                        log("Error: Could not remove channel " .. arg .. " from table bot.nets[" .. n .. "].joined (" .. bot.nets[n].name .. ")")
+                        log("Error: Could not remove channel " .. arg .. " from table bot.nets[" .. n .. "].joined (" .. bot.nets[n].name .. ")", "warn")
                     end
                 else
-                    log("No understandable channel given to part from")
-                    c.net[n]:sendChat(chan, "Sorry, what channel did you say I should part from?")
+                    log("No understandable channel given to part from", "trivial")
+                    send(n, chan, "Sorry, what channel did you say I should part from?")
                 end
             else
-                db.error(n, u, msg.notauth)
+                log("Received unauthorised part command", u, "warn")
+                send(n, u.nick, msg.notauth)
             end
         end
     },
@@ -147,7 +146,7 @@ bot.cmds  = {
             if db.check_auth(n, u, "oper") then
                 local arg = getarg(m)
                 if not arg then
-                    cpnet[n]:sendChat(chan. u.nick .. ": Say what?")
+                    send(n, chan. u.nick .. ": Say what?")
                 else
                     local say = ""
                     local t = arg:match("^%s-(#%S+)%s+%S+")
@@ -161,11 +160,19 @@ bot.cmds  = {
                     local firstchar = say:sub(1, 1)
                     firstchar = firstchar:upper()
                     say = say:sub(2) --]]
-                    say = say:gsub(say:sub(1, 1), say:sub(1, 1):upper(), 1)
-                    c.net[n]:sendChat(t, say)
+                    local subit, subto
+                    if ( say:sub(1, 1) == "%" ) then
+                        subit, subto = "%%", "%%"
+                    else
+                        subit = say:sub(1, 1)
+                        subto = say:sub(1, 1):upper()
+                    end
+                    say = say:gsub(subit, subto, 1)
+                    send(n, t, say)
                 end
             else
-                db.error(n, u, msg.notauth)
+                log("Received unauthorised say command", u, "warn")
+                send(n, u.nick, msg.notauth)
             end
         end
     },
@@ -176,13 +183,14 @@ bot.cmds  = {
             if db.check_auth(n, u, "oper") then
                 local arg = getarg(m)
                 if not arg then
-                    c.net[n]:sendChat(chan, u.nick .. ": Version who?")
+                    send(n, chan, u.nick .. ": Version who?")
                 else
                     ctcp.version(n, arg)
                     vchan = chan
                 end
             else
-                db.error(n, u, msg.notauth)
+                log("Received unauthorised version command", u, "warn")
+                send(n, u.nick, msg.notauth)
             end
         end
     },
@@ -198,13 +206,21 @@ bot.cmds  = {
                 args = args:gsub("^as%s+", "")
             end
             args = args:gsub("^user%s+", "")
-            local name = args:match("^(%S+)%s+%S+") -- Capture the name
-            args = args:gsub("^" .. name .. "%s+", "")
+            local name = args:match("^([^%s%.,]+)") -- Capture the name
+            args = args:gsub("^" .. name:gsub("(%p)", "%%%1") .. "%s*", "")
             if args:match("^with%s+%S+") then
                 args = args:gsub("with%s+", "")
             end
-            args = args:gsub("password%s+", "")
-            local passwd = args:match("(%S+)")
+            args = args:gsub("^the%s+", "")
+            args = args:gsub("^password%s+", "")
+            local passwd = args:match("^(%S+)")
+            if not name then
+                send(n, u.nick, "You forgot telling me your name.")
+                return nil
+            elseif not passwd then
+                send(n, u.nick, "You forgot the password.")
+                return nil
+            end
             db.ident_user(n, u, name, passwd)
         end
     },
@@ -213,7 +229,7 @@ bot.cmds  = {
         comment = "database management. ('db help' for more info)",
         action  = function(n, u, chan, m)
             if chan:match("^#") then
-                c.net[n]:sendChat(chan, "I can't let you do database operations in a channel, sorry.")
+                send(n, chan, "I can't let you do database operations in a channel, sorry.")
                 return nil
             end
             local arg = getarg(m) or ""
@@ -222,15 +238,15 @@ bot.cmds  = {
             if ( cmd == "mod" ) or ( cmd == "add" ) then
                 -- Just bloody fix this inefficiency, please? FIXME: INEFFICIENT
                 -- (Possibly, try using catches and %n)
-                local nick      = arg:match("^(%S+)") or ""
-                nick    = nick:gsub("(%p)", "%%%1")
-                local level     = arg:match("^" .. nick .. "%s+(%S+)") or ""
-                level   = level:gsub("(%p)", "%%%1")
-                local host      = arg:match("^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
-                host    = host:gsub("([%p])", "%%%1")
-                local passhash  = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
-                local email     = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
-                email   = email:gsub("([%p])", "%%%1")
+                local nick  = arg:match("^(%S+)") or ""
+                nick  = nick:gsub("(%p)", "%%%1")
+                local level = arg:match("^" .. nick .. "%s+(%S+)") or ""
+                level = level:gsub("(%p)", "%%%1")
+                local host  = arg:match("^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
+                host  = host:gsub("([%p])", "%%%1")
+                local passhash = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
+                local email = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
+                email = email:gsub("([%p])", "%%%1")
                 local passhash  = passgen(passhash)
                 local allowed_level
                 if db.check_auth(n, u, "admin") then
@@ -238,8 +254,8 @@ bot.cmds  = {
                 elseif db.check_auth(n, u, "oper") then
                     allowed_level = "user"
                 else
-                    log("Attempted to add or modify user on " .. bot.nets[n].name, u)
-                    c.net[n]:sendChat(u.nick, msg.notauth)
+                    log("Attempted to add or modify user on " .. bot.nets[n].name, u, "warn")
+                    send(n, u.nick, msg.notauth)
                     return nil
                 end
                 db.set_data(n, u, cmd, allowed_level, nick, level, host, passhash, email)
@@ -254,7 +270,7 @@ bot.cmds  = {
                 arg = arg:gsub("^user%s+", "")
                 local name = arg:match("^(%S+)")
                 if not name then
-                    c.net[n]:sendChat(u.nick, "I'm sorry, I didn't seem to catch the username. Could you please say that again?")
+                    send(n, u.nick, "I'm sorry, I didn't seem to catch the username. Could you please say that again?")
                     return nil
                 end
                 db.rem_user(n, u, name)
@@ -268,17 +284,15 @@ bot.cmds  = {
             elseif ( cmd == "set" ) then
                 local mode, value = arg:match("(%S+)%s+(%S+)")
                 db.set_user(n, u, mode, value)
-            --[[ elseif ( cmd == "update" ) then
-                local nick, host = arg:match("(%S+)%s+(%S+)")
-                db.upd_user(n, u, u.nick, nick, host) --]]
+            elseif ( cmd == "flush" ) then
+                db.flush(n, u)
             elseif ( cmd == "help" ) then
-                c.net[n]:sendChat(chan, "Syntax: db (set|update|get|mod|add)")
-                c.net[n]:sendChat(chan, "Add and mod are admin-level, and need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. EMAIL is voluntary.")
-                c.net[n]:sendChat(chan, "Get needs NICK, and shows the registered information for that nick.")
-                c.net[n]:sendChat(chan, "Set needs MODE and VALUE. It allows you to set you email and password.")
-                c.net[n]:sendChat(chan, "Update needs NICK and HOST, and update your information automatically.")
+                send(n, chan, "Syntax: db (set|get|mod|add)")
+                send(n, chan, "Add and mod are admin-level, and need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. EMAIL is voluntary.")
+                send(n, chan, "Get needs NICK, and shows the registered information for that nick.")
+                send(n, chan, "Set needs MODE and VALUE. It allows you to set you email and password.")
             else
-                c.net[n]:sendChat(chan, "I don't know what you meant I should do with the database. Maybe you need some help?")
+                send(n, chan, "I don't know what you meant I should do with the database. Maybe you need some help?")
             end
         end
     },
@@ -290,14 +304,16 @@ bot.cmds  = {
                 if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then
                     db.error(n, u, "Could not close database: " .. udb:errcode() .. " - " .. udb:errmsg())
                 end
-                c.net[n]:sendChat(chan, msg.bye)
+                send(n, chan, msg.bye)
                 for i = 1, #c.net do
                     c.net[i]:disconnect(msg.quitting)
                 end
-                log("")
-                log(msg.quitting)
+                log("", "info")
+                log("Received quit command", u, "info")
+                log(msg.quitting, "info")
             else
-                db.error(n, u, msg.notauth)
+                log("Received unauthorised quit command", u, "warn")
+                send(n, u.nick, msg.notauth)
             end
         end
     }
@@ -319,17 +335,17 @@ table.insert(bot.cmds,{
             found = false
             for i = 1, #bot.cmds do
                 if ( bot.cmds[i].name == arg ) then
-                    c.net[n]:sendChat(chan, bot.cmds[i].name .. ": " .. bot.cmds[i].comment)
+                    send(n, chan, bot.cmds[i].name .. ": " .. bot.cmds[i].comment)
                     found = true
                     break
                 end
             end
             if ( found ~= true ) then
-                c.net[n]:sendChat(chan, "I don't know that command!")
+                send(n, chan, "I don't know that command!")
             end
         else
-            c.net[n]:sendChat(chan, name)
-            c.net[n]:sendChat(chan, "Commands: " .. bot.cmds.list .. ", help")
+            send(n, chan, name)
+            send(n, chan, "Commands: " .. bot.cmds.list .. ", help")
         end
     end
 })

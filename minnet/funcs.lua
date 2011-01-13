@@ -1,12 +1,22 @@
 #!/usr/bin/env lua
 -- funcs.lua - functions file for minnet
--- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 -- This file is part of Minnet. 
 -- Minnet is released under the GPLv3 - see ../COPYING 
-function log(m, u)
+
+function log(m, u, l) -- Log function, takes message, user table and loglevel
     if not m then
         err("No error message provided in call to log()")
-        return nil
+    end
+    if not l then       -- Because I'm too lazy to switch l and u in all calls
+        if ( type(u) == "string" ) then
+            l, u = u, nil
+        end
+    end
+    if not l then
+        err("No info level defined for parent function; FIXME")
+    elseif ( levels[l] > verbosity ) then -- Lower value == higher prio
+        return nil      -- We don't want this level; shut up
     end
     local mask
     if u then
@@ -14,21 +24,37 @@ function log(m, u)
     else
         mask = ""
     end
-    print(os.date("%F/%T : ") .. mask .. m)
+    l = l:upper() .. " "
+    print(os.date("%F/%T : ") .. l .. mask .. m)
 end
-function err(m, f)
-    if f then f = " " .. f else f = "" end
-    log("error: " .. m .. f)
-    os.exit(1)
+function err(m, file)
+    if file then file = " " .. file else file = "" end
+    log(m .. file, "error")
+    --os.exit(1)
+    error(m)
 end
+
+function send(n, chan, str)
+    -- Wrapper func: should be changed according to irc framework used
+    -- Allows for more dynamic rewriting of the well-used message sending.
+    if ( type(chan) == "table" ) then
+        if chan.nick then chan = chan.nick end
+    end
+    c.net[n]:sendChat(chan, str)
+end
+function sendRaw(n, str)
+    -- Wrapper function for passing a rawquote to the server
+    -- str must be preformatted; no assumptions about content are made
+    c.net[n]:send(str)
+end
+
 function otkgen(n)
-    --[[
-    local seed = tostring(math.random())
-    seed = seed:match("%.(%d+)")
-    seed = tonumber(seed)
-    math.randomseed(seed) --]]
-    otk[n] = tostring(math.random())
-    otk[n] = otk[n]:match("%.(%d+)")
+    otk[n] = tostring(math.random(100000000, 99999999999999))
+end
+function passgen(p)
+    if ( not p ) or ( p == "" ) then return nil end
+    local h = crypto.evp.digest("sha1", p)
+    return h
 end
 function getarg(m) -- Gets everything after *first* word
     local arg = m:match("^%S+%s+(%S+.*)")
@@ -51,7 +77,8 @@ function check_joined(n, c) -- Returns true if c is in n's joined list
 end
 function channel_add(n, c)
     table.insert(bot.nets[n].joined, c)
-    log("Added " .. c .. " to joined channel list on " .. bot.nets[n].name)
+    log("Added " .. c .. " to joined channel list on " .. bot.nets[n].name,
+        "info")
 end
 function channel_remove(n, c)
     local num, found
@@ -63,30 +90,35 @@ function channel_remove(n, c)
         end
     end
     if found then
-        log("Removing channel " .. c .. " from joined channel list on " .. bot.nets[n].name)
+        log("Removing channel " .. c .. " from joined channel list on " .. bot.nets[n].name,
+            "info")
         table.remove(bot.nets[n].joined, num)
         return true
     else
         return false
     end
 end
+
 function wit(n, u, chan, m) -- Main hook function for reacting to commands
-    if m:match(bot.cmdstring) then
-        m = m:gsub(bot.cmdstring, "")
+    local nickmatch = "^" .. c.net[n].nick .. "%s-[,:;%-$]+%s+"
+    if m:match(nickmatch) then
+        m = m:gsub(nickmatch, "")
     end
-    if ( m == "" ) or m:match("^%s+") then return nil end
+    if ( m == "" ) or m:match("^%s+") or m:match("%\001") then return nil end
+    m = m:gsub("%s+$", "")
     cmdFound = false
     for i = 1, #bot.cmds do
-        if m:lower():match("^" .. bot.cmds[i].name:lower() .. "%s-$") or m:lower():match("^" .. bot.cmds[i].name:lower() .. "%W+") then
-            log("Received command " .. m .. " on " .. bot.nets[n].name .. "/" .. chan, u)
-            if bot.cmds[i].rep      then c.net[n]:sendChat(chan, bot.cmds[i].rep) end
+        if m:lower():match("^" .. bot.cmds[i].name:lower() .. "$") or m:lower():match("^" .. bot.cmds[i].name:lower() .. "%W+") then
+            log("Received command " .. m .. " on " .. bot.nets[n].name .. "/" .. chan, u, "debug")
+            if bot.cmds[i].rep      then send(n, chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
             cmdFound = true
             break
         end
     end
     if ( cmdFound == false ) then
-        c.net[n]:sendChat(chan, "Excuse me?")
+        log("Could not understand command: " .. m, u, "debug")
+        send(n, chan, "Excuse me?")
     end
 end
 function timecal(t)
@@ -114,29 +146,19 @@ function timecal(t)
         hours = ""
     end
     if ( time.min > 0 ) then
-        if ( days ~= "" ) or ( hours ~= "" ) then pre = " and " else pre = "" end
+        if ( days ~= "" ) or ( hours ~= "" ) then
+            pre = " and "
+        else
+            pre = ""
+        end
         mins = pre .. time.min .. " minute" .. ending.minute
     else
         mins = ""
     end
     return days, hours, mins
 end
-function ctcp.action(n, chan, act)
-    act = act:gsub("%%", "%%%%")
-    c.net[n]:send("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
-    log("Sent ctcp.action " .. act .. " to " .. bot.nets[n].name .. "/" .. chan, u)
-end
-function ctcp.version(n, arg)
-    arg = arg:match("^(%S+)")
-    c.net[n]:send("PRIVMSG " .. arg .. " :\001VERSION\001")
-    log("Sent ctcp.version to " .. arg .. " on " .. bot.nets[n].name, u)
-end
-function passgen(p)
-    if ( not p ) or ( p == "" ) then return nil end
-    local h = crypto.evp.digest("sha1", p)
-    return h
-end
--- Create msg.help() function
+
+-- Create msg.help() function; read name, version and append to --help message
 name = ""
 io.input(arg[0])
 local matchstring = "^%-%-%s-(" .. arg[0]:match("%p*(%S+)") .. ".*)$"
@@ -145,6 +167,7 @@ while not name:match(matchstring) or not io.read() do
 end
 io.close()
 name = name:gsub("^%W*", "")
+version = name:match("^%S+%s+(%d%.%d%.%d%.?%d?)")
 msg.help = function()
     print(name)
     print("Usage: " .. arg[0] .. " [--help|--dry|--run]")

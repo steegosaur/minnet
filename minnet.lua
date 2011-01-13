@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.3.5 - the unuseful lua irc bot
+-- minnet.lua 0.4.0 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -22,12 +22,14 @@ conf    = "minnet.config"
 funcs   = "minnet.funcs"
 commands= "minnet.commands"
 dbfuncs = "minnet.db"
+ctcpf   = "minnet.ctcp"
 require("irc")
 require("socket")
 require("lsqlite3")
 require("crypto")
 require(conf)
 require(funcs)
+require(ctcpf)
 require(commands)
 require(dbfuncs)
 udb = sqlite3.open(db.file)
@@ -35,11 +37,15 @@ bot.start = os.time()
 -- }}}
 
 -- {{{ Runtime arg check
+-- Non-executing modes first:
 if ( arg[1] == "--help" ) then
     msg.help()
 elseif ( arg[1] == "--licence" ) then
-    local read = { list  = { "/bin/less", "/bin/more", "/usr/bin/nano", "/usr/bin/emacs", "/usr/bin/vim", "/usr/bin/vi", "/bin/cat" },
-        cmd = nil }
+    local read = {
+        list  = { "/bin/less", "/bin/more", "/usr/bin/nano", "/usr/bin/emacs",
+            "/usr/bin/vim", "/usr/bin/vi", "/bin/cat" },
+        cmd = nil
+    }
     for i = 1, #read.list do
         if io.open(read.list[i], "r") then
             read.cmd = read.list[i]
@@ -49,76 +55,102 @@ elseif ( arg[1] == "--licence" ) then
     if read.cmd then
         os.execute(read.cmd .. " COPYING")
     else
-        print("Could not find a program for viewing the licence file; please take a look at the GPL v3 yourself. It can be found in the file COPYING in the Minnet main directory.")
+        io.stdout:write("Could not find a program for viewing the licence ")
+        io.stdout:write("file; please take a look at the GPL v3 yourself. It ")
+        io.stdout:write("can be found in the file COPYING in the Minnet main directory.\n")
     end
     os.exit()
-elseif ( arg[1] == "--dry" ) then
+elseif not arg[1] then
+    err(msg.noargs)
+end
+
+-- Check args for runmode and eventual level
+for i = 1, #arg do
+    if arg[i]:match("^%-%-verbos") or arg[i]:match("^%-v$") then
+        if not arg[i+1] then
+            verbosity = levels["debug"] - 1     -- Make it whatever level is above debug
+        else
+            verbosity = levels[arg[i+1]]
+            if not verbosity then
+                verbosity = levels["info"]      -- Repair nonexisting level to default
+                err(msg.noargs)
+            end
+        end
+    elseif ( arg[i] == "--dry" ) then
+        runmode = "dry"
+    elseif ( arg[i] == "--run" ) then
+        runmode = "run"
+    end
+end
+
+-- Runmode evaluation
+if ( runmode == "dry" ) then
+    local verbosity = verbosity or levels["debug"]
     run = false
     if not ( arg[-1] == "-i" ) then
         print("Attempting to re-run self in interactive mode..")
         print("If this doesn't work, run lua manually, specifying -i for interactive execution.")
-        os.execute("lua -i " .. arg[0] .. " --dry")
+        print()
+        os.execute("lua -i " .. arg[0] .. " --dry -v " .. verbosity)
     else
         require("dryrun")
         print("Entering debug mode - dryrun variables for u and c.net set.")
     end
-elseif ( arg[1] ~= "--run" ) then
+elseif ( runmode ~= "run" ) then
     err(msg.noargs)
 end
 -- }}}
 
 -- {{{ Run
-if ( run ~= false ) then
-log("Starting Minnet..")
-for i = 1, #bot.nets do
-    db.check(i)
-    log("Adding net " .. bot.nets[i].name)
-    c.net[i] = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
-    db.ucheck(i)
-    log("Connecting to " .. bot.nets[i].name .. " server at " .. bot.nets[i].addr)
-    c.net[i]:connect(bot.nets[i].addr)
-    if ( bot.nets[i].modes ~= "" ) then
-        log("Setting mode +" .. bot.nets[i].modes)
-        c.net[i]:setMode({ target = bot.nick, add = bot.nets[i].modes })
+log("Starting Minnet..", "info")
+for n = 1, #bot.nets do
+    db.check(n)     -- Check that the net's table exists
+    log("Adding net " .. bot.nets[n].name, "info")
+    c.net[n] = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
+    db.ucheck(n)    -- Check that the net's table is not empty
+
+    log("Connecting to " .. bot.nets[n].name .. " server at " .. bot.nets[n].addr, "info")
+    c.net[n]:connect(bot.nets[n].addr)
+
+    -- Add usermodes for self if defined in config
+    if bot.nets[n].modes and ( bot.nets[n].modes ~= "" ) then
+        log("Setting mode +" .. bot.nets[n].modes, "info")
+        c.net[n]:setMode({ target = bot.nick, add = bot.nets[n].modes })
     end
-    log("Current nick on " .. bot.nets[i].name .. ": " .. c.net[i].nick)
-    for j = 1, #bot.nets[i].c do
-        log("Joining channel " .. bot.nets[i].c[j] .. " on " .. bot.nets[i].name)
-        c.net[i]:join(bot.nets[i].c[j])
-        channel_add(i, bot.nets[i].c[j])
+
+    log("Current nick on " .. bot.nets[n].name .. ": " .. c.net[n].nick, "info")
+
+    for j = 1, #bot.nets[n].c do
+        log("Joining channel " .. bot.nets[n].c[j] .. " on " .. bot.nets[n].name, "info")
+        c.net[n]:join(bot.nets[n].c[j])
+        channel_add(i, bot.nets[n].c[j])
     end
-    -- Register hooks
-    c.net[i]:hook("OnChat", "happy", function(u, chan, m)
-        local n = i
+
+    -- Register event hooks
+    c.net[n]:hook("OnChat", "happy", function(u, chan, m) -- Just for the lulz
         if ( chan == c.net[n].nick ) then chan = u.nick end
         if m:match("^[Bb]e%s+happy%p?%s-[Dd]on%'?t%s+worry") or m:match("^[Dd]on%'?t%s+worry%p?%s-[Bb]e%s+happy") then
             ctcp.action(n, chan, "doesn't worry, is happy! :D")
         end
     end)
-    c.net[i]:hook("OnChat", "wit", function(u, chan, m)
+    c.net[n]:hook("OnChat", "wit", function(u, chan, m)
         local ismsg = false
-        local n = i
         if ( chan == c.net[n].nick ) then ismsg = true; chan = u.nick end
-        if ( ismsg == true ) or m:match(bot.cmdstring) then wit(n, u, chan, m) end
-    end)
-    c.net[i]:hook("OnRaw", "versionparse", function(l)
-        local n = i
-        if string.match(l, "\001VERSION%s.*") then
-            local reply = l:match("VERSION%s?(.*)%\001$")
-            if not reply then reply = "No understandable VERSION reply" end
-            c.net[n]:sendChat(vchan, "VERSION reply: " .. reply)
+        if ( ismsg == true ) or m:match("^" .. c.net[n].nick .. "[,:]-%s+") then
+            wit(n, u, chan, m)
         end
     end)
-    print()
+    c.net[n]:hook("OnRaw", "ctcpRead", function(l) ctcp.read(n, l) end)
+    log("", "info") -- Separate nets with an empty log line
 end
-log("All networks connected. Awaiting commands.")
-print()
+log("All networks connected. Awaiting commands.", "info")
+log("", "info")
+
 while true do
     for n = 1, #c.net do
-        c.net[n]:think()
+        c.net[n]:think()    -- The black magic stuff
         socket.sleep(1)
     end
-end
 end
 -- }}}
 -- EOF
