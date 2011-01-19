@@ -30,8 +30,8 @@ end
 function err(m, file)
     if file then file = " " .. file else file = "" end
     log(m .. file, "error")
-    --os.exit(1)
     error(m)
+    os.exit(1)
 end
 
 function send(n, chan, str)

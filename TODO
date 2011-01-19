@@ -23,7 +23,14 @@ Roadmap:
         Has several (at least 2) logging levels
         Abstracts irc message sending into a function wrapper (send())
     0.5.0
+        Greets after being greeted
+        Only connects to one network per instance
+            -Has a -n|--net[work] switch using bot.nets[i].name to select
+            -Has a default net defined in the config
+    0.6.0
         Dynamically uses config-defined levels to define allowed_level
+        
+    0.9.0
         Has liberal recognition of commands (hooks that look for keywords)
         Has multiple possible commands per action ("(what|how long) uptime")
     1.0.0
@@ -37,6 +44,7 @@ Todo atm:
     ! Make allowed_level checking dynamically choose 1 level lower
         -Use same system as for verbosity (levels[l])?
     
+    Make 'be' replace 'you' with 'she' and 'your' with 'her'
     Add connection port variable to config
     Provide documentation of what the bloody commands actually do
     Add statistics commands (system details, resource usage, ...)

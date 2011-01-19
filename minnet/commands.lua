@@ -238,6 +238,7 @@ bot.cmds  = {
             if ( cmd == "mod" ) or ( cmd == "add" ) then
                 -- Just bloody fix this inefficiency, please? FIXME: INEFFICIENT
                 -- (Possibly, try using catches and %n)
+                arg   = arg:gsub("^user%s+", "")
                 local nick  = arg:match("^(%S+)") or ""
                 nick  = nick:gsub("(%p)", "%%%1")
                 local level = arg:match("^" .. nick .. "%s+(%S+)") or ""

@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- minnet.lua 0.4.0 - the unuseful lua irc bot
--- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
 --
@@ -18,20 +18,16 @@
 -- along with Minnet. If not, see <http://www.gnu.org/licenses/>.
 
 -- {{{ Init
-conf    = "minnet.config"
-funcs   = "minnet.funcs"
-commands= "minnet.commands"
-dbfuncs = "minnet.db"
-ctcpf   = "minnet.ctcp"
 require("irc")
 require("socket")
 require("lsqlite3")
 require("crypto")
-require(conf)
-require(funcs)
-require(ctcpf)
-require(commands)
-require(dbfuncs)
+require("minnet.config")
+require("minnet.funcs")
+require("minnet.ctcp")
+require("minnet.commands")
+require("minnet.db")
+require("minnet.hooks")
 udb = sqlite3.open(db.file)
 bot.start = os.time()
 -- }}}
@@ -91,7 +87,7 @@ if ( runmode == "dry" ) then
         print("Attempting to re-run self in interactive mode..")
         print("If this doesn't work, run lua manually, specifying -i for interactive execution.")
         print()
-        os.execute("lua -i " .. arg[0] .. " --dry -v " .. verbosity)
+        os.execute("lua -i " .. arg[0] .. " --dry -v debug")
     else
         require("dryrun")
         print("Entering debug mode - dryrun variables for u and c.net set.")
@@ -102,6 +98,7 @@ end
 -- }}}
 
 -- {{{ Run
+if ( runmode == "run" ) then
 log("Starting Minnet..", "info")
 for n = 1, #bot.nets do
     db.check(n)     -- Check that the net's table exists
@@ -127,6 +124,7 @@ for n = 1, #bot.nets do
     end
 
     -- Register event hooks
+    --[[
     c.net[n]:hook("OnChat", "happy", function(u, chan, m) -- Just for the lulz
         if ( chan == c.net[n].nick ) then chan = u.nick end
         if m:match("^[Bb]e%s+happy%p?%s-[Dd]on%'?t%s+worry") or m:match("^[Dd]on%'?t%s+worry%p?%s-[Bb]e%s+happy") then
@@ -141,16 +139,25 @@ for n = 1, #bot.nets do
         end
     end)
     c.net[n]:hook("OnRaw", "ctcpRead", function(l) ctcp.read(n, l) end)
+    --]]
+    
+    log("Registering hooks..", "info")
+    for i, j in ipairs(hooks) do
+        log("Assigning hook " .. j.name .. " for event " .. j.event, "debug")
+        c.net[n]:hook(j.event, j.name, j.action)
+    end
     log("", "info") -- Separate nets with an empty log line
 end
 log("All networks connected. Awaiting commands.", "info")
 log("", "info")
 
 while true do
-    for n = 1, #c.net do
+    for i = 1, #c.net do
+        n = i
         c.net[n]:think()    -- The black magic stuff
         socket.sleep(1)
     end
+end
 end
 -- }}}
 -- EOF
