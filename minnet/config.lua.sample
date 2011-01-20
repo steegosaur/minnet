@@ -9,8 +9,8 @@ bot = {
     uname = "Minnet",
     rname = "Minnet",
     nets  = {
-        { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" }, modes = "pxB" },
-        { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" }, modes = "iB" }
+        { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" }, modes = "pxB", default = true, joined = {} },
+        { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" }, modes = "iB", joined = {} }
     },
     levels = {
         admin   = 1,
@@ -52,7 +52,6 @@ levels = {
 verbosity = levels["info"]  -- Set initial value
 
 db    = { file = "users.minnet.db" }
-c     = { net = {} } -- Connection list
 ctcp  = {}
 otk   = {}
 vchan = ""
