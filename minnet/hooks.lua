@@ -3,24 +3,15 @@
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 -- This file is part of Minnet. 
 -- Minnet is released under the GPLv3 - see ../COPYING 
---[[
-function hook_assign(n, i)
-    local event = hooks[i].event
-    local name  = hooks[i].name
-    local action= hooks[i].action
-    log("Assigning hook " .. name .. " for event " .. event, "debug")
-    c.net[n]:hook(event, name, action)
-end --]]
-
 hooks = {
     {   -- Hook for replying to "don't worry, be happy" lines
         event   = "OnChat",
         name    = "happy",
         action  = function(u, chan, m)
-            if ( chan == c.net[n].nick ) then chan = u.nick end
+            if ( chan == conn.nick ) then chan = u.nick end
             m = m:lower()
             if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
-                ctcp.action(n, chan, "doesn't worry, is happy! :D")
+                ctcp.action(chan, "doesn't worry, is happy! :D")
             end
         end
     },
@@ -29,38 +20,46 @@ hooks = {
         name    = "wit",
         action  = function(u, chan, m)
             local ismsg = false
-            if ( chan == c.net[n].nick ) then ismsg = true; chan = u.nick end
-            if ( ismsg == true ) or m:match("^" .. u.nick .. "%s-[,:]%s+") then
-                wit(n, u, chan, m)
+            if ( chan == conn.nick ) then ismsg = true; chan = u.nick end
+            if ( ismsg == true ) or m:match("^" .. conn.nick .. "%s-[,:]%s+") then
+                wit(u, chan, m)
             end
         end
     },
     {   -- Hook for ctcp parsing
         event   = "OnRaw",
         name    = "ctcpRead",
-        action  = function(l) ctcp.read(n, l) end
+        action  = function(l) ctcp.read(l) end
     },
-    {
+    {   -- Be a lil' polite, will ya?
         event   = "OnChat",
         name    = "greet",
         action  = function(u, chan, m)
-            if ( chan == c.net[n].nick ) then return nil end
+            if ( chan == conn.nick ) then return nil end
             m = m:lower()
-            if not m:match(c.net[n].nick:lower()) then return nil end
+            if not m:match(conn.nick:lower()) then return nil end
             local g = { "[hj']?ello", "o?hi", "o?hey", "[h']?allo", "hei",
                 "sal[uton]-", "yo", "g[od%s']+day", "mor[rnigow]+", "o?hai",
                 "eve[ning]-", "afternoon", "g[od%s]+[ou]n[e']?",
                 "greetin[g']s",
             }
+            local r = {
+                hi  = { "Hi", "Hello", "Hey" },
+                sal = { "Sal", "Saluton" },
+                hei = { "Hei", "Hallo" }
+            }
             for i = 1, #g do
-                if m:match("^%S-%s-%S-%s-" .. g[i] .. "[%s%p]+" .. c.net[n].nick:lower()) then
+                if m:match("^%S-%s-%S-%s-" .. g[i] .. "[%s%p]+" .. conn.nick:lower()) then
                     local word
                     if i == 1 or i == 2 or i == 3 or i == 7 or i == 10 or i == 14 then
-                        word = "'Ello"
+                        local num = math.random(1, #r.hi)
+                        word = r.hi[num]
                     elseif i == 4 or i == 5 then
-                        word = "Hallo"
+                        local num = math.random(1, #r.hei)
+                        word = r.hei[num]
                     elseif i == 6 then
-                        word = "Saluton"
+                        local num = math.random(1, #r.sal)
+                        word = r.sal[num]
                     elseif i == 8 or i == 9 or i == 11 or i == 12 or i == 13 then
                         local hour = tonumber(os.date("%H"))
                         if ( hour < 12 ) and ( hour >= 4 ) then
@@ -78,8 +77,8 @@ hooks = {
                     else
                         word = "'Ello"
                     end
-                    send(n, chan, word .. ", " .. u.nick .. ".")
-                    log("Greeted " .. u.nick .. " in channel " .. chan .. " on net " .. bot.nets[n].name, "debug")
+                    send(chan, word .. ", " .. u.nick .. ".")
+                    log("Greeted " .. u.nick .. " in channel " .. chan .. " on net " .. net.name, "debug")
                 end
             end
         end

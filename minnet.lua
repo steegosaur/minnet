@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.4.0 - the unuseful lua irc bot
+-- minnet.lua 0.4.2 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -34,9 +34,7 @@ bot.start = os.time()
 
 -- {{{ Runtime arg check
 -- Non-executing modes first:
-if ( arg[1] == "--help" ) then
-    msg.help()
-elseif ( arg[1] == "--licence" ) then
+if ( arg[1] == "--licence" ) then
     local read = {
         list  = { "/bin/less", "/bin/more", "/usr/bin/nano", "/usr/bin/emacs",
             "/usr/bin/vim", "/usr/bin/vi", "/bin/cat" },
@@ -56,13 +54,13 @@ elseif ( arg[1] == "--licence" ) then
         io.stdout:write("can be found in the file COPYING in the Minnet main directory.\n")
     end
     os.exit()
-elseif not arg[1] then
-    err(msg.noargs)
+elseif not arg[1] or ( arg[1] == "--help" ) then
+    msg.help()
 end
 
 -- Check args for runmode and eventual level
-for i = 1, #arg do
-    if arg[i]:match("^%-%-verbos") or arg[i]:match("^%-v$") then
+for i, val in ipairs(arg) do
+    if val:match("^%-%-verbos") or ( val == "-v" ) then
         if not arg[i+1] then
             verbosity = levels["debug"] - 1     -- Make it whatever level is above debug
         else
@@ -72,16 +70,29 @@ for i = 1, #arg do
                 err(msg.noargs)
             end
         end
-    elseif ( arg[i] == "--dry" ) then
+    elseif val:match("^%-%-net[work]-$") or ( val == "-n" ) then
+        local nname = arg[i+1] or nil
+        if ( not nname ) or nname:match("%-") then
+            err(msg.noargs)
+        end
+        for j, net in ipairs(bot.nets) do
+            if ( net.name == nname ) then
+                netnr = j
+                break
+            end
+        end
+        if not netnr then
+            err("Unknown network '" .. nname .. "'")
+        end
+    elseif ( val == "--dry" ) then
         runmode = "dry"
-    elseif ( arg[i] == "--run" ) then
+    elseif ( val == "--run" ) then
         runmode = "run"
     end
 end
 
 -- Runmode evaluation
 if ( runmode == "dry" ) then
-    local verbosity = verbosity or levels["debug"]
     run = false
     if not ( arg[-1] == "-i" ) then
         print("Attempting to re-run self in interactive mode..")
@@ -90,7 +101,7 @@ if ( runmode == "dry" ) then
         os.execute("lua -i " .. arg[0] .. " --dry -v debug")
     else
         require("dryrun")
-        print("Entering debug mode - dryrun variables for u and c.net set.")
+        print("Entering debug mode - dryrun variables for u and conn set.")
     end
 elseif ( runmode ~= "run" ) then
     err(msg.noargs)
@@ -99,65 +110,56 @@ end
 
 -- {{{ Run
 if ( runmode == "run" ) then
-log("Starting Minnet..", "info")
-for n = 1, #bot.nets do
+    log("Starting Minnet..", "info")
+    log("", "info")
+
+    if not netnr then -- No network defined by switch; look for a default net
+        for i, net in ipairs(bot.nets) do
+            if net.default and ( net.default == true ) then
+                netnr = i
+            end
+        end
+    end
+    if not netnr then err("No default net specified in config! Go edit it, foo'!") end
+    n   = netnr
+    net = bot.nets[n] -- Convenience, since there is only one network to be connected
+
     db.check(n)     -- Check that the net's table exists
-    log("Adding net " .. bot.nets[n].name, "info")
-    c.net[n] = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
+    conn = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
     db.ucheck(n)    -- Check that the net's table is not empty
 
-    log("Connecting to " .. bot.nets[n].name .. " server at " .. bot.nets[n].addr, "info")
-    c.net[n]:connect(bot.nets[n].addr)
+    log("Connecting to " .. net.name .. " server at " .. net.addr, "info")
+    conn:connect(net.addr)
 
     -- Add usermodes for self if defined in config
-    if bot.nets[n].modes and ( bot.nets[n].modes ~= "" ) then
-        log("Setting mode +" .. bot.nets[n].modes, "info")
-        c.net[n]:setMode({ target = bot.nick, add = bot.nets[n].modes })
+    if net.modes and ( net.modes ~= "" ) then
+        log("Setting mode +" .. net.modes .. " on self", "info")
+        conn:setMode({ target = conn.nick, add = net.modes })
     end
 
-    log("Current nick on " .. bot.nets[n].name .. ": " .. c.net[n].nick, "info")
+    log("Current nick on " .. net.name .. ": " .. conn.nick, "info")
 
-    for j = 1, #bot.nets[n].c do
-        log("Joining channel " .. bot.nets[n].c[j] .. " on " .. bot.nets[n].name, "info")
-        c.net[n]:join(bot.nets[n].c[j])
-        channel_add(i, bot.nets[n].c[j])
+    for j = 1, #net.c do
+        log("Joining channel " .. net.c[j] .. " on " .. net.name, "info")
+        conn:join(net.c[j])
+        channel_add(i, net.c[j])
     end
 
     -- Register event hooks
-    --[[
-    c.net[n]:hook("OnChat", "happy", function(u, chan, m) -- Just for the lulz
-        if ( chan == c.net[n].nick ) then chan = u.nick end
-        if m:match("^[Bb]e%s+happy%p?%s-[Dd]on%'?t%s+worry") or m:match("^[Dd]on%'?t%s+worry%p?%s-[Bb]e%s+happy") then
-            ctcp.action(n, chan, "doesn't worry, is happy! :D")
-        end
-    end)
-    c.net[n]:hook("OnChat", "wit", function(u, chan, m)
-        local ismsg = false
-        if ( chan == c.net[n].nick ) then ismsg = true; chan = u.nick end
-        if ( ismsg == true ) or m:match("^" .. c.net[n].nick .. "[,:]-%s+") then
-            wit(n, u, chan, m)
-        end
-    end)
-    c.net[n]:hook("OnRaw", "ctcpRead", function(l) ctcp.read(n, l) end)
-    --]]
-    
-    log("Registering hooks..", "info")
+    log("Registering hooks..", "debug")
     for i, j in ipairs(hooks) do
         log("Assigning hook " .. j.name .. " for event " .. j.event, "debug")
-        c.net[n]:hook(j.event, j.name, j.action)
+        conn:hook(j.event, j.name, j.action)
     end
     log("", "info") -- Separate nets with an empty log line
-end
-log("All networks connected. Awaiting commands.", "info")
-log("", "info")
+    log("Successfully connected to network, awaiting commands.", "info")
+    log("", "info")
 
-while true do
-    for i = 1, #c.net do
-        n = i
-        c.net[n]:think()    -- The black magic stuff
+    while true do
+        conn:think()    -- The black magic stuff
         socket.sleep(1)
     end
-end
-end
+
+end -- End of '--run' block
 -- }}}
 -- EOF

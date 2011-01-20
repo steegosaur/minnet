@@ -34,18 +34,18 @@ function err(m, file)
     os.exit(1)
 end
 
-function send(n, chan, str)
+function send(chan, str)
     -- Wrapper func: should be changed according to irc framework used
     -- Allows for more dynamic rewriting of the well-used message sending.
     if ( type(chan) == "table" ) then
         if chan.nick then chan = chan.nick end
     end
-    c.net[n]:sendChat(chan, str)
+    conn:sendChat(chan, str)
 end
-function sendRaw(n, str)
+function sendRaw(str)
     -- Wrapper function for passing a rawquote to the server
     -- str must be preformatted; no assumptions about content are made
-    c.net[n]:send(str)
+    conn:send(str)
 end
 
 function otkgen(n)
@@ -61,10 +61,10 @@ function getarg(m) -- Gets everything after *first* word
     return arg
 end
 
-function check_joined(n, c) -- Returns true if c is in n's joined list
+function check_joined(c) -- Returns true if c is in n's joined list
     local found
-    for i = 1, #bot.nets[n].joined do
-        if ( bot.nets[n].joined[i] == c ) then
+    for i = 1, #net.joined do
+        if ( net.joined[i] == c ) then
             found = true
             break
         end
@@ -75,32 +75,32 @@ function check_joined(n, c) -- Returns true if c is in n's joined list
         return false
     end
 end
-function channel_add(n, c)
-    table.insert(bot.nets[n].joined, c)
-    log("Added " .. c .. " to joined channel list on " .. bot.nets[n].name,
+function channel_add(c)
+    table.insert(net.joined, c)
+    log("Added " .. c .. " to joined channel list on " .. net.name,
         "info")
 end
-function channel_remove(n, c)
+function channel_remove(c)
     local num, found
-    for i = 1, #bot.nets[n].joined do
-        if ( bot.nets[n].joined[i] == c ) then
+    for i = 1, #net.joined do
+        if ( net.joined[i] == c ) then
             found = true
             num = i
             break
         end
     end
     if found then
-        log("Removing channel " .. c .. " from joined channel list on " .. bot.nets[n].name,
+        log("Removing channel " .. c .. " from joined channel list on " .. net.name,
             "info")
-        table.remove(bot.nets[n].joined, num)
+        table.remove(net.joined, num)
         return true
     else
         return false
     end
 end
 
-function wit(n, u, chan, m) -- Main hook function for reacting to commands
-    local nickmatch = "^" .. c.net[n].nick .. "%s-[,:;%-$]+%s+"
+function wit(u, chan, m) -- Main hook function for reacting to commands
+    local nickmatch = "^" .. conn.nick .. "%s-[,:;%-$]+%s+"
     if m:match(nickmatch) then
         m = m:gsub(nickmatch, "")
     end
@@ -109,16 +109,16 @@ function wit(n, u, chan, m) -- Main hook function for reacting to commands
     cmdFound = false
     for i = 1, #bot.cmds do
         if m:lower():match("^" .. bot.cmds[i].name:lower() .. "$") or m:lower():match("^" .. bot.cmds[i].name:lower() .. "%W+") then
-            log("Received command " .. m .. " on " .. bot.nets[n].name .. "/" .. chan, u, "debug")
-            if bot.cmds[i].rep      then send(n, chan, bot.cmds[i].rep) end
-            if bot.cmds[i].action   then bot.cmds[i].action(n, u, chan, m) end
+            log("Received command " .. m .. " on " .. net.name .. "/" .. chan, u, "debug")
+            if bot.cmds[i].rep      then send(chan, bot.cmds[i].rep) end
+            if bot.cmds[i].action   then bot.cmds[i].action(u, chan, m) end
             cmdFound = true
             break
         end
     end
     if ( cmdFound == false ) then
         log("Could not understand command: " .. m, u, "debug")
-        send(n, chan, "Excuse me?")
+        send(chan, "Excuse me?")
     end
 end
 function timecal(t)
@@ -170,7 +170,11 @@ name = name:gsub("^%W*", "")
 version = name:match("^%S+%s+(%d%.%d%.%d%.?%d?)")
 msg.help = function()
     print(name)
-    print("Usage: " .. arg[0] .. " [--help|--dry|--run]")
+    print("Usage: " .. arg[0] .. " <--help|--dry|--run> [OPTIONS]")
+    print()
+    print("OPTIONS is one or more of the following:")
+    print("    -v, --verbose [LEVEL]    set to output debug info, or set output to specified level")
+    print("    -n, --network NET        connect to network NET, as identified by name")
     os.exit()
 end
 -- EOF

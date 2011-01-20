@@ -4,10 +4,8 @@
 u = {
     nick = "Lakorv",
     username = "Staeld",
-    host = "purewhite.id.au"
+    host = "host.com"
 }
 
-c.net = {
-    { sendChat = function(self, u, m) print("Send: " .. m) end }
-}
+conn = { sendChat = function(self, u, m) print("Send: " .. m) end }
 n = 1 -- For when you forget using 1 instead of n.
