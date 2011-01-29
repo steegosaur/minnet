@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
 -- commands.lua - config file for minnet
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
--- This file is part of Minnet.  
--- Minnet is released under the GPLv3 - see ../COPYING 
+-- This file is part of Minnet.
+-- Minnet is released under the GPLv3 - see ../COPYING
 bot.cmds  = {
     {
         name    = "how long",
@@ -10,7 +10,9 @@ bot.cmds  = {
         action  = function(u, chan, m)
             m = m:lower()
             local arg = m:match("^how%s+long%s+(.*)$")
-            if ( ( arg:match("online") or arg:match("%s+up[%s%p]+") or arg:match("uptime") or arg:match("connected") or arg:match("running") ) and arg:match("you") and not ( arg:match("system") or arg:match("computer") or arg:match("server") ) ) then
+            if ( ( arg:match("online") or arg:match("%s+up[%s%p]+") or
+              arg:match("uptime") or arg:match("connected") or arg:match("running") ) and
+              arg:match("you") and not ( arg:match("system") or arg:match("computer") or arg:match("server") ) ) then
                 local diff = os.difftime(os.time(), bot.start)
                 local days, hours, mins = timecal(diff)
                 if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
@@ -39,7 +41,8 @@ bot.cmds  = {
                 if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
                     send(chan, u.nick .. ": It was just booted!")
                 else
-                    send(chan, u.nick .. ": The " .. sysword .. " went up " .. days .. hours .. mins .. " ago.")
+                    send(chan, u.nick .. ": The " .. sysword .. " went up " ..
+                        days .. hours .. mins .. " ago.")
                 end
             else
                 send(chan, "Err, what?")
@@ -51,21 +54,26 @@ bot.cmds  = {
         name    = "be",
         comment = "make me be what you think I should be.",
         action  = function(u, chan, m)
-            local arg = getarg(m)
-            local smile
-            if not arg then
-                send(chan, u.nick .. ": Be what?")
-            else
-                for i = 1, #bot.smiles do
-                    if string.match(m, "%s+" .. bot.smiles[i].text) then
-                        smile = " " .. bot.smiles[i].face
-                        break
+            if db.check_auth(u, "user") then
+                local arg = getarg(m)
+                local smile
+                if not arg then
+                    send(chan, u.nick .. ": Be what?")
+                else
+                    for i = 1, #bot.smiles do
+                        if string.match(m, "%s+" .. bot.smiles[i].text) then
+                            smile = " " .. bot.smiles[i].face
+                            break
+                        end
                     end
+                    if not smile then smile = "" end
+                    local arg1 = arg:match("^%s-(#%S+)%s+%S+")
+                    if arg1 then chan = arg1; arg = arg:match("^%s-%S+%s+(.*)$") end
+                    ctcp.action(chan, "is " .. arg .. smile)
                 end
-                if not smile then smile = "" end
-                local arg1 = arg:match("^%s-(#%S+)%s+%S+")
-                if arg1 then chan = arg1; arg = arg:match("^%s-%S+%s+(.*)$") end
-                ctcp.action(chan, "is " .. arg .. smile)
+            else
+                log("Received unauthorised be command", u, "trivial")
+                send(u.nick, msg.notauth)
             end
         end
     },
@@ -207,8 +215,10 @@ bot.cmds  = {
                 if not arg then
                     send(chan, u.nick .. ": Version who?")
                 else
+                    if not check_user(arg) then return nil end
                     ctcp.version(arg)
                     vchan = chan
+                    table.insert(ctcp.active.version, arg)
                 end
             else
                 log("Received unauthorised version command", u, "warn")
@@ -271,20 +281,10 @@ bot.cmds  = {
                 local email = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
                 email = email:gsub("([%p])", "%%%1")
                 local passhash  = passgen(passhash)
-                local allowed_level
-                if db.check_auth(u, "admin") then
-                    allowed_level = "admin"
-                elseif db.check_auth(u, "oper") then
-                    allowed_level = "user"
-                else
-                    log("Attempted to add or modify user on " .. net.name, u, "warn")
-                    send(u.nick, msg.notauth)
-                    return nil
-                end
-                db.set_data(u, cmd, allowed_level, nick, level, host, passhash, email)
+                db.set_data(u, cmd, nick, level, host, passhash, email)
             elseif ( cmd == "otk" ) then
                 local key = arg:match("(%d+)")
-                if key and ( key:len() == 14 ) then
+                if key then
                     db.check_otk(u, key)
                 end
             elseif ( cmd == "remove" ) or ( cmd == "delete" ) then

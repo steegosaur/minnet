@@ -1,16 +1,33 @@
 #!/usr/bin/env lua
 -- config.lua.sample - config file for minnet
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
--- This file is part of Minnet.  
--- Minnet is released under the GPLv3 - see ../COPYING 
+-- This file is part of Minnet.
+-- Minnet is released under the GPLv3 - see ../COPYING
 
 bot = {
     nick  = "Minnet",
     uname = "Minnet",
     rname = "Minnet",
     nets  = {
-        { name = "dummynet", addr = "irc.dummynet.org", c = { "#channelA", "#Chan2" }, modes = "pxB", default = true, joined = {} },
-        { name = "net2", addr = "irc.net2.org", c = { "#talk", "#somechan" }, modes = "iB", joined = {} }
+        {
+            name    = "dummynet",
+            addr    = "irc.dummynet.org",
+            port    = "6667", -- Optional; defaults to 6667
+            secure  = false; -- Optional; defaults to false [enables ssl]
+            c       = { "#channelA", "#Chan2" },
+            modes   = "pxB",
+            default = true,
+            joined  = {}, -- Do not edit; FIXME: Make dynamically defined at runtime instead
+        },
+        {
+            name    = "net2",
+            addr    = "irc.net2.org",
+            port    = "6697", -- SSL
+            secure  = true,
+            c       = { "#talk", "#somechan" },
+            modes   = "iB",
+            joined  = {},
+        },
     },
     levels = {
         admin   = 1,
@@ -52,7 +69,13 @@ levels = {
 verbosity = levels["info"]  -- Set initial value
 
 db    = { file = "users.minnet.db" }
-ctcp  = {}
+ctcp  = {
+    active = {
+        version = {},
+        source  = {},
+        time    = {},
+    }
+}
 otk   = {}
 vchan = ""
 

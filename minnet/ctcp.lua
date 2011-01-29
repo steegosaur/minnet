@@ -15,6 +15,31 @@ function ctcp.version(arg)
     log("Sent CTCP VERSION request to " .. arg .. " on " .. net.name, u, "info")
 end
 
+function ctcp.check_active(o, t)
+    if not ( o or t ) then return nil end
+    local wQ, num
+    for i, name in ipairs(ctcp.active[t]) do
+        if ( o:lower() == name:lower() ) then
+            wQ = true
+            num = i
+            break
+        end
+    end
+    if wQ then
+        return true, num
+    else
+        return nil
+    end
+end
+function ctcp.rem_active(o, t)
+    local _, num = ctcp.check_active(o, t)
+    if num then
+        table.remove(ctcp.active[t], num)
+    else
+        err("Out of cheese in ctcp.rem_active()!", "error")
+    end
+end
+
 function ctcp.read(l)
     if not l then
         return nil
@@ -26,9 +51,11 @@ function ctcp.read(l)
             log("Received CTCP VERSION request from " .. origin .. " on " .. net.name, "info")
             sendRaw("NOTICE " .. origin .. " :\001VERSION Minnet " .. version .. "\001")
         else
+            if not ctcp.check_active(origin, "version") then return nil end
             local reply = l:match("VERSION%s*(.-)%\001")
             log("Received CTCP VERSION reply from " .. origin .. " on " .. net.name, "debug")
             send(vchan, "VERSION reply from " .. origin .. ": " .. reply)
+            ctcp.rem_active(origin, "version")
         end
     elseif l:match("%\001%s*SOURCE%s*%\001") then
         log("Received CTCP SOURCE request from " .. origin .. " on " .. net.name, "info")

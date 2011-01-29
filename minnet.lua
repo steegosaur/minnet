@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.4.5 - the unuseful lua irc bot
+-- minnet.lua 0.4.8 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -30,6 +30,7 @@ require("minnet.db")
 require("minnet.hooks")
 udb = sqlite3.open(db.file)
 bot.start = os.time()
+math.randomseed(os.time())
 -- }}}
 
 -- {{{ Runtime arg check
@@ -124,12 +125,15 @@ if ( runmode == "run" ) then
     n   = netnr
     net = bot.nets[n] -- Convenience, since there is only one network to be connected
 
-    db.check(n)     -- Check that the net's table exists
+    db.check()     -- Check that the net's table exists
     conn = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
-    db.ucheck(n)    -- Check that the net's table is not empty
+    db.ucheck()    -- Check that the net's table is not empty
 
+    conn.port   = net.port or "6667"
+    conn.secure = net.secure or false
+    if net.secure then require("ssl") end
     log("Connecting to " .. net.name .. " server at " .. net.addr, "info")
-    conn:connect(net.addr)
+    conn:connect({ host = net.addr, port = net.port, secure = net.secure})
 
     -- Add usermodes for self if defined in config
     if net.modes and ( net.modes ~= "" ) then
@@ -142,7 +146,7 @@ if ( runmode == "run" ) then
     for j = 1, #net.c do
         log("Joining channel " .. net.c[j] .. " on " .. net.name, "info")
         conn:join(net.c[j])
-        channel_add(i, net.c[j])
+        channel_add(net.c[j])
     end
 
     -- Register event hooks
@@ -157,7 +161,7 @@ if ( runmode == "run" ) then
 
     while true do
         conn:think()    -- The black magic stuff
-        socket.sleep(1)
+        socket.sleep(0.5)
     end
 
 end -- End of '--run' block

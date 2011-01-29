@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
 -- hooks.lua - hook register for Minnet
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
--- This file is part of Minnet. 
--- Minnet is released under the GPLv3 - see ../COPYING 
+-- This file is part of Minnet.
+-- Minnet is released under the GPLv3 - see ../COPYING
 hooks = {
     {   -- Hook for replying to "don't worry, be happy" lines
         event   = "OnChat",
@@ -15,13 +15,21 @@ hooks = {
             end
         end
     },
+    --[[
+    {
+        event   = "OnChat",
+        name    = "debug",
+        action  = function(u, chan, m)
+            print(u.nick, chan, m)
+        end
+    }, --]]
     {   -- Main hook for command reading
         event   = "OnChat",
         name    = "wit",
         action  = function(u, chan, m)
             local ismsg = false
-            if ( chan == conn.nick ) then ismsg = true; chan = u.nick end
-            if ( ismsg == true ) or m:match("^" .. conn.nick .. "%s-[,:]%s+") then
+            if ( chan:lower() == conn.nick:lower() ) then ismsg = true; chan = u.nick end
+            if ( ismsg == true ) or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+") then
                 wit(u, chan, m)
             end
         end
@@ -41,12 +49,13 @@ hooks = {
             local g = { "[hj']?ello", "o?hi", "o?hey", "[h']?allo", "hei",
                 "sal[uton]-", "yo", "g[od%s']+day", "mor[rnigow]+", "o?hai",
                 "eve[ning]-", "afternoon", "g[od%s]+[ou]n[e']?",
-                "greetin[g']s",
+                "greetin[g']s", "g[od%s]+nig?h?te?"
             }
             local r = {
                 hi  = { "Hi", "Hello", "Hey" },
                 sal = { "Sal", "Saluton" },
-                hei = { "Hei", "Hallo" }
+                hei = { "Hei", "Hallo" },
+                nite= { "G'nite", "Good night", "Night" }
             }
             for i = 1, #g do
                 if m:match("^%S-%s-%S-%s-" .. g[i] .. "[%s%p]+" .. conn.nick:lower()) then
@@ -60,6 +69,9 @@ hooks = {
                     elseif i == 6 then
                         local num = math.random(1, #r.sal)
                         word = r.sal[num]
+                    elseif i == 15 then
+                        local num = math.random(1, #r.nite)
+                        word = r.nite[num]
                     elseif i == 8 or i == 9 or i == 11 or i == 12 or i == 13 then
                         local hour = tonumber(os.date("%H"))
                         if ( hour < 12 ) and ( hour >= 4 ) then

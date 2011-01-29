@@ -1,8 +1,8 @@
 #!/usr/bin/env lua
 -- funcs.lua - functions file for minnet
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
--- This file is part of Minnet. 
--- Minnet is released under the GPLv3 - see ../COPYING 
+-- This file is part of Minnet.
+-- Minnet is released under the GPLv3 - see ../COPYING
 
 function log(m, u, l) -- Log function, takes message, user table and loglevel
     if not m then
@@ -48,7 +48,7 @@ function sendRaw(str)
     conn:send(str)
 end
 
-function otkgen(n)
+function otkgen()
     otk[n] = tostring(math.random(100000000, 99999999999999))
 end
 function passgen(p)
@@ -59,6 +59,15 @@ end
 function getarg(m) -- Gets everything after *first* word
     local arg = m:match("^%S+%s+(%S+.*)")
     return arg
+end
+
+function check_user(nick)
+    local uinfo = conn:whois(nick)
+    if uinfo.userinfo then
+        return true
+    else
+        return nil
+    end
 end
 
 function check_joined(c) -- Returns true if c is in n's joined list
@@ -108,7 +117,8 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     m = m:gsub("%s+$", "")
     cmdFound = false
     for i = 1, #bot.cmds do
-        if m:lower():match("^" .. bot.cmds[i].name:lower() .. "$") or m:lower():match("^" .. bot.cmds[i].name:lower() .. "%W+") then
+        if m:lower():match("^" .. bot.cmds[i].name:lower() .. "$") or
+          m:lower():match("^" .. bot.cmds[i].name:lower() .. "%W+") then
             log("Received command " .. m .. " on " .. net.name .. "/" .. chan, u, "debug")
             if bot.cmds[i].rep      then send(chan, bot.cmds[i].rep) end
             if bot.cmds[i].action   then bot.cmds[i].action(u, chan, m) end

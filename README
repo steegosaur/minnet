@@ -32,8 +32,10 @@ See COPYING for the full licence.
 2 REQUIREMENTS
 
 Minnet requires Lua 5.1, and the packages 'irc' (irc-lua), 'socket' 
-(lua-socket), 'lsqlite3' (lua-sqlite3), and 'crypto' (lua-crypto). lsqlite3 
-requires a working sqlite library to be installed, crypto requires openssl. 
+(lua-socket), 'lsqlite3' (lua-sqlite3), 'ssl' (luasec) and 'crypto' 
+(lua-crypto). lsqlite3 requires a working sqlite library to be installed, 
+crypto and luasec require openssl. Luasec is optional, and only required if 
+you want to make ssl-encrypted connections. 
 
 Minnet as of currently has only been tested on GNU/Linux, but depending on how 
 other systems handle certain things, it could work with little or no changes 
