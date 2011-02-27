@@ -21,18 +21,11 @@ bot.cmds  = {
                     send(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
                 end
             elseif ( ( arg:match("%s+up[%s%p]+") or arg:match("uptime") or arg:match("running") ) and ( arg:match("system") or arg:match("server") or arg:match("computer") ) ) then
-                -- Custom response in style with query
-                local sysword
-                if arg:match("system") then
-                    sysword = "system"
-                elseif arg:match("server") then
-                    sysword = "server"
-                elseif arg:match("computer") then
-                    sysword = "computer"
-                else
-                    sysword = "system"
-                end
+                local r = { "system", "server", "computer" }
+                local sysword = r[math.random(1, #r)]
+
                 -- Read standard GNU/Linux uptime file
+                -- TODO: Make this cross-platform by implementing Windows alternative too?
                 io.input("/proc/uptime")
                 local utime = io.read()
                 io.close()
@@ -148,20 +141,130 @@ bot.cmds  = {
         end
     },
     {
+        name    = "reload",
+        comment = "Updated some code yet?",
+        action  = function(u, chan, m)
+            if db.check_auth(u, "admin") then
+                local arg = getarg(m)
+                if not arg then
+                    send(chan, u.nick .. ": Reload what?")
+                else
+                    arg = arg:gsub("%s*the%s+", "")
+                    arg = arg:gsub("%s*your%s+", "")
+                    arg = arg:gsub("%s*file%s*", "")
+                    local file = arg:match("^(%S+)")
+                    file = file:match("^(%a+)")
+                    if file then
+                        reload(u, chan, file)
+                    else
+                        log("No file specified or recognised for reload command", "trivial")
+                        send(chan, u.nick ": Reload what?")
+                    end
+                end
+            else
+                log("Received unauthorised reload command", u, "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
+    {
+        name    = "set",
+        comment = "Set variables and decide stuff. (set logging)",
+        action  = function(u, chan, m)
+            if db.check_auth(u, "admin") then
+                m = m:lower()
+                arg = getarg(m)
+                arg = arg:gsub("%s*the%s+", "", 1)
+                local cmd = arg:match("^(%a+)")
+                local arg = getarg(arg)
+                if ( cmd == "logging" ) or cmd:match("^verbos") or cmd:match("^debug") then
+                    arg = arg:gsub("%s*the%s+", "")
+                    arg = arg:gsub("%s*level%s*", "")
+                    arg = arg:gsub("%s*to%s+", "")
+                    if arg then
+                        local level = arg:match("^(%a+)")
+                        if levels[level] then
+                            verbosity = levels[level]
+                            log("Set verbosity level to " .. level .. " (" .. verbosity .. ")", u, "info")
+                            send(chan, u.nick .. ": Done.")
+                        else
+                            log("Attempted to set unknown verbosity level " .. level, u, "trivial")
+                            send(chan, u.nick .. ": I don't recognise that level.. could you try another?")
+                        end
+                    else
+                        log("No verbosity level specified", u, "debug")
+                        send(chan, u.nick .. ": Set it to what?")
+                    end
+                else
+                    log("User did not specify anything to set", u, "debug")
+                    send(chan, u.nick .. ": Set what?")
+                end
+            else
+                log("Received unauthorised command: " .. m, u, "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
+    {
+        name    = "load",
+        comment = "You made some hook you'd like me to put to use?",
+        action  = function(u, chan, m)
+            if db.check_auth(u, "admin") then
+                m = getarg(m)
+                m = m:gsub("%s*the%s*", "", 1)
+                m = m:gsub("%s*hook%s*", "", 1)
+                m = m:gsub("%s*called%s*", "", 1)
+                local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
+                if hookname then
+                    local hookfound = false
+                    for i, h in ipairs(hooks) do
+                        if ( h.name == hookname ) then
+                            log("Assigning hook " .. h.name .. " for event " ..
+                                h.event, u, "info")
+                            conn:hook(h.event, h.name, h.action)
+                            send(chan, u.nick .. ": Okay, I added the hook.")
+                            hookfound = true
+                            break
+                        end
+                    end
+                    if not hookfound then
+                        log("Attempted to load unknown hook " .. hookname, u, "trivial")
+                        send(chan, u.nick .. ": I'm sorry, but I couldn't find any hook by that name.")
+                    end
+                else
+                    log("Could not understand hook name", u, "trivial")
+                    send(chan, u.nick .. ": Load what?")
+                end
+            else
+                log("Received unauthorised load command", u, "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
+    {
+        name    = "reseed",
+        comment = "reseed random number generator",
+        action  = function(u, chan, m)
+            math.randomseed(os.time())
+            log("Reseeded math.random", u, "info")
+            send(chan, u.nick .. ": It's reseeded.")
+        end
+    },
+    {
         name    = "say",
         comment = "make me say something.",
         action  = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 local arg = getarg(m)
                 if not arg then
-                    send(chan. u.nick .. ": Say what?")
+                    send(chan, u.nick .. ": Say what?")
                 else
                     local inchan = false
                     local nick
                     local say = ""
-                    local t = arg:match("^%s-(#%S+)%s+%S+")
-                    if arg:match("%s+to%s+%S+$") then
-                        nick = arg:match("(%S+)$")
+                    local t = arg:match("^%s-(#%S+)%s+%S+") -- Channel to output to?
+                    if arg:match("%s+to%s+%S+%s-%p-$") then -- Telling someone something?
+                        nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
                         local q = conn:whois(nick)
                         if q.channels then
                             for w in q.channels[3]:gmatch("(#%S+)") do
@@ -173,14 +276,20 @@ bot.cmds  = {
                         end
                     end
                     if t then
-                        say = arg:match("^%s-" .. t .. "%s+(%S+.*)$")
+                        say = arg:match("^%s-" .. t .. "%s+(%S+.*)$") -- Cut out channel name
+                        if not check_joined(t) then
+                            log("Attempted to say something in non-joined channel", u, "warn")
+                            send(chan, "I can't - I'm not it that channel!")
+                            return nil
+                        end
                     else
+                        -- No channel specified, use the one we received the command in
                         t = chan
                         say = arg:match("^(.*)$")
                     end
 
-                    if inchan then
-                        say = say:gsub("%s+%S+%s+%S+$", "")
+                    if inchan then -- It's to a user, who has been found to be in the channel
+                        say = say:gsub("%s+%S+%s+%S+%s-%p-$", "")
                         say = nick .. ": " .. say
                         log("Saying " .. say .. " to " .. nick .. " on channel " .. chan, u, "debug")
                     end
@@ -270,16 +379,17 @@ bot.cmds  = {
             if ( cmd == "mod" ) or ( cmd == "add" ) then
                 -- Just bloody fix this inefficiency, please? FIXME: INEFFICIENT
                 -- (Possibly, try using catches and %n)
+                arg   = arg:gsub("^the%s+", "")
                 arg   = arg:gsub("^user%s+", "")
                 local nick  = arg:match("^(%S+)") or ""
                 nick  = nick:gsub("(%p)", "%%%1")
-                local level = arg:match("^" .. nick .. "%s+(%S+)") or ""
+                local host = arg:match("^" .. nick .. "%s+(%S+)") or ""
+                host  = host:gsub("(%p)", "%%%1")
+                local level  = arg:match("^" .. nick .. "%s+" .. host .. "%s+(%S+)") or ""
                 level = level:gsub("(%p)", "%%%1")
-                local host  = arg:match("^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
-                host  = host:gsub("([%p])", "%%%1")
-                local passhash = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
-                local email = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
-                email = email:gsub("([%p])", "%%%1")
+                local passhash = arg:match("^" .. nick .. "%s+" .. host .. "%s+" .. level .. "%s+(%S+)") or ""
+                local email = arg:match("^" .. nick .. "%s+" .. host .. "%s+" .. level .. "%s+" .. passhash .. "%s+(%S+)") or ""
+                email = email:gsub("(%p)", "%%%1")
                 local passhash  = passgen(passhash)
                 db.set_data(u, cmd, nick, level, host, passhash, email)
             elseif ( cmd == "otk" ) then
@@ -323,15 +433,20 @@ bot.cmds  = {
         name    = "get off",
         comment = "shut me down.",
         action  = function(u, chan, m)
-            if db.check_auth(u, "admin") then
+            if db.check_auth(u, "owner") then
                 if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then
                     db.error(u, "Could not close database: " .. udb:errcode() .. " - " .. udb:errmsg())
                 end
                 send(chan, msg.bye)
-                conn:disconnect(msg.quitting)
+                for i, f in pairs(logs) do
+                    f:write("-- Log closed at " .. os.date("%F/%T") .. "\n")
+                    f:close()
+                end
                 log("", "info")
                 log("Received quit command", u, "info")
                 log(msg.quitting, "info")
+                log("", "info")
+                conn:disconnect(msg.quitting)
             else
                 log("Received unauthorised quit command", u, "warn")
                 send(u.nick, msg.notauth)

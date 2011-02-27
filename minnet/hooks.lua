@@ -15,12 +15,44 @@ hooks = {
             end
         end
     },
-    --[[
     {
         event   = "OnChat",
-        name    = "debug",
+        name    = "logchat",
         action  = function(u, chan, m)
-            print(u.nick, chan, m)
+            if ( chan == conn.nick ) then
+                chan = u.nick
+            end
+            logchat(u, chan, m)
+        end
+    },
+    {
+        event   = "OnJoin",
+        name    = "logjoin",
+        action  = function(u, chan)
+            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "]", "<--")
+        end
+    },
+    {
+        event   = "OnPart",
+        name    = "logpart",
+        action  = function(u, chan)
+            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "]", "-->")
+        end
+    },
+    {
+        event   = "OnKick",
+        name    = "logkick",
+        action  = function(chan, nick, k, r)
+            local u = conn:whois(nick).userinfo
+            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")
+        end
+    },
+    --[[
+    {
+        event   = "OnQuit",
+        name    = "logquit",
+        action  = function(u, msg)
+            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] ", "-->")
         end
     }, --]]
     {   -- Main hook for command reading
@@ -39,6 +71,27 @@ hooks = {
         name    = "ctcpRead",
         action  = function(l) ctcp.read(l) end
     },
+    {
+        event   = "OnKick",
+        name    = "rejoin",
+        action  = function(chan, nick, k, r)
+            if ( nick:lower() == conn.nick:lower() ) then
+                log("Kicked from channel " .. chan, k, "info")
+                if not channel_remove(chan) then
+                    log("Error: Could not remove channel " .. chan ..
+                      " from table bot.nets[" .. n  .. "].joined (" ..
+                      net.name .. ")", "warn")
+                end
+                --if not db.check_auth(k, "oper") then
+                    conn:join(chan)
+                    channel_add(chan)
+                --end
+            else
+                send(chan, "o/` Another one bites the dust, oh - another one" ..
+                  "bites the dust! o/`")
+            end
+        end
+    },
     {   -- Be a lil' polite, will ya?
         event   = "OnChat",
         name    = "greet",
@@ -46,53 +99,96 @@ hooks = {
             if ( chan == conn.nick ) then return nil end
             m = m:lower()
             if not m:match(conn.nick:lower()) then return nil end
-            local g = { "[hj']?ello", "o?hi", "o?hey", "[h']?allo", "hei",
-                "sal[uton]-", "yo", "g[od%s']+day", "mor[rnigow]+", "o?hai",
-                "eve[ning]-", "afternoon", "g[od%s]+[ou]n[e']?",
-                "greetin[g']s", "g[od%s]+nig?h?te?"
+            local g = {
+                hei = { "hei", "[h']?allo" },
+                hi  = { "[h']?ello", "o?h[ae]?[iy][2%a]-", "yo",
+                    "r[ao]wr2?[you]-"
+                },
+                bye = { "bye%s?", "see%s-y[aou]+", "cya" },
+                sal = { "sal", "saluton" },
+                tim = { "g[od%s']+day", "g?[od%s']-mor[rownig']+", "eve[nig]-",
+                    "afternoon", "g[od%s]+[ou]n[e']?"
+                },
+                nite= { "[god%s']-nigh?h?te?" },
+                wb  = { "wi?bs?", "welc%ame?%s-back" },
+                how = { "how[%s's%-are]-y?[aou]-d?o?i?n?g?" },
             }
             local r = {
-                hi  = { "Hi", "Hello", "Hey" },
+                hi  = { "Hi", "Hello", "Hey", "'Ello" },
+                bye = { "Bye", "Good bye", "G'bye", "See ya", "See you" },
                 sal = { "Sal", "Saluton" },
                 hei = { "Hei", "Hallo" },
-                nite= { "G'nite", "Good night", "Night" }
+                nite= { "G'nite", "Good night", "Night" },
+                wb  = { "Thanks" },
+                morning = { "G'morrow", "Good morning", "Morning" },
+                day = { "G'day", "Good day" },
+                eve = { "Good evening", "Eve" },
+                noon= { "Good afternoon" },
+                how = { "I'm fine thanks", "I'm good", "All's well with me",
+                    "Eh, I'm alright", "I'm doing fine", "Meh, could've been better",
+                    "Well - I am"
+                },
             }
-            for i = 1, #g do
-                if m:match("^%S-%s-%S-%s-" .. g[i] .. "[%s%p]+" .. conn.nick:lower()) then
+            local wordFound = false
+            for name, t in pairs(g) do
+            for i, pattern in ipairs(t) do
+                if m:match(pattern .. "[%s%p]+" .. conn.nick:lower()) then
                     local word
-                    if i == 1 or i == 2 or i == 3 or i == 7 or i == 10 or i == 14 then
-                        local num = math.random(1, #r.hi)
-                        word = r.hi[num]
-                    elseif i == 4 or i == 5 then
-                        local num = math.random(1, #r.hei)
-                        word = r.hei[num]
-                    elseif i == 6 then
-                        local num = math.random(1, #r.sal)
-                        word = r.sal[num]
-                    elseif i == 15 then
-                        local num = math.random(1, #r.nite)
-                        word = r.nite[num]
-                    elseif i == 8 or i == 9 or i == 11 or i == 12 or i == 13 then
+
+                    if ( name == "tim" ) then  -- What time is it?
                         local hour = tonumber(os.date("%H"))
                         if ( hour < 12 ) and ( hour >= 4 ) then
-                            word = "G'morrow"
+                            word = r.morning[math.random(1, #r.morning)]
                         elseif ( hour < 4 ) or ( hour >= 20 ) then
-                            word = "Good evening"
+                            word = r.eve[math.random(1, #r.eve)]
                         elseif ( hour >= 12 ) and ( hour < 16 ) then
-                            word = "G'day"
+                            word = r.day[math.random(1, #r.day)]
                         elseif ( hour >= 16 ) and ( hour < 20 ) then
-                            word = "Good afternoon"
-                        else
-                            log("Out of cheese in time calculation for greeting hook!", "error")
+                            word = r.noon[math.random(1, #r.noon)]
+                        else -- How the hell did we get here?
+                            log("Out of cheese in time calculation for greeting hook - time is " .. tostring(hour), "warn")
                             word = "Hello" -- Safe fallback in case of fuckup
                         end
+                    elseif ( name == "how" ) then
+                        local now = os.time()
+                        local diff = os.difftime(now, howdoTime[chan]) or 200
+                        if ( diff < 60 ) then
+                            log("Was asked for feelings <60s ago, grumbling..", u, "debug")
+                            local grbl = {
+                                "I just said", "You must be deaf",
+                                "You oughta have heard the first time",
+                            }
+                            word = grbl[math.random(1, #grbl)]
+                        elseif ( diff < 120 ) then
+                            log("Was asked for feelings <120s ago, repeating..", u, "debug")
+                            word = "I said like a minute ago. " .. r[name][wordNum]
+                        else
+                            howdoTime[chan] = os.time()
+                            wordNum = math.random(1, #r[name])
+                            word = r[name][wordNum]
+                        end
+                    elseif ( name == "hi" ) then
+                        word = r[name][math.random(1, #r[name])]
+                        if ( math.random(1, 8 ) < 3 ) then
+                            word = word .. " there"
+                        end
+                    elseif ( name == "hei" ) then
+                        word = r[name][math.random(1, #r[name])]
+                        if ( math.random(1, 8 ) < 3 ) then
+                            word = word .. " der"
+                        end
                     else
-                        word = "'Ello"
+                        word = r[name][math.random(1, #r[name])] or "'Ello"
                     end
+                    if word then
+					    wordFound = true
+					end
                     send(chan, word .. ", " .. u.nick .. ".")
-                    log("Greeted " .. u.nick .. " in channel " .. chan .. " on net " .. net.name, "debug")
+                    log("Greeted " .. u.nick .. " in channel " .. chan, "debug")
+                    return nil
                 end
-            end
+            end -- per-word
+            end -- per-class
         end
-    }, --]]
+    }
 }

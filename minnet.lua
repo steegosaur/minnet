@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.4.8 - the unuseful lua irc bot
+-- minnet.lua 0.5.0 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -18,16 +18,21 @@
 -- along with Minnet. If not, see <http://www.gnu.org/licenses/>.
 
 -- {{{ Init
-require("irc")
-require("socket")
-require("lsqlite3")
-require("crypto")
+-- Libraries we depend on:
+require("irc")      -- Base irc lib
+require("socket")   -- Base socket networking lib
+require("lsqlite3") -- lsqlite3 for database
+require("crypto")   -- openssl for password protection
+require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
+-- Minnet's modules:
 require("minnet.config")
 require("minnet.funcs")
 require("minnet.ctcp")
 require("minnet.commands")
 require("minnet.db")
 require("minnet.hooks")
+require("minnet.logging")
+
 udb = sqlite3.open(db.file)
 bot.start = os.time()
 math.randomseed(os.time())
@@ -110,9 +115,9 @@ end
 -- }}}
 
 -- {{{ Run
+create_help()
 if ( runmode == "run" ) then
     log("Starting Minnet..", "info")
-    log("", "info")
 
     if not netnr then -- No network defined by switch; look for a default net
         for i, net in ipairs(bot.nets) do
@@ -125,13 +130,25 @@ if ( runmode == "run" ) then
     n   = netnr
     net = bot.nets[n] -- Convenience, since there is only one network to be connected
 
-    db.check()     -- Check that the net's table exists
+    -- Check that logdirs exist
+    check_create_dir(logdir)
+    syslog = logdir .. "/debug_" .. os.date("%F_%H%M%S", bot.start) .. ".log"
+    netdir = logdir .. "/" .. net.name
+    check_create(syslog)
+    check_create_dir(netdir)
+
+    db.check()   -- Check that the net's table exists
     conn = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
-    db.ucheck()    -- Check that the net's table is not empty
+    db.ucheck()  -- Check that the net's table is not empty
+    log("", "info")
+
+    -- Tables to be initiated on startup only:
+    net.joined = {}
+    howdoTime = {}
 
     conn.port   = net.port or "6667"
     conn.secure = net.secure or false
-    if net.secure then require("ssl") end
+    if net.secure then require("ssl") else net.secure = false end
     log("Connecting to " .. net.name .. " server at " .. net.addr, "info")
     conn:connect({ host = net.addr, port = net.port, secure = net.secure})
 
