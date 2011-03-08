@@ -82,7 +82,7 @@ for i, val in ipairs(arg) do
             err(msg.noargs)
         end
         for j, net in ipairs(bot.nets) do
-            if ( net.name == nname ) then
+            if ( net.name:lower() == nname:lower() ) then
                 netnr = j
                 break
             end

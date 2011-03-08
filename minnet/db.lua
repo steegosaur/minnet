@@ -61,7 +61,7 @@ function db.check_otk(u, key)
         if ( key == otk[n] ) then
             log("Successful OTK auth; owner access granted", u, "warn")
             -- Data:    u, mode,  nick,   level,   host,   passhash,                email)
-            db.set_data(u, "add", u.nick, "owner", u.host, passgen(tostring(otk[n])), nil)
+            db.set_data(u, "add", u.nick, "owner", u.host, passgen(tostring(otk[n])), nil, true)
             send(u.nick, "Congrats, you just identified and added yourself as the owner, with the otk as your password.")
             send(u.nick, "You will want to modify your database entry asap by writing 'db mod " .. u.nick .. " owner " .. u.host .. " <password> <email>'.")
             send(u.nick, "For more help on managing the database, write 'db help'.")
@@ -99,6 +99,9 @@ end
 function db.check_allowed(u, level)
     local info = db.get_user(u.nick)
     if not info then
+        return false
+    end
+    if not bot.levels[level] then
         return false
     end
     -- Check if user's access level is lower (higher value) than what he's
@@ -221,11 +224,11 @@ end
 
 -- db mod/add function; used for setting complete user data
 -- Params: usertable, add/mod, nick, accesslevel, hostmask, passhash, email
-function db.set_data(u, mode, nick, level, host, passhash, email)
+function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
+--    print(u.nick, mode, nick, level, host)
     if     not nick     or ( nick     == "" ) then forgot(u, "nick")
     -- Check if user has the rights to add new user with given level
-    print(u.nick, mode, nick, level, host)
-    elseif ( db.check_allowed(u, level) == false ) then
+    elseif ( db.check_allowed(u, level) == false ) and not otkcheck then
         log("Attempted to add/mod user " .. nick .. " as " .. level .. " without sufficient permissions to do so.", u, "warn")
         send(u.nick, msg.notauth)
 
@@ -234,9 +237,9 @@ function db.set_data(u, mode, nick, level, host, passhash, email)
             log("No email specified for user " .. nick, "trivial")
             email = ""
         end
-        if nick:match("%%")     then nick  = nick:gsub("%%", "") end
-        if level:match("%%")    then level = level:gsub("%%", "")  end
-        if host:match("%%")     then host  = host:gsub("%%", "")   end
+        if nick:match("%%")  then nick  = nick:gsub("%%", "")   end
+        if level:match("%%") then level = level:gsub("%%", "")  end
+        if host:match("%%")  then host  = host:gsub("%%", "")   end
         if email and email:match("%%") then email = email:gsub("%%", "") end
 
         nick = nick:lower()

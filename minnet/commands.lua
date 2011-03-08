@@ -383,12 +383,12 @@ bot.cmds  = {
                 arg   = arg:gsub("^user%s+", "")
                 local nick  = arg:match("^(%S+)") or ""
                 nick  = nick:gsub("(%p)", "%%%1")
-                local host = arg:match("^" .. nick .. "%s+(%S+)") or ""
-                host  = host:gsub("(%p)", "%%%1")
-                local level  = arg:match("^" .. nick .. "%s+" .. host .. "%s+(%S+)") or ""
+                local level = arg:match("^" .. nick .. "%s+(%S+)") or ""
                 level = level:gsub("(%p)", "%%%1")
-                local passhash = arg:match("^" .. nick .. "%s+" .. host .. "%s+" .. level .. "%s+(%S+)") or ""
-                local email = arg:match("^" .. nick .. "%s+" .. host .. "%s+" .. level .. "%s+" .. passhash .. "%s+(%S+)") or ""
+                local host  = arg:match("^" .. nick .. "%s+" .. level .. "%s+(%S+)") or ""
+                host  = host:gsub("(%p)", "%%%1")
+                local passhash = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+(%S+)") or ""
+                local email = arg:match("^" .. nick .. "%s+" .. level .. "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
                 email = email:gsub("(%p)", "%%%1")
                 local passhash  = passgen(passhash)
                 db.set_data(u, cmd, nick, level, host, passhash, email)
@@ -429,6 +429,7 @@ bot.cmds  = {
             end
         end
     },
+        -- TODO: move rest from here downwards to cmdarray.lua
     {
         name    = "get off",
         comment = "shut me down.",

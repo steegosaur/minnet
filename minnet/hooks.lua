@@ -43,8 +43,12 @@ hooks = {
         event   = "OnKick",
         name    = "logkick",
         action  = function(chan, nick, k, r)
-            local u = conn:whois(nick).userinfo
-            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")
+            if not ( nick:lower() == conn.nick:lower() ) then
+                local u = conn:whois(nick).userinfo
+                u.username = u.username or "user"
+                u.host     = u.host     or "host"
+                lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")
+            end
         end
     },
     --[[
