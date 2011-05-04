@@ -45,6 +45,7 @@ hooks = {
         action  = function(chan, nick, k, r)
             if not ( nick:lower() == conn.nick:lower() ) then
                 local u = conn:whois(nick).userinfo
+                u.nick     = nick
                 u.username = u.username or "user"
                 u.host     = u.host     or "host"
                 lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")

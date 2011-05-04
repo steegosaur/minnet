@@ -42,7 +42,7 @@ cmdlist = {
                 end
             else
                 send(chan, "Err, what?")
-                log("Could not recognise enough keywords for 'how long', ignoring command", "trivial")
+                log("Could not recognise enough keywords for uptime command, ignoring", "trivial")
             end
         end
     end,
