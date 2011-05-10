@@ -4,19 +4,20 @@
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
-function ctcp.action(chan, act)
+function ctcp.action(chan, act) -- send an ACTION (/me) to 'channel'
     act = act:gsub("%%", "%%%%")
     sendRaw("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
     log("Sent ctcp.action " .. act .. " to " .. net.name .. "/" .. chan, u, "info")
 end
-function ctcp.version(arg)
+function ctcp.version(arg) -- request a VERSION reply to 'arg'
     arg = arg:match("^(%S+)")
     sendRaw("PRIVMSG " .. arg .. " :\001VERSION\001")
     log("Sent CTCP VERSION request to " .. arg .. " on " .. net.name, u, "info")
 end
 
+-- ctcp.check_active(o, t): check if there is an active CTCP request of type 't' for user 'o'
 function ctcp.check_active(o, t)
-    if not ( o or t ) then return nil end
+    if not ( o and t ) then return nil end
     local wQ, num
     for i, name in ipairs(ctcp.active[t]) do
         if ( o:lower() == name:lower() ) then
@@ -31,6 +32,7 @@ function ctcp.check_active(o, t)
         return nil
     end
 end
+-- ctcp.rem_active(o, t): remove the active CTCP request of type 't' for user 'o'
 function ctcp.rem_active(o, t)
     local _, num = ctcp.check_active(o, t)
     if num then
@@ -40,6 +42,7 @@ function ctcp.rem_active(o, t)
     end
 end
 
+-- ctcp.read(line): read a line and parse it to check for valid (recognised) CTCP requests
 function ctcp.read(l)
     if not l then
         return nil

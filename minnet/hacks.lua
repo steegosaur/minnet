@@ -4,8 +4,15 @@
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3, see ../COPYING
 
-local list = ""
-for i, e in pairs(logs) do
-    list = tostring(e) .. " "
-end
-send("#fire_island", list)
+--[[
+    Code that does one-time stuff,
+    fixes bugs or unwanted situations,
+    or just outputs more useful debugging information
+    goes here.
+
+    This is executed by calling 'reload hacks',
+    which is the safer (albeit more thorough)
+    way of injecting Lua code directly into Minnet.
+
+    -Stæld
+--]]

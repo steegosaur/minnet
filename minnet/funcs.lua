@@ -203,10 +203,26 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     if ( m == "" ) or m:match("^%s+") or m:match("%\001") then return nil end
     m = m:gsub("%s+$", "")
     cmdFound = false
+    -- Rewriting command recognition; please stand by
+    --[[
+    for name, cmdfunc in pairs(cmdlist) do
+        if m:lower():match("^" .. name:lower() .. "$") or
+          m:lower():match("^" .. name:lower() .. "%W+") then
+            log("Received command " .. m .. " on " .. net.name .. "/" .. chan, u, "debug")
+            if ( type(cmdfunc) == "function" ) then
+                cmdfunc(u, chan, m)
+            end
+            cmdFound = true
+            break
+        end
+    end
+    
+    end --]]
+    -- end WIP code
+    --
     for i, cmd in ipairs(bot.cmds) do
         if m:lower():match("^" .. cmd.name:lower() .. "$") or
           m:lower():match("^" .. cmd.name:lower() .. "%W+") then
-            log("Received command " .. m .. " on " .. net.name .. "/" .. chan, u, "debug")
             if cmd.rep      then send(chan, cmd.rep) end
             if cmd.action   then cmd.action(u, chan, m) end
             cmdFound = true
@@ -217,6 +233,7 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
         log("Could not understand command: " .. m, u, "debug")
         send(chan, "Excuse me?")
     end
+    --]]
 end
 
 -- Create msg.help() function; read name, version and append to --help message
