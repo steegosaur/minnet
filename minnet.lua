@@ -28,10 +28,11 @@ require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
 require("minnet.config")
 require("minnet.funcs")
 require("minnet.ctcp")
-require("minnet.commands")
+--require("minnet.commands") -- Outdated, in the process of being replaced
 require("minnet.db")
 require("minnet.hooks")
 require("minnet.logging")
+require("minnet.cmdarray")
 
 udb = sqlite3.open(db.file)
 bot.start = os.time()

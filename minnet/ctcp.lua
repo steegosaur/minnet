@@ -56,8 +56,13 @@ function ctcp.read(l)
         else
             if not ctcp.check_active(origin, "version") then return nil end
             local reply = l:match("VERSION%s*(.-)%\001")
-            log("Received CTCP VERSION reply from " .. origin .. " on " .. net.name, "debug")
-            send(vchan, "VERSION reply from " .. origin .. ": " .. reply)
+            if reply then
+                log("Received CTCP VERSION reply from " .. origin .. " on " .. net.name, "debug")
+                send(vchan, "VERSION reply from " .. origin .. ": " .. reply)
+            else
+                log("Received incomprehensible CTCP VERSION reply from " .. origin .. " on " .. net.name, "debug")
+                send(vchan, "Sorry, but I couldn't understand that reply.. You sure it conforms to the RFC?")
+            end
             ctcp.rem_active(origin, "version")
         end
     elseif l:match("%\001%s*SOURCE%s*%\001") then

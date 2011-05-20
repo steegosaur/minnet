@@ -24,26 +24,27 @@ cmdlist = {
             else
                 send(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
             end
-        elseif ( ( arg:match("%s+up[%s%p]+") or arg:match("uptime") or arg:match("running") ) and ( arg:match("system") or arg:mat$
-                local r = { "system", "server", "computer" }
-                local sysword = r[math.random(1, #r)]
-                -- Read standard GNU/Linux uptime file
-                -- TODO: Make this cross-platform by implementing Windows alternative too?
-                io.input("/proc/uptime")
-                local utime = io.read()
-                io.close()
-                utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
-                local days, hours, mins = timecal(utime)
-                if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
-                    send(chan, u.nick .. ": It was just booted!")
-                else
-                    send(chan, u.nick .. ": The " .. sysword .. " went up " ..
-                      days .. hours .. mins .. " ago.")
-                end
+        elseif ( ( arg:match("%s+up[%s%p]+") or arg:match("uptime") or
+          arg:match("running") ) and ( arg:match("system") or
+          arg:match("server") or arg:match("computer") ) ) then
+            local r = { "system", "server", "computer" }
+            local sysword = r[math.random(1, #r)]
+            -- Read standard GNU/Linux uptime file
+            -- TODO: Make this cross-platform by implementing Windows alternative too?
+            io.input("/proc/uptime")
+            local utime = io.read()
+            io.close()
+            utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
+            local days, hours, mins = timecal(utime)
+            if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
+                send(chan, u.nick .. ": It was just booted!")
             else
-                send(chan, "Err, what?")
-                log("Could not recognise enough keywords for uptime command, ignoring", "trivial")
+                send(chan, u.nick .. ": The " .. sysword .. " went up " ..
+                  days .. hours .. mins .. " ago.")
             end
+        else
+            send(chan, "Err, what?")
+            log("Could not recognise enough keywords for uptime command, ignoring", "trivial")
         end
     end,
 
@@ -117,7 +118,7 @@ cmdlist = {
                 conn:part(chan)
                 log("Leaving channel " .. chan .. " on " .. net.name, "info")
                 if not channel_remove(chan) then
-                    log("Error: Could not remove channel " .. chan .. " from table bot.nets[" .. n .. "].joined (" .. net.name .. $
+                    log("Error: Could not remove channel " .. chan .. " from table bot.nets[" .. n .. "].joined (" .. net.name .. ")", "warn")
                 end
             elseif arg:match("^of%s+#%S") then
                 arg = arg:match("^of%s+(#[^%s%.!,]+)")
@@ -126,7 +127,7 @@ cmdlist = {
                 conn:part(arg)
                 log("Leaving channel " .. arg .. " on " .. net.name, "info")
                 if not channel_remove(arg) then
-                    log("Error: Could not remove channel " .. arg .. " from table bot.nets[" .. n .. "].joined (" .. net.name .. "$
+                    log("Error: Could not remove channel " .. arg .. " from table bot.nets[" .. n .. "].joined (" .. net.name .. ")", "warn")
                 end
             else
                 log("No understandable channel given to part from", "trivial")
@@ -193,7 +194,6 @@ cmdlist = {
                 log("User did not specify anything to set", u, "debug")
                 send(chan, u.nick .. ": Set what?")
             end
-        else
         else
             log("Received unauthorised command: " .. m, u, "warn")
             send(u.nick, msg.notauth)
@@ -404,7 +404,7 @@ cmdlist = {
             db.flush(u)
         elseif ( cmd == "help" ) then
             send(chan, "Syntax: db (set|get|mod|add)")
-            send(chan, "Add and mod are admin-level, and need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. EMAIL is$
+            send(chan, "Add and mod are admin-level, and need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. EMAIL is voluntary.")
             send(chan, "Get needs NICK, and shows the registered information for that nick.")
             send(chan, "Set needs MODE and VALUE. It allows you to set you email and password.")
         else

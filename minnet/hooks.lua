@@ -92,8 +92,8 @@ hooks = {
                     channel_add(chan)
                 --end
             else
-                send(chan, "o/` Another one bites the dust, oh - another one" ..
-                  "bites the dust! o/`")
+                send(chan, "o/` Another one bites the dust, oh - " ..
+                  "another one bites the dust! o/`")
             end
         end
     },

@@ -204,7 +204,8 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     m = m:gsub("%s+$", "")
     cmdFound = false
     -- Rewriting command recognition; please stand by
-    --[[
+    --
+    -- Know what, scrap this; I'll rewrite it /over again/
     for name, cmdfunc in pairs(cmdlist) do
         if m:lower():match("^" .. name:lower() .. "$") or
           m:lower():match("^" .. name:lower() .. "%W+") then
@@ -216,10 +217,9 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             break
         end
     end
-    
-    end --]]
+    --[[
+    end
     -- end WIP code
-    --
     for i, cmd in ipairs(bot.cmds) do
         if m:lower():match("^" .. cmd.name:lower() .. "$") or
           m:lower():match("^" .. cmd.name:lower() .. "%W+") then
@@ -229,11 +229,11 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             break
         end
     end
+    --]]
     if ( cmdFound == false ) then
         log("Could not understand command: " .. m, u, "debug")
         send(chan, "Excuse me?")
     end
-    --]]
 end
 
 -- Create msg.help() function; read name, version and append to --help message
