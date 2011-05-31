@@ -108,7 +108,7 @@ function logchan(mode, u, chan, m, bullet)
     else
         log("Erroneous chatlog() mode; FIXME", "error")
     end
-    logfile:write(entry .. "\n")
+    logfile:write(entry, "\n")
     logfile:flush()
     logfile = nil
 end

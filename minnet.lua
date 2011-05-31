@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.5.0 - the unuseful lua irc bot
+-- minnet.lua 0.6.0b1 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -27,12 +27,12 @@ require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
 -- Minnet's modules:
 require("minnet.config")
 require("minnet.funcs")
-require("minnet.ctcp")
---require("minnet.commands") -- Outdated, in the process of being replaced
 require("minnet.db")
+require("minnet.ctcp")
 require("minnet.hooks")
 require("minnet.logging")
-require("minnet.cmdarray")
+require("minnet.cmdarray") -- The command functions
+require("minnet.cmdvocab") -- The command recognition vocabulary
 
 udb = sqlite3.open(db.file)
 bot.start = os.time()
@@ -56,9 +56,9 @@ if ( arg[1] == "--licence" ) then
     if read.cmd then
         os.execute(read.cmd .. " COPYING")
     else
-        io.stdout:write("Could not find a program for viewing the licence ")
-        io.stdout:write("file; please take a look at the GPL v3 yourself. It ")
-        io.stdout:write("can be found in the file COPYING in the Minnet main directory.\n")
+        io.stdout:write("Could not find a program for viewing the licence ",
+        "file; please take a look at the GPL v3 yourself. It can be found in ",
+        "the file COPYING in the Minnet main directory.\n")
     end
     os.exit()
 elseif not arg[1] or ( arg[1] == "--help" ) then
@@ -69,11 +69,11 @@ end
 for i, val in ipairs(arg) do
     if val:match("^%-%-verbos") or ( val == "-v" ) then
         if not arg[i+1] then
-            verbosity = levels["debug"] - 1     -- Make it whatever level is above debug
+            verbosity = levels["debug"] - 1 -- Make it the level above debug
         else
             verbosity = levels[arg[i+1]]
             if not verbosity then
-                verbosity = levels["info"]      -- Repair nonexisting level to default
+                verbosity = levels["info"]  -- Set nonexisting level to default
                 err(msg.noargs)
             end
         end
@@ -103,7 +103,8 @@ if ( runmode == "dry" ) then
     run = false
     if not ( arg[-1] == "-i" ) then
         print("Attempting to re-run self in interactive mode..")
-        print("If this doesn't work, run lua manually, specifying -i for interactive execution.")
+        print("If this doesn't work, run lua manually, specifying -i for " ..
+            "interactive execution.")
         print()
         os.execute("lua -i " .. arg[0] .. " --dry -v debug")
     else
@@ -127,9 +128,10 @@ if ( runmode == "run" ) then
             end
         end
     end
-    if not netnr then err("No default net specified in config! Go edit it, foo'!") end
+    if not netnr then err("No default net specified in config! " ..
+        "Go edit it, foo'!") end
     n   = netnr
-    net = bot.nets[n] -- Convenience, since there is only one network to be connected
+    net = bot.nets[n] -- Convenience, since there is only one connected network
 
     -- Check that logdirs exist
     check_create_dir(logdir)
@@ -139,7 +141,11 @@ if ( runmode == "run" ) then
     check_create_dir(netdir)
 
     db.check()   -- Check that the net's table exists
-    conn = irc.new({ nick = bot.nick, username = bot.uname, realname = bot.rname })
+    conn = irc.new({
+        nick = bot.nick,
+        username = bot.uname,
+        realname = bot.rname
+    })
     db.ucheck()  -- Check that the net's table is not empty
     log("", "info")
 

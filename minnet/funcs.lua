@@ -14,8 +14,9 @@ function reload(u, chan, file)
     elseif ( file == "database" ) then file = "db"
     elseif ( file == "log" ) then file = "logging"
     end
-    if ( file == "funcs" or file == "commands" or file == "ctcp" or
+    if ( file == "funcs" or file == "ctcp" or
       file == "db" or file == "hooks" or file == "config" or
+      file == "cmdvocab" or file == "cmdarray" or
       file == "logging" or file == "hacks" ) then
         if assert(io.open("minnet/" .. file .. ".lua", "r")) then
             dofile("minnet/" .. file .. ".lua")
@@ -24,13 +25,25 @@ function reload(u, chan, file)
             send(chan, u.nick .. ": Sorry, but I couldn't find the file.")
             return nil
         end
+        log("Reloaded " .. file .. ".lua", u, "info")
+        send(chan, u.nick .. ": I reloaded " .. file .. ".lua.")
+    elseif file == "commands" then
+        local cmdfiles = { "cmdarray", "cmdvocab" }
+        for _, file in ipairs(cmdfiles) do
+            if assert(io.open("minnet/" .. file .. ".lua", "r")) then
+                dofile("minnet/" .. file .. ".lua")
+            else
+                log("No such file: minnet/" .. file .. ".lua", u, "warn")
+                send(chan, u.nick .. ": Sorry, but I couldn't find the file.")
+                return nil
+            end
+        end
+        log("Reloaded command files", u, "info")
+        send(chan, u.nick .. ": I reloaded the command files.")
     else
         log("Attempt to reload unknown file " .. file .. ".lua", u, "warn")
         send(chan, u.nick .. ": I don't know what you're talking about.")
-        return nil
     end
-    log("Reloaded " .. file .. ".lua", u, "info")
-    send(chan, u.nick .. ": I reloaded " .. file .. ".lua.")
 end
 
 -- check_create_dir(): Ensure that a dir exists; if not, attempt to create
@@ -132,8 +145,8 @@ function channel_remove(c)
         end
     end
     if found then
-        log("Removing channel " .. c .. " from joined channel list on " .. net.name,
-            "info")
+        log("Removing channel " .. c .. " from joined channel list on " ..
+            net.name, "info")
         table.remove(net.joined, num)
         return true
     else
@@ -203,35 +216,30 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     if ( m == "" ) or m:match("^%s+") or m:match("%\001") then return nil end
     m = m:gsub("%s+$", "")
     cmdFound = false
-    -- Rewriting command recognition; please stand by
-    --
-    -- Know what, scrap this; I'll rewrite it /over again/
-    for name, cmdfunc in pairs(cmdlist) do
-        if m:lower():match("^" .. name:lower() .. "$") or
-          m:lower():match("^" .. name:lower() .. "%W+") then
-            log("Received command " .. m .. " on " .. net.name .. "/" .. chan, u, "debug")
-            if ( type(cmdfunc) == "function" ) then
-                cmdfunc(u, chan, m)
+    local cmdfunc, catch
+    for cmd, names in pairs(bot.commands) do
+        for _, name in ipairs(names) do
+            catch = m:lower():match("^(" .. name .. ")")
+            if catch then
+                cmdFound = true
+                break
             end
-            cmdFound = true
+        end
+        if cmdFound == true then
+            cmdfunc = cmd
             break
         end
     end
-    --[[
-    end
-    -- end WIP code
-    for i, cmd in ipairs(bot.cmds) do
-        if m:lower():match("^" .. cmd.name:lower() .. "$") or
-          m:lower():match("^" .. cmd.name:lower() .. "%W+") then
-            if cmd.rep      then send(chan, cmd.rep) end
-            if cmd.action   then cmd.action(u, chan, m) end
-            cmdFound = true
-            break
+
+    if cmdFound == true then
+        log("Received command '" .. m .. "' on " .. net.name .. "/" .. chan,
+            u, "debug")
+        local func = cmdlist[cmdfunc]
+        if type(func) == "function" then
+            func(u, chan, m, catch)
         end
-    end
-    --]]
-    if ( cmdFound == false ) then
-        log("Could not understand command: " .. m, u, "debug")
+    else
+        log("Could not understand command '" .. m .. "'", u, "debug")
         send(chan, "Excuse me?")
     end
 end

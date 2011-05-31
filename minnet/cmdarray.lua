@@ -5,18 +5,17 @@
 -- Minnet is released under the GPLv3 - see ../COPYING
 
 -- This file contains an array which is referenced by the meta-array in
---  commands.lua, so that several triggers there can use the same command
+--  cmdvocab.lua, so that several triggers there can use the same command
 --  definition, thus enabling re-use of portions or wholes of the code.
 
 cmdlist = {
     -- uptime: report uptime of self or server hosting self
     uptime = function(u, chan, m)
         m = m:lower()
-        local arg = m:match("^how%s+long%s+(.*)$")
-        if ( ( arg:match("online") or arg:match("%s+up[%s%p]+") or
-          arg:match("uptime") or arg:match("connected") or arg:match("running") ) and
-          arg:match("you") and not ( arg:match("system") or
-          arg:match("computer") or arg:match("server") ) ) then
+        if ( ( m:match("online") or m:match("%s+up[%s%p]+") or
+          m:match("uptime") or m:match("connected") or m:match("running") ) and
+          m:match("you") and not ( m:match("system") or
+          m:match("computer") or m:match("server") ) ) then
             local diff = os.difftime(os.time(), bot.start)
             local days, hours, mins = timecal(diff)
             if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
@@ -24,9 +23,9 @@ cmdlist = {
             else
                 send(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
             end
-        elseif ( ( arg:match("%s+up[%s%p]+") or arg:match("uptime") or
-          arg:match("running") ) and ( arg:match("system") or
-          arg:match("server") or arg:match("computer") ) ) then
+        elseif ( ( m:match("%s+up[%s%p]+") or m:match("uptime") or
+          m:match("running") ) and ( m:match("system") or
+          m:match("server") or m:match("computer") ) ) then
             local r = { "system", "server", "computer" }
             local sysword = r[math.random(1, #r)]
             -- Read standard GNU/Linux uptime file
@@ -74,9 +73,9 @@ cmdlist = {
     end,
 
     -- join: join 'chan'
-    join = function(u, chan, m)
+    join = function(u, chan, m, catch)
         if db.check_auth(u, "admin") then
-            local arg = m:match("^go%s+to%s+(#.*)")
+            local arg = m:match(catch .. "%s+(.*)")
             if not arg then
                 send(chan, u.nick .. ": Go to what channel?")
             else
@@ -109,16 +108,18 @@ cmdlist = {
     end,
 
     -- part: part 'chan'
-    part = function(u, chan, m)
+    part = function(u, chan, m, catch)
         if db.check_auth(u, "admin") then
             m = m:lower()
-            local arg = m:match("^get%s+out[!%.]?%s-(of%s+#?[^%s%.!,]+)")
+            local arg = m:match(catch .. "%s+(of%s+#?[^%s%.!,]+)")
             if ( not arg ) or arg:match("^of%s+here") then
                 send(chan, msg.bye)
                 conn:part(chan)
                 log("Leaving channel " .. chan .. " on " .. net.name, "info")
                 if not channel_remove(chan) then
-                    log("Error: Could not remove channel " .. chan .. " from table bot.nets[" .. n .. "].joined (" .. net.name .. ")", "warn")
+                    log("Error: Could not remove channel " .. chan ..
+                        " from table bot.nets[" .. n .. "].joined (" ..
+                        net.name .. ")", "warn")
                 end
             elseif arg:match("^of%s+#%S") then
                 arg = arg:match("^of%s+(#[^%s%.!,]+)")
@@ -127,11 +128,13 @@ cmdlist = {
                 conn:part(arg)
                 log("Leaving channel " .. arg .. " on " .. net.name, "info")
                 if not channel_remove(arg) then
-                    log("Error: Could not remove channel " .. arg .. " from table bot.nets[" .. n .. "].joined (" .. net.name .. ")", "warn")
+                    log("Error: Could not remove channel " .. arg ..
+                        " from table bot.nets[" .. n .. "].joined (" ..
+                        net.name .. ")", "warn")
                 end
             else
                 log("No understandable channel given to part from", "trivial")
-                send(chan, "Sorry, what channel did you say I should part from?")
+                send(chan, "Sorry, what channel didya say I should part from?")
             end
         else
             log("Received unauthorised part command", u, "warn")
@@ -235,6 +238,7 @@ cmdlist = {
     end,
 
     -- reseed: reseed random number seed
+    -- TODO: Automate this?
     reseed = function(u, chan, m)
         math.randomseed(os.time())
         log("Reseeded math.random", u, "info")
@@ -305,9 +309,9 @@ cmdlist = {
     end,
 
     -- version: send a CTCP VERSION request to someone
-    version = function(u, chan, m)
-        if db.check_auth(u, "oper") then
-            local arg = getarg(m)
+    version = function(u, chan, m, catch)
+        if db.check_auth(u, "user") then
+            local arg = m:match(catch .. "%s+(.*)")
             if not arg then
                 send(chan, u.nick .. ": Version who?")
             else
@@ -323,8 +327,8 @@ cmdlist = {
     end,
 
     -- identify: identify user with self
-    identify = function(u, chan, m)
-        local args = getarg(m)
+    identify = function(u, chan, m, catch)
+        local args = m:match(catch .. "%s+(.*)") or ""
         args = args:gsub("^me%s+", "")
         if args:match("^for%s+%S+") then
             args = args:gsub("^for%s+", "")
@@ -351,14 +355,17 @@ cmdlist = {
     end,
 
     -- db: database management meta-command
-    db = function(u, chan, m)
+    db = function(u, chan, m, catch)
         if chan:match("^#") then
             send(chan, "I can't let you do database operations in a channel, sorry.")
             return nil
         end
-        local arg = getarg(m) or ""
+        local arg = m:match(catch .. "%s+(.*)") or ""
+        -- Catch what db operation we're doing:
         local cmd = arg:match("^%s-(%S+)") or ""
+        -- Catch the arguments for the db operation:
         local arg = arg:match("^" .. cmd .. "%s-(%S+.*)") or ""
+
         if ( cmd == "mod" ) or ( cmd == "add" ) then
             -- Just bloody fix this inefficiency, please? FIXME: INEFFICIENT
             -- (Possibly, try using catches and %n)
@@ -411,4 +418,35 @@ cmdlist = {
             send(chan, "I don't know what you meant I should do with the database. Maybe you need some help?")
         end
     end,
+
+    -- vocablist: list all known command vocab in raw form
+    vocablist = function(u, chan, m)
+        if db.check_auth(u, "user") then
+            -- WIP
+        end
+    end,
+
+    -- quit: disconnect from the network
+    quit = function(u, chan, m)
+        if db.check_auth(u, "owner") then
+            if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then
+                db.error(u, "Could not close database: " .. udb:errcode() ..
+                    " - " .. udb:errmsg())
+            end
+            send(chan, msg.bye)
+            for i, f in pairs(logs) do
+                f:write("-- Log closed at ", os.date("%F/%T"), "\n")
+                f:close()
+            end
+            log("", "info")
+            log("Received quit command", u, "info")
+            log("", "info")
+            conn:disconnect(msg.quitting)
+        else
+            log("Received unauthorised quit command", u, "warn")
+            send(u.nick, msg.notauth)
+        end
+    end,
 }
+
+-- EOF
