@@ -230,8 +230,10 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             break
         end
     end
-
     if cmdFound == true then
+        if bot.disabled[chan] == true and cmdfunc ~= "enable" then
+            return nil
+        end
         log("Received command '" .. m .. "' on " .. net.name .. "/" .. chan,
             u, "debug")
         local func = cmdlist[cmdfunc]

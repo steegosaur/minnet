@@ -25,5 +25,13 @@ bot.commands = {
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*of" },
     identify= { "identify", "i'?%s-a?m" },
     db      = { "db", "database" },
+    disable = {
+        "shut%s-up", "shaddap", "keep%s+quiet", "be%s+quiet", "stay%s+quiet",
+        "silence", "stay%s+off", "disable"
+    },
+    enable  = {
+        "y[oua]+'?re?%s+free", "speak", "r?e?%-?enable", "unsilence",
+        "live"
+    },
 }
 -- EOF

@@ -420,9 +420,48 @@ cmdlist = {
     end,
 
     -- vocablist: list all known command vocab in raw form
+    --[[ WIP
     vocablist = function(u, chan, m)
         if db.check_auth(u, "user") then
-            -- WIP
+            local cmds = {}
+            for cmd, names in pairs(bot.commands) do
+                local cmd = {}
+                table.insert(cmds, cmd)
+                for _, name in ipairs(names) do
+                    table.insert(cmds[cmd], name)
+                end
+            end
+            log("Listing all available commands and their patterns in "..
+                "channel " .. chan, u, "info")
+            -- OUTPUT GOES HERE
+        else
+            log("Received unauthorised quit command", u, "warn")
+            send(u.nick, msg.notauth)
+        end
+    end,
+    --]]
+
+    -- disable: do not respond to anything
+    disable = function(u, chan, m)
+        if db.check_auth(u, "oper") then
+            log("Entering response freeze for channel " .. chan, u, "info")
+            bot.disabled[chan] = true
+            send(chan, msg.shutup)
+        else
+            log("Received unauthorised disabling command", u, "warn")
+            send(u.nick, msg.nothauth)
+        end
+    end,
+
+    -- enable: commence responding again
+    enable = function(u, chan, m)
+        if db.check_auth(u, "oper") then
+            log("Unfreezing channel " .. chan, u, "info")
+            bot.disabled[chan] = false
+            send(chan, msg.talk)
+        else
+            log("Received unauthorised enabling command", u, "warn")
+            send(u.nick, msg.notauth)
         end
     end,
 

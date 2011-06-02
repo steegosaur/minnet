@@ -31,7 +31,7 @@ Roadmap:
         Uses ssl
         Dynamically uses config-defined levels to define allowed_level
     0.5.0
-		Does stuff. </lazy>
+	    Does stuff. </lazy>
     0.6.0
         Has liberal recognition of commands (hooks that look for keywords)
         Has multiple possible commands per action ("(what|how long) uptime")
@@ -52,9 +52,7 @@ Todo atm:
     Add USERINFO, CLIENTINFO, FINGER, etc
     ! Check vulnerabilities for more than one user with the same nick
     
-    
 Command ideas:
-    ! Disabling function
     ! Flood protection - warn then kick (then ban?); check for own op status
 
     ? JOTI functionality
@@ -69,7 +67,6 @@ Command ideas:
     YouTube, etc:   Report what is in a given link
     (Last|Libre).fm Say what people are listening to
     Google/Wiki/etc Look up stuff
-    
 
 Wishlist:
     Provide documentation of what the hell the bloody commands actually do
@@ -77,4 +74,4 @@ Wishlist:
     AI :D
 
 Known bugs:
-    quitting always results in a crash - this is irc.lua's fault. WONTFIX
+    Quitting always results in a crash - this is irc.lua's fault. WONTFIX

@@ -4,6 +4,10 @@
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
+-- Directory for logfiles
+logdir = os.getenv("HOME") .. "/.minnetlogs"
+
+-- Main static info for the bot, including networks
 bot = {
     nick  = "Minnet",
     uname = "Minnet",
@@ -17,7 +21,6 @@ bot = {
             c       = { "#channelA", "#Chan2" },
             modes   = "pxB",
             default = true,
-            joined  = {}, -- Do not edit; FIXME: Make dynamically defined at runtime instead
         },
         {
             name    = "net2",
@@ -26,10 +29,11 @@ bot = {
             secure  = true,
             c       = { "#talk", "#somechan" },
             modes   = "iB",
-            joined  = {},
         },
     },
+    -- Access levels; owner is obligatory and must be lowest number
     levels = {
+        owner   = 0,
         admin   = 1,
         oper    = 2,
         user    = 9
@@ -45,12 +49,17 @@ bot = {
         { text = "sexy",    face = ";)" },
         { text = "smart",   face = "8)" }
     }
+    -- disabled = { channame = true, chan2 = false };
+    -- this is used during runtime, but can be predefined for special needs
+    disabled = {}
 }
 msg = {
     noargs = "invalid arguments specified. See --help",
     notowner = "Hey, I'm not taking commands from you.",
     notauth = "Hey, you're not authorised for this operation!",
     bye = "Okay, bye!",
+    shutup  = "Fine, I'll just shut up.",
+    talk    = "By time.",
     leaving = "Minnet leaving..",
     quitting = "Minnet quitting..",
     joining = "flaps off to " -- Is an action, will be merged with channel name
@@ -59,6 +68,7 @@ msg = {
 --[[ ! Do not edit below this level
     unless you know what you're doing --]]
 
+-- Logging levels
 levels = {
     error   = 0,
     warn    = 1,
@@ -77,6 +87,7 @@ ctcp  = {
     }
 }
 otk   = {}
+logs  = {}
 vchan = ""
 
 -- EOF
