@@ -24,8 +24,8 @@ cmdlist = {
                 send(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
             end
         elseif ( ( m:match("%s+up[%s%p]+") or m:match("uptime") or
-          m:match("running") ) and ( m:match("system") or
-          m:match("server") or m:match("computer") ) ) then
+          m:match("online") or m:match("running") ) and ( m:match("system") or
+          m:match("server") or m:match("computer") or m:match("host") ) ) then
             local r = { "system", "server", "computer" }
             local sysword = r[math.random(1, #r)]
             -- Read standard GNU/Linux uptime file
@@ -35,7 +35,7 @@ cmdlist = {
             io.close()
             utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
             local days, hours, mins = timecal(utime)
-            if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
+            if days == "" and hours == "" and mins == "" then
                 send(chan, u.nick .. ": It was just booted!")
             else
                 send(chan, u.nick .. ": The " .. sysword .. " went up " ..
@@ -175,7 +175,7 @@ cmdlist = {
             arg = arg:gsub("%s*the%s+", "", 1)
             local cmd = arg:match("^(%a+)")
             local arg = getarg(arg)
-            if ( cmd == "logging" ) or cmd:match("^verbos") or cmd:match("^debug") then
+            if cmd == "logging" or cmd:match("^verbos") or cmd:match("^debug") then
                 arg = arg:gsub("%s*the%s+", "")
                 arg = arg:gsub("%s*level%s*", "")
                 arg = arg:gsub("%s*to%s+", "")
@@ -214,7 +214,7 @@ cmdlist = {
             if hookname then
                 local hookfound = false
                 for i, h in ipairs(hooks) do
-                    if ( h.name == hookname ) then
+                    if h.name == hookname then
                         log("Assigning hook " .. h.name .. " for event " ..
                             h.event, u, "info")
                         conn:hook(h.event, h.name, h.action)
@@ -261,7 +261,7 @@ cmdlist = {
                     local q = conn:whois(nick)
                     if q.channels then
                         for w in q.channels[3]:gmatch("(#%S+)") do
-                            if ( w == chan ) then
+                            if w == chan then
                                 inchan = true
                                 break
                             end
@@ -288,7 +288,7 @@ cmdlist = {
                 end
 
                 local subit, subto
-                if ( say:sub(1, 1) == "%" ) then
+                if say:sub(1, 1) == "%" then
                     subit, subto = "%%", "%%"
                 else
                     if inchan then
@@ -366,7 +366,7 @@ cmdlist = {
         -- Catch the arguments for the db operation:
         local arg = arg:match("^" .. cmd .. "%s-(%S+.*)") or ""
 
-        if ( cmd == "mod" ) or ( cmd == "add" ) then
+        if cmd == "mod" or cmd == "add" then
             -- Just bloody fix this inefficiency, please? FIXME: INEFFICIENT
             -- (Possibly, try using catches and %n)
             arg   = arg:gsub("^the%s+", "")
@@ -382,12 +382,12 @@ cmdlist = {
             email = email:gsub("(%p)", "%%%1")
             local passhash  = passgen(passhash)
             db.set_data(u, cmd, nick, level, host, passhash, email)
-        elseif ( cmd == "otk" ) then
+        elseif cmd == "otk" then
             local key = arg:match("(%d+)")
             if key then
                 db.check_otk(u, key)
             end
-        elseif ( cmd == "remove" ) or ( cmd == "delete" ) then
+        elseif cmd == "remove" or cmd == "delete" then
             arg = arg:gsub("^%S+%s+", "")
             arg = arg:gsub("^the%s+", "")
             arg = arg:gsub("^user%s+", "")
@@ -397,19 +397,19 @@ cmdlist = {
                 return nil
             end
             db.rem_user(u, name)
-        elseif ( cmd == "get" ) then
+        elseif cmd == "get" then
             arg = arg:gsub("user%s+", "")
             arg = arg:gsub("info[rmation]-%s+", "")
             arg = arg:gsub("on%s+", "")
             arg = arg:gsub("about%s+", "")
             local name = arg:match("(%S+)")
             db.show_user(u, name)
-        elseif ( cmd == "set" ) then
+        elseif cmd == "set" then
             local mode, value = arg:match("(%S+)%s+(%S+)")
             db.set_user(u, mode, value)
-        elseif ( cmd == "flush" ) then
+        elseif cmd == "flush" then
             db.flush(u)
-        elseif ( cmd == "help" ) then
+        elseif cmd == "help" then
             send(chan, "Syntax: db (set|get|mod|add)")
             send(chan, "Add and mod are admin-level, and need NICK, LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. EMAIL is voluntary.")
             send(chan, "Get needs NICK, and shows the registered information for that nick.")

@@ -75,6 +75,7 @@ levels = {
     info    = 3,    -- The default value; config must have this!
     trivial = 5,
     debug   = 9,
+    internal= 99,
 }
 verbosity = levels["info"]  -- Set initial value
 

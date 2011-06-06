@@ -46,6 +46,11 @@ Roadmap:
 
 Todo atm:
     ! Implement a working help message database (add to the vocab[] array?)
+    ! Implement debug level "internal" below "debug" for showing lots of
+        internal debugging, so it can be enabled dynamically rather than added
+        and removed when needed (unuseful outside of debug. Will need tonnes of
+        descriptions to make legible and usable!)
+        - DONE; now to put it to use internally
 
     ! Add !-commands below
     ! Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
