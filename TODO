@@ -45,7 +45,6 @@ Roadmap:
         Causes a part of Hell to freeze over
 
 Todo atm:
-    ! Implement a working help message database (add to the vocab[] array?)
     ! Implement debug level "internal" below "debug" for showing lots of
         internal debugging, so it can be enabled dynamically rather than added
         and removed when needed (unuseful outside of debug. Will need tonnes of

@@ -236,7 +236,7 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
         end
         log("Received command '" .. m .. "' on " .. net.name .. "/" .. chan,
             u, "debug")
-        local func = cmdlist[cmdfunc]
+        local func = cmdlist[cmdfunc].func
         if type(func) == "function" then
             func(u, chan, m, catch)
         end
