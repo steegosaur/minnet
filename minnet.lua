@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.6.2b1 - the unuseful lua irc bot
+-- minnet.lua 0.6.5 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -37,11 +37,12 @@ require("minnet.cmdvocab") -- The command recognition vocabulary
 udb = sqlite3.open(db.file)
 bot.start = os.time()
 math.randomseed(os.time())
+create_help()
 -- }}}
 
 -- {{{ Runtime arg check
 -- Non-executing modes first:
-if ( arg[1] == "--licence" ) then
+if arg[1] == "--licence" then
     local read = {
         list  = { "/bin/less", "/bin/more", "/usr/bin/nano", "/usr/bin/emacs",
             "/usr/bin/vim", "/usr/bin/vi", "/bin/cat" },
@@ -61,7 +62,7 @@ if ( arg[1] == "--licence" ) then
         "the file COPYING in the Minnet main directory.\n")
     end
     os.exit()
-elseif not arg[1] or ( arg[1] == "--help" ) then
+elseif arg[1] == "--help" then
     msg.help()
 end
 
@@ -91,16 +92,14 @@ for i, val in ipairs(arg) do
         if not netnr then
             err("Unknown network '" .. nname .. "'")
         end
-    elseif ( val == "--dry" ) then
+    elseif val:match("^%-%-dry") then
         runmode = "dry"
-    elseif ( val == "--run" ) then
-        runmode = "run"
     end
 end
+-- }}}
 
--- Runmode evaluation
+-- {{{ Run
 if ( runmode == "dry" ) then
-    run = false
     if not ( arg[-1] == "-i" ) then
         print("Attempting to re-run self in interactive mode..")
         print("If this doesn't work, run lua manually, specifying -i for " ..
@@ -111,16 +110,8 @@ if ( runmode == "dry" ) then
         require("dryrun")
         print("Entering debug mode - dryrun variables for u and conn set.")
     end
-elseif ( runmode ~= "run" ) then
-    err(msg.noargs)
-end
--- }}}
-
--- {{{ Run
-create_help()
-if ( runmode == "run" ) then
+else
     log("Starting Minnet..", "info")
-
     if not netnr then -- No network defined by switch; look for a default net
         for i, net in ipairs(bot.nets) do
             if net.default and ( net.default == true ) then
@@ -129,7 +120,7 @@ if ( runmode == "run" ) then
         end
     end
     if not netnr then err("No default net specified in config! " ..
-        "Go edit it, foo'!") end
+    "Go edit it, foo'!") end
     n   = netnr
     net = bot.nets[n] -- Convenience, since there is only one connected network
 
@@ -187,7 +178,6 @@ if ( runmode == "run" ) then
         conn:think()    -- The black magic stuff
         socket.sleep(0.5)
     end
-
-end -- End of '--run' block
+end
 -- }}}
 -- EOF

@@ -35,6 +35,9 @@ Roadmap:
     0.6.0
         Has liberal recognition of commands (hooks that look for keywords)
         Has multiple possible commands per action ("(what|how long) uptime")
+    0.7.0
+        Has help functionality
+        Has documented internal debug info enabled by output level "internal"
     0.9.0
         Is compatible with the CTCP specs for USERINFO, FINGER, CLIENTINFO etc.
     1.0.0

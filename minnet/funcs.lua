@@ -260,7 +260,7 @@ function create_help()
 end
 msg.help = function()
     print(name)
-    print("Usage: " .. arg[0] .. " <--help|--dry|--run> [OPTIONS]")
+    print("Usage: " .. arg[0] .. " [--help|--dry] [OPTIONS]")
     print()
     print("OPTIONS is one or more of the following:")
     print("    -v, --verbose [LEVEL]    set to output debug info, or set output to specified level")

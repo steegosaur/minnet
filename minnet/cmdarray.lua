@@ -11,7 +11,7 @@
 cmdlist = {
     -- uptime: report uptime of self or server hosting self
     uptime = {
-        help = "Report uptime of server or connection"
+        help = "Report uptime of server or connection",
         uptime = function(u, chan, m)
             m = m:lower()
             if ( ( m:match("online") or m:match("%s+up[%s%p]+") or
@@ -476,8 +476,8 @@ cmdlist = {
                 send(u.nick, msg.notauth)
             end
         end
-    --]]
     },
+    --]]
     -- disable: do not respond to anything
     disable = {
         help = "Make me shut up",
