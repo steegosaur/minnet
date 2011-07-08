@@ -95,8 +95,14 @@ end
 
 function sendRaw(str)
     -- Wrapper function for passing a rawquote to the server
-    -- str must be preformatted; no assumptions about content are made
+    -- str must be preformatted; content is not examined
     conn:send(str)
+end
+
+function sendNotice(nick, str)
+    -- Wrapper function for sending notices
+    -- Mostly used for ctcp replies
+    sendRaw("NOTICE " .. nick .. " :" .. str)
 end
 
 function check_user(nick) -- Whois function to check if a user exists

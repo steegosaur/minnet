@@ -4,6 +4,11 @@
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
+-- logctcp(o, req): Log received ctcp request req from origin o
+function logctcp(o, req)
+    log("Received CTCP " .. req .. " request from " .. o .. " on " .. net.name, "info")
+end
+
 function ctcp.action(chan, act) -- send an ACTION (/me) to 'channel'
     act = act:gsub("%%", "%%%%")
     sendRaw("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
@@ -38,26 +43,29 @@ function ctcp.rem_active(o, t)
     if num then
         table.remove(ctcp.active[t], num)
     else
-        err("Out of cheese in ctcp.rem_active()!", "error")
+        err("Out of cheese in ctcp.rem_active()!")
     end
 end
 
 -- ctcp.read(line): read a line and parse it to check for valid (recognised) CTCP requests
 function ctcp.read(l)
-    if not l then
-        return nil
-    end
+    if not l then return nil end
+    -- Catch who is sending:
     local origin = l:match("^:(%S+)!") or ""
+    -- Exclude sender from line:
     l = l:gsub("^%:" .. origin .. "%S+%s*", "")
+
+    -- Check if line l matches a known ctcp command:
+    --   VERSION
     if l:match("%\001%s*VERSION") then
         if l:match("%\001VERSION%s*%\001") then
-            log("Received CTCP VERSION request from " .. origin .. " on " .. net.name, "info")
-            sendRaw("NOTICE " .. origin .. " :\001VERSION Minnet " .. version .. "\001")
+            logctcp(origin, "VERSION")
+            sendNotice(origin, "\001VERSION Minnet " .. version .. "\001")
         else
             if not ctcp.check_active(origin, "version") then return nil end
             local reply = l:match("VERSION%s*(.-)%\001")
             if reply then
-                log("Received CTCP VERSION reply from " .. origin .. " on " .. net.name, "debug")
+                logctcp(origin, "VERSION")
                 send(vchan, "VERSION reply from " .. origin .. ": " .. reply)
             else
                 log("Received incomprehensible CTCP VERSION reply from " .. origin .. " on " .. net.name, "debug")
@@ -65,12 +73,23 @@ function ctcp.read(l)
             end
             ctcp.rem_active(origin, "version")
         end
+    --   SOURCE
     elseif l:match("%\001%s*SOURCE%s*%\001") then
-        log("Received CTCP SOURCE request from " .. origin .. " on " .. net.name, "info")
-        sendRaw("NOTICE " .. origin .. " :\001SOURCE git://github.com/staeld/minnet/\001")
+        logctcp(origin, "SOURCE")
+        sendNotice(origin, "\001SOURCE git://github.com/staeld/minnet/\001")
+    --   TIME
     elseif l:match("%\001%s*TIME%s*%\001") then
-        log("Received CTCP TIME request from " .. origin .. " on " .. net.name, "info")
-        sendRaw("NOTICE " .. origin .. " :\001TIME " .. os.date("%F %T %Z") .. "\001")
+        logctcp(origin, "TIME")
+        sendNotice(origin, "\001TIME " .. os.date("%F %T %Z") .. "\001")
+    --   FINGER
+    elseif l:match("%\001%s*FINGER%s*%\001") then
+        logctcp(origin, "FINGER")
+        sendNotice(origin, "\001FINGER Get your hands off me :|\001")
+    --   LICENCE
+    elseif l:match("%\001%s*LICENCE%s*%\001") then
+        logctcp(origin, "LICENCE")
+        sendNotice(origin, "\001LICENCE This program is released under the GNU GPL v3; " ..
+            "see http://www.gnu.org/licences/\001")
 
     --[[ Only for wip debugging
     else

@@ -19,7 +19,7 @@ function logwrite(m, u, l, f) -- msg, u, level, output-file
         filecheck:close()
 
         if not logs[f] then -- io.open() returns nil on error
-            err("Could not open logfile " .. f, "error")
+            err("Could not open logfile", f)
         else
             log("Opened logfile " .. f, "info")
             f = logs[f]
