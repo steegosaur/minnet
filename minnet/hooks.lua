@@ -8,6 +8,7 @@ hooks = {
         event   = "OnChat",
         name    = "happy",
         action  = function(u, chan, m)
+            if check_disabled(chan) == true then return nil end
             if ( chan == conn.nick ) then chan = u.nick end
             m = m:lower()
             if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
@@ -22,6 +23,7 @@ hooks = {
             if ( chan == conn.nick ) then
                 chan = u.nick
             end
+            m = desat(m)
             logchat(u, chan, m)
         end
     },
@@ -64,6 +66,7 @@ hooks = {
         event   = "OnChat",
         name    = "wit",
         action  = function(u, chan, m)
+            m = desat(m)
             local ismsg = false
             if ( chan:lower() == conn.nick:lower() ) then ismsg = true; chan = u.nick end
             if ( ismsg == true ) or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+") then
@@ -92,6 +95,7 @@ hooks = {
                     channel_add(chan)
                 --end
             else
+                if check_disabled(chan) == true then return nil end
                 send(chan, "o/` Another one bites the dust, oh - " ..
                   "another one bites the dust! o/`")
             end
@@ -101,13 +105,14 @@ hooks = {
         event   = "OnChat",
         name    = "greet",
         action  = function(u, chan, m)
+            if check_disabled(chan) == true then return nil end
             if ( chan == conn.nick ) then return nil end
             m = m:lower()
             if not m:match(conn.nick:lower()) then return nil end
             local g = {
                 hei = { "hei", "[h']?allo" },
                 hi  = { "[h']?ello", "o?h[ae]?[iy][2%a]-", "yo",
-                    "r[ao]wr2?[you]-"
+                    "r[ao]wr2?[you]-", "[h']?errow?"
                 },
                 bye = { "bye%s?", "see%s-y[aou]+", "cya" },
                 sal = { "sal", "saluton" },
@@ -195,5 +200,13 @@ hooks = {
             end -- per-word
             end -- per-class
         end
-    }
+    },
+    --[[
+    {
+        event   = "OnRaw",
+        name    = "dump",
+        action  = function(m)
+            io.write(m, "\n")
+        end
+    } --]]
 }

@@ -16,7 +16,7 @@ bot.commands = {
     be      = { "be" },
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out" },
-    quit    = { "get%s+off", "shut%s+down", "quit" },
+    quit    = { "get%s+off", "shut%s+down", "quit", "disconnect" },
     reload  = { "reload" },
     set     = { "set" },
     load    = { "load" },
@@ -31,7 +31,7 @@ bot.commands = {
     },
     enable  = {
         "y[oua]+'?re?%s+free", "speak", "r?e?%-?enable", "unsilence",
-        "live"
+        "live", "go%s+on"
     },
 }
 -- EOF

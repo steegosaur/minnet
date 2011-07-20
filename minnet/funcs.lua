@@ -5,6 +5,24 @@
 -- Minnet is released under the GPLv3 - see ../COPYING
 
 -- {{{ Internal functionality
+-- check_disabled(): Check if disabled in a channel
+function check_disabled(chan, cmdfunc)
+    if bot.disabled[chan] == true and cmdfunc ~= "enable" then
+        return true
+    else
+        return false
+    end
+end
+
+-- desat(): Strip colours from messages
+function desat(m)
+    if not m then return nil end
+    m = tostring(m)
+    m = m:gsub("^%W%d%d", "")
+    return m
+end
+
+-- reload(): Reload one or more files while running
 function reload(u, chan, file)
     if not file then
         return nil
@@ -237,9 +255,8 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
         end
     end
     if cmdFound == true then
-        if bot.disabled[chan] == true and cmdfunc ~= "enable" then
-            return nil
-        end
+        log("chan == " .. chan .. "; cmdfunc == " .. cmdfunc, u, "internal")
+        if check_disabled(chan, cmdfunc) == true then return nil end
         log("Received command '" .. m .. "' on " .. net.name .. "/" .. chan,
             u, "debug")
         local func = cmdlist[cmdfunc].func
