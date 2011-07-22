@@ -44,8 +44,8 @@ you want to make ssl-encrypted connections.
 
 Minnet as of currently has only been tested on GNU/Linux, but depending on how 
 other systems handle certain things, it could work with little or no changes 
-made to the programme. Implementing support for BSD and OS X should be a matter 
-of adding a few lines of code (provided the libraries required by Minnet work 
+made to the code. Implementing support for BSD and OS X should be a matter of
+adding a few lines of code (provided the libraries required by Minnet work 
 properly on the platforms).
 
 
@@ -129,9 +129,7 @@ more, as defined in minnet/hooks.lua.
 If you wish to silence Minnet, telling her to be quiet (or just to shut up) 
 will disable all command recognition for the channel in which the silencing 
 command is given. The only exception to this is the re-enabling command, to 
-avoid silencing her without an option to re-enable her. (NOTE: Currently, she 
-will still react to the hook-scripted interactions. This will be fixed later 
-on.)
+avoid silencing her without an option to re-enable her.
 
 
 4.4 LIST OF COMMANDS

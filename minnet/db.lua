@@ -83,9 +83,9 @@ function db.check_table(tab, data)
     data = data:lower()
     get_stmt:bind_names({ nick = data })
     for i in get_stmt:nrows() do
+        get_stmt:reset()
         return i
     end
-    get_stmt:reset()
 end
 function db.get_user(nick) -- db.get_user(): Query the udb for user info
     local usr_stmt = udb:prepare("SELECT nick,level,host,passhash,email,cur_nick FROM " ..
@@ -156,7 +156,8 @@ end
 
 -- db.show_user(): Get info on users through irc
 function db.show_user(u, name)
-    if not db.check_auth(u, "admin") then
+    if not db.check_auth(u, "admin") or not
+    ( u.nick == name and u.host:match(db.get_user(name).host) ) then
         log("Attempted to get info about user " .. name .. " on " .. net.name, u, "warn")
         send(u.nick, msg.notauth)
         return nil

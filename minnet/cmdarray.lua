@@ -40,7 +40,7 @@ cmdlist = {
              )
             then
                 local diff = os.difftime(os.time(), bot.start)
-                local days, hours, mins = timecal(diff)
+                local days, hours, mins = time.calculate(diff)
                 if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
                     send(chan, u.nick .. ": I just got online!")
                 else
@@ -62,11 +62,11 @@ cmdlist = {
                 local sysword = r[math.random(1, #r)]
                 -- Read standard GNU/Linux uptime file
                 -- TODO: Make this cross-platform by implementing Windows alternative too?
-                io.input("/proc/uptime")
-                local utime = io.read()
-                io.close()
+                local uptime_file = assert(io.open("/proc/uptime"))
+                local utime = uptime_file:read()
+                uptime_file:close()
                 utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
-                local days, hours, mins = timecal(utime)
+                local days, hours, mins = time.calculate(utime)
                 if days == "" and hours == "" and mins == "" then
                     send(chan, u.nick .. ": It was just booted!")
                 else
@@ -550,12 +550,14 @@ cmdlist = {
         end
     },
     --]]
-    -- disable: do not respond to anything
+    -- disable: do not react to anything
     disable = {
         help = "Make me shut up",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
-                log("Entering response freeze for channel " .. chan, u, "info")
+                local silchan = m:match("#([^%s%.!%?,]+)")
+                if not silchan then silchan = chan end
+                log("Entering response freeze for channel " .. silchan, u, "info")
                 bot.disabled[chan] = true
                 send(chan, msg.shutup)
             else

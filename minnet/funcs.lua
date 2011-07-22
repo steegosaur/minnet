@@ -195,43 +195,6 @@ function getarg(m) -- Gets everything after *first* word
     return arg
 end
 
-function timecal(t)
-    local time = os.date("*t", t)
-    time.day, time.hour = time.day - 1, time.hour - 1
-    local ending = { day = "", hour = "", minute = "" }
-    if ( time.day   ~= 1 ) then ending.day      = "s" end
-    if ( time.hour  ~= 1 ) then ending.hour     = "s" end
-    if ( time.min   ~= 1 ) then ending.minute   = "s" end
-    local days, hours, mins
-    local pre = ""
-    if ( time.day  > 0 ) then
-        days = time.day .. " day" .. ending.day
-    else
-        days = ""
-    end
-    if ( time.hour > 0 ) then
-        if ( days ~= "" ) and ( time.min > 0 ) then
-            pre = ", "
-        elseif ( days ~= "" ) and ( time.minute <= 0 ) then
-            pre = " and "
-        end
-        hours = pre .. time.hour .. " hour" .. ending.hour
-    else
-        hours = ""
-    end
-    if ( time.min > 0 ) then
-        if ( days ~= "" ) or ( hours ~= "" ) then
-            pre = " and "
-        else
-            pre = ""
-        end
-        mins = pre .. time.min .. " minute" .. ending.minute
-    else
-        mins = ""
-    end
-    return days, hours, mins
-end
-
 function wit(u, chan, m) -- Main hook function for reacting to commands
     local nickmatch = "^" .. conn.nick .. "%s-[,:;%-$]+%s+"
     if m:match(nickmatch) then

@@ -146,7 +146,7 @@ hooks = {
                     local word
 
                     if ( name == "tim" ) then  -- What time is it?
-                        local hour = tonumber(os.date("%H"))
+                        local hour = time.get_current().hour
                         if ( hour < 12 ) and ( hour >= 4 ) then
                             word = r.morning[math.random(1, #r.morning)]
                         elseif ( hour < 4 ) or ( hour >= 20 ) then
