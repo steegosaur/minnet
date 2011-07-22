@@ -7,22 +7,24 @@
 -- This file is used as an abstraction layer between the received commands
 --  and the actual, known commands. This permits for looser command recognition
 --  while avoiding duplicate functions.
---  The actual implementation is still subject to change.
 
--- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command$" }
+-- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command" }
 
 bot.commands = {
-    uptime  = { "how%s+long", "for%s+how%s+long", "what'?s?%s+.*uptime.*" },
-    be      = { "be" },
+    uptime  = { "how%s+long", "for%s+how%s+long", "what'?s?%s+.*uptime.*",
+        "^uptime" },
+    time    = { "what'?%s-i?s%s+.*%s+time", "what'?%s-i?s%s+.*%s+clock",
+        "what%stime'?%s-i?s'?%s-it", "^time%s" },
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out" },
     quit    = { "get%s+off", "shut%s+down", "quit", "disconnect" },
     reload  = { "reload" },
     set     = { "set" },
     load    = { "load" },
+    unload  = { "unload", "remove" },
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     say     = { "say" },
-    version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*of" },
+    version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
     identify= { "identify", "i'?%s-a?m" },
     db      = { "db", "database" },
     disable = {
@@ -33,5 +35,6 @@ bot.commands = {
         "y[oua]+'?re?%s+free", "speak", "r?e?%-?enable", "unsilence",
         "live", "go%s+on"
     },
+    be      = { "be" },
 }
 -- EOF

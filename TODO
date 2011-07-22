@@ -31,14 +31,17 @@ Roadmap:
         Uses ssl
         Dynamically uses config-defined levels to define allowed_level
     0.5.0
-	    Does stuff. </lazy>
+	    Does stuff. </lazy> (Refer to commits for actual changes at this point)
     0.6.0
         Has liberal recognition of commands (hooks that look for keywords)
         Has multiple possible commands per action ("(what|how long) uptime")
     0.7.0
+        Has hook unload functionality
+        Supports fully (single-)coloured lines (commands and logging)
         Has help functionality
+        Provides the time when asked
         Has documented internal debug info enabled by output level "internal", 
-          and more widely used "debug" level output
+         and more widely used "debug" level output
     0.9.0
         Is compatible with the CTCP specs for USERINFO, FINGER, CLIENTINFO etc.
     1.0.0
@@ -49,17 +52,11 @@ Roadmap:
         Causes a part of Hell to freeze over
 
 Todo atm:
-    ! Implement debug level "internal" below "debug" for showing lots of
-        internal debugging, so it can be enabled dynamically rather than added
-        and removed when needed (unuseful outside of debug. Will need tonnes of
-        descriptions to make legible and usable!)
-        - DONE; now to put it to use internally
-
     ! Add !-commands below
     ! Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
     Add USERINFO, CLIENTINFO, FINGER, etc
     ! Check vulnerabilities for more than one user with the same nick
-    
+
 Command ideas:
     ! Flood protection - warn then kick (then ban?); check for own op status
 

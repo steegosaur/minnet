@@ -9,10 +9,10 @@ function logctcp(o, req)
     log("Received CTCP " .. req .. " request from " .. o .. " on " .. net.name, "info")
 end
 
-function ctcp.action(chan, act) -- send an ACTION (/me) to 'channel'
+function ctcp.action(u, chan, act) -- send an ACTION (/me) to 'channel'
     act = act:gsub("%%", "%%%%")
     sendRaw("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
-    log("Sent ctcp.action " .. act .. " to " .. net.name .. "/" .. chan, u, "info")
+    log("Sent CTCP ACTION '" .. act .. "' to " .. net.name .. "/" .. chan, u, "info")
 end
 function ctcp.version(arg) -- request a VERSION reply to 'arg'
     arg = arg:match("^(%S+)")

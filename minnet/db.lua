@@ -226,7 +226,9 @@ end
 -- Params: usertable, add/mod, nick, accesslevel, hostmask, passhash, email
 function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
 --    print(u.nick, mode, nick, level, host)
-    if     not nick     or ( nick     == "" ) then forgot(u, "nick")
+    if     not nick     or ( nick     == "" ) then
+        forgot(u, "nick")
+        return nil
     -- Check if user has the rights to add new user with given level
     elseif ( db.check_allowed(u, level) == false ) and not otkcheck then
         log("Attempted to add/mod user " .. nick .. " as " .. level .. " without sufficient permissions to do so.", u, "warn")
@@ -246,9 +248,18 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
         local cur_nick = nick
 
         if ( mode == "add" ) then
-            if not host     or ( host     == "" ) then forgot(u, "host") end
-            if not passhash or ( passhash == "" ) then forgot(u, "password") end
-            if not level    or ( level    == "" ) then forgot(u, "level") end
+            if not host or ( host     == "" ) then
+                forgot(u, "host")
+                return nil
+            end
+            if not passhash or ( passhash == "" ) then
+                forgot(u, "password")
+                return nil
+            end
+            if not level or ( level    == "" ) then
+                forgot(u, "level")
+                return nil
+            end
             if db.check_table(net.name, nick) then
                 log("User " .. nick .. " already exists, ignoring", u, "trivial")
                 send(u.nick, "I already know that guy. Try modifying the user instead.")

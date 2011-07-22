@@ -12,7 +12,7 @@ hooks = {
             if ( chan == conn.nick ) then chan = u.nick end
             m = m:lower()
             if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
-                ctcp.action(chan, "doesn't worry, is happy! :D")
+                ctcp.action(u, chan, "doesn't worry, is happy! :D")
             end
         end
     },
@@ -106,7 +106,7 @@ hooks = {
         name    = "greet",
         action  = function(u, chan, m)
             if check_disabled(chan) == true then return nil end
-            if ( chan == conn.nick ) then return nil end
+            if ( chan == conn.nick ) then chan = u.nick end
             m = m:lower()
             if not m:match(conn.nick:lower()) then return nil end
             local g = {

@@ -18,7 +18,7 @@ end
 function desat(m)
     if not m then return nil end
     m = tostring(m)
-    m = m:gsub("^%W%d%d", "")
+    m = m:gsub("^[^%w%p%s]%d%d", "")
     return m
 end
 
@@ -34,7 +34,7 @@ function reload(u, chan, file)
     end
     if ( file == "funcs" or file == "ctcp" or
       file == "db" or file == "hooks" or file == "config" or
-      file == "cmdvocab" or file == "cmdarray" or
+      file == "cmdvocab" or file == "cmdarray" or file == "time" or
       file == "logging" or file == "hacks" ) then
         if assert(io.open("minnet/" .. file .. ".lua", "r")) then
             dofile("minnet/" .. file .. ".lua")
@@ -254,9 +254,9 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             break
         end
     end
+    if check_disabled(chan, cmdfunc) == true then return nil end
     if cmdFound == true then
         log("chan == " .. chan .. "; cmdfunc == " .. cmdfunc, u, "internal")
-        if check_disabled(chan, cmdfunc) == true then return nil end
         log("Received command '" .. m .. "' on " .. net.name .. "/" .. chan,
             u, "debug")
         local func = cmdlist[cmdfunc].func
@@ -264,6 +264,7 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             func(u, chan, m, catch)
         end
     else
+        m = m:gsub("[^%s%p%w]", "")
         log("Could not understand command '" .. m .. "'", u, "debug")
         send(chan, "Excuse me?")
     end

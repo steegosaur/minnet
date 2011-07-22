@@ -9,15 +9,36 @@
 --  definition, thus enabling re-use of portions or wholes of the code.
 
 cmdlist = {
+    -- time: report the current time (optionally, in a given numerical tz)
+    time = {
+        help = "So you wonder what the time is?",
+        func = function(u, chan, m)
+            local response = "%s: The time is currently %.2d:%.2d:%.2d %s, " ..
+                "%s %.4d-%.2d-%.2d."
+            local now, tz = time.get_current(m)
+            send(chan, response:format(u.nick, now.hour, now.min, now.sec, tz,
+                time.wdays.short[now.wday], now.year, now.month, now.day))
+        end
+    },
     -- uptime: report uptime of self or server hosting self
     uptime = {
         help = "Report uptime of server or connection",
-        uptime = function(u, chan, m)
+        func = function(u, chan, m)
             m = m:lower()
-            if ( ( m:match("online") or m:match("%s+up[%s%p]+") or
-              m:match("uptime") or m:match("connected") or m:match("running") ) and
-              m:match("you") and not ( m:match("system") or
-              m:match("computer") or m:match("server") ) ) then
+            if
+             (
+              (
+               m:match("online") or m:match("%s+up[%s%p]+") or
+               m:match("uptime") or m:match("connected") or m:match("running")
+              ) and
+              (
+               m:match("you") or m:match("ya%s") or m:match("yer%s")
+              ) and not
+              (
+               m:match("system") or m:match("computer") or m:match("server")
+              )
+             )
+            then
                 local diff = os.difftime(os.time(), bot.start)
                 local days, hours, mins = timecal(diff)
                 if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
@@ -25,9 +46,18 @@ cmdlist = {
                 else
                     send(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
                 end
-            elseif ( ( m:match("%s+up[%s%p]+") or m:match("uptime") or
-              m:match("online") or m:match("running") ) and ( m:match("system") or
-              m:match("server") or m:match("computer") or m:match("host") ) ) then
+            elseif
+             (
+              (
+               m:match("%s+up[%s%p]+") or m:match("uptime") or
+               m:match("online") or m:match("running")
+              ) and
+              (
+               m:match("system") or m:match("server") or m:match("computer") or
+               m:match("host")
+              )
+             )
+            then
                 local r = { "system", "server", "computer" }
                 local sysword = r[math.random(1, #r)]
                 -- Read standard GNU/Linux uptime file
@@ -67,8 +97,11 @@ cmdlist = {
                     end
                     if not smile then smile = "" end
                     local arg1 = arg:match("^%s-(#%S+)%s+%S+")
-                    if arg1 then chan = arg1; arg = arg:match("^%s-%S+%s+(.*)$") end
-                    ctcp.action(chan, "is " .. arg .. smile)
+                    if arg1 and check_joined(arg1) then
+                        chan = arg1
+                        arg = arg:match("^%s-%S+%s+(.*)$")
+                    end
+                    ctcp.action(u, chan, "is " .. arg .. smile)
                 end
             else
                 log("Received unauthorised be command", u, "trivial")
@@ -99,7 +132,7 @@ cmdlist = {
                         send(chan, "I'm already there!")
                     else
                         channel_add(cn)
-                        ctcp.action(chan, msg.joining .. cn)
+                        ctcp.action(u, chan, msg.joining .. cn)
                         if k then
                             conn:join(cn, k)
                         else
@@ -187,7 +220,8 @@ cmdlist = {
                 arg = arg:gsub("%s*the%s+", "", 1)
                 local cmd = arg:match("^(%a+)")
                 local arg = getarg(arg)
-                if cmd == "logging" or cmd:match("^verbos") or cmd:match("^debug") then
+                if cmd == "logging" or cmd:match("^verbos") or
+                  cmd:match("^debug") or cmd:match("^output") then
                     arg = arg:gsub("%s*the%s+", "")
                     arg = arg:gsub("%s*level%s*", "")
                     arg = arg:gsub("%s*to%s+", "")
@@ -218,7 +252,7 @@ cmdlist = {
     -- load: load stuff (atm: hooks)
     load = {
         help = "Load hooks or something",
-            func = function(u, chan, m)
+        func = function(u, chan, m)
             if db.check_auth(u, "admin") then
                 m = getarg(m)
                 m = m:gsub("%s*the%s*", "", 1)
@@ -251,6 +285,43 @@ cmdlist = {
             end
         end
     },
+    -- unload: unload stuff (ie., hooks)
+    unload = {
+        help = "Unload hooks and stuff",
+        func = function(u, chan, m)
+            if db.check_auth(u, "admin") then
+                m = getarg(m)
+                m = m:gsub("%s*the%s*", "", 1)
+                m = m:gsub("%s*called%s*", "", 1)
+                local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
+                if hookname then
+                    local hookfound = false
+                    for i, h in ipairs(hooks) do
+                        if h.name == hookname then
+                            log("Removing hook " .. h.name .. " for event " ..
+                                h.event, u, "info")
+                            conn:hook(h.event, h.name, h.action)
+                            send(chan, u.nick .. ": Okay, got rid of it.")
+                            hookfound = true
+                            break
+                        end
+                    end
+                    if not hookfound then
+                        log("Attempted to remove unknown hook " .. hookname,
+                            u, "trivial")
+                        send(chan, u.nick .. ": I'm sorry, but I couldn't " ..
+                            "find any hook by that name.")
+                    end
+                else
+                    log("Could not understand hook name", u, "trivial")
+                    send(chan, u.nick .. ": Unload what?")
+                end
+            else
+                log("Received unauthorised unload command", u, "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
     -- reseed: reseed random number seed
     -- TODO: Automate this?
     reseed = {
@@ -274,7 +345,7 @@ cmdlist = {
                     local nick
                     local say = ""
                     local t = arg:match("^%s-(#%S+)%s+%S+") -- Channel to output to?
-                    if arg:match("%s+to%s+%S+%s-%p-$") then -- Telling someone something?
+                    if arg:match("%s+to%s+[^%s!%?%.,]+") then -- Telling someone something?
                         nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
                         local q = conn:whois(nick)
                         if q.channels then
@@ -305,6 +376,7 @@ cmdlist = {
                         log("Saying " .. say .. " to " .. nick .. " on channel " .. chan, u, "debug")
                     end
 
+                    -- Fix uppercase letters and initial %'s
                     local subit, subto
                     if say:sub(1, 1) == "%" then
                         subit, subto = "%%", "%%"
@@ -447,7 +519,7 @@ cmdlist = {
                 send(chan, "Get needs NICK, and shows the registered " ..
                     "information for that nick.")
                 send(chan, "Set needs MODE and VALUE. It allows you to set " ..
-                    "you email and password.")
+                    "your email and password.")
             else
                 send(chan, "I don't know what you meant I should do with " ..
                     "the database. Maybe you need some help?")

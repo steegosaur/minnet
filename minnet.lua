@@ -31,6 +31,7 @@ require("minnet.db")
 require("minnet.ctcp")
 require("minnet.hooks")
 require("minnet.logging")
+require("minnet.time")     -- Time functionality
 require("minnet.cmdarray") -- The command functions
 require("minnet.cmdvocab") -- The command recognition vocabulary
 
