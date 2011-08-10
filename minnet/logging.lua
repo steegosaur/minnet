@@ -35,7 +35,7 @@ function logwrite(m, u, l, f) -- msg, u, level, output-file
     end
     l = l:upper()
     local fmtstr = "%s : %s %s%s\n"
-    if ( io.type(f) ~= "file" ) then
+    if io.type(f) ~= "file" then
         return nil
     end
     f:write(fmtstr:format(os.date("%F/%T"), l, mask, m))
@@ -47,7 +47,7 @@ function log(m, u, l) -- Log function, takes message, user table and loglevel
         err("No error message provided in call to log()")
     end
     if not l then     -- Because I'm too lazy to switch l and u in all calls
-        if ( type(u) == "string" ) then
+        if type(u) == "string" then
             l, u = u, nil
         end
     end
@@ -60,7 +60,7 @@ function log(m, u, l) -- Log function, takes message, user table and loglevel
         logwrite(m, u, l, syslog)
     end
 
-    if ( levels[l] > verbosity ) then -- Lower value == higher prio
+    if levels[l] > verbosity then -- Lower value == higher prio
         return nil      -- We don't want this level; shut up
     end
 
@@ -76,14 +76,19 @@ function err(m, file)
 end
 
 function logchan(mode, u, chan, m, bullet)
-    if ( type(u) == "string" ) then
+    if type(u) == "string" then
         local nick = u
         u = { nick = nick }
     end
     local logfile
     chan = chan:lower()
+    local logpath = logdir .. "/" .. net.name .. "/" .. chan .. ".log"
     if not logs[chan] then
-        logs[chan] = io.open(logdir .. "/" .. net.name .. "/" .. chan .. ".log", "w")
+        if not io.open(logpath, "r") then
+            logs[chan] = io.open(logpath, "w")
+        else
+            logs[chan] = io.open(logpath, "a+")
+        end
         if not logs[chan] then
             err("Could not open logfile " .. netdir .. "/" .. chan .. ".log")
         else
@@ -93,22 +98,22 @@ function logchan(mode, u, chan, m, bullet)
     else
         logfile = logs[chan]
     end
-    if ( io.type(logfile) ~= "file" ) then
+    if io.type(logfile) ~= "file" then
         return nil
     end
 
     local entry, fmtstr
-    if ( mode == "chat" ) then
+    if mode == "chat" then
         fmtstr = "%s: %s: %s\n"
         entry  = fmtstr:format(os.date("%F/%T"), u.nick, m)
-    elseif ( mode == "note" ) then
+    elseif mode == "note" then
         bullet = bullet or "*"
         fmtstr = "%s: %s %s %s\n"
         entry  = fmtstr:format(os.date("%F/%T"), bullet, u.nick, m)
     else
         log("Erroneous chatlog() mode; FIXME", "error")
     end
-    logfile:write(entry, "\n")
+    logfile:write(entry)
     logfile:flush()
     logfile = nil
 end

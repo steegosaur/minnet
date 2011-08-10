@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.6.7 - the unuseful lua irc bot
+-- minnet.lua 0.7.0 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -131,6 +131,7 @@ else
     netdir = logdir .. "/" .. net.name
     check_create(syslog)
     check_create_dir(netdir)
+    logs[syslog] = io.open(syslog, "a+")
 
     db.check()   -- Check that the net's table exists
     conn = irc.new({

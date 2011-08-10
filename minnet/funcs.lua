@@ -27,15 +27,14 @@ function reload(u, chan, file)
     if not file then
         return nil
     end
-    if ( file == "functions" ) then file = "funcs"
-    elseif ( file == "configuration" ) then file = "config"
-    elseif ( file == "database" ) then file = "db"
-    elseif ( file == "log" ) then file = "logging"
+    if file == "functions" then file = "funcs"
+    elseif file == "configuration" then file = "config"
+    elseif file == "database" then file = "db"
+    elseif file == "log" then file = "logging"
     end
-    if ( file == "funcs" or file == "ctcp" or
-      file == "db" or file == "hooks" or file == "config" or
-      file == "cmdvocab" or file == "cmdarray" or file == "time" or
-      file == "logging" or file == "hacks" ) then
+    if file == "funcs" or file == "ctcp" or file == "db" or file == "hooks" or
+      file == "config" or file == "cmdvocab" or file == "cmdarray" or
+      file == "time" or file == "logging" or file == "hacks" then
         if assert(io.open("minnet/" .. file .. ".lua", "r")) then
             dofile("minnet/" .. file .. ".lua")
         else
@@ -74,7 +73,7 @@ function check_create_dir(d)
             err("Error creating dir " .. d .. ": " .. errmsg)
         end
     else
-        if ( lfs.attributes(d, "mode") ~= "directory" ) then
+        if lfs.attributes(d, "mode") ~= "directory" then
             err(d .. " is not a directory")
         else
             log("Dir " .. d .. " exists, using..", "debug")
@@ -92,7 +91,7 @@ function check_create(f)
             err("Error creating file " .. f .. ": " .. errmsg)
         end
     else
-        if ( lfs.attributes(f, "mode") ~= "file" ) then
+        if lfs.attributes(f, "mode") ~= "file" then
             err(f .. " is not a file")
         else
             log("File " .. f .. " exists, using..", "debug")
@@ -105,7 +104,7 @@ end
 function send(chan, str)
     -- Wrapper func: should be changed according to irc framework used
     -- Allows for more dynamic rewriting of the well-used message sending.
-    if ( type(chan) == "table" ) then
+    if type(chan) == "table" then
         if chan.nick then chan = chan.nick end
     end
     conn:sendChat(chan, str)
@@ -137,7 +136,7 @@ function check_joined(c) -- Returns true if c is in n's joined list
     c = c:lower()
     local found
     for i = 1, #net.joined do
-        if ( net.joined[i] == c ) then
+        if net.joined[i] == c then
             found = true
             break
         end
@@ -162,7 +161,7 @@ function channel_remove(c)
     c = c:lower()
     local num, found
     for i = 1, #net.joined do
-        if ( net.joined[i] == c ) then
+        if net.joined[i] == c then
             found = true
             num = i
             break
@@ -185,7 +184,7 @@ function otkgen()
 end
 
 function passgen(p)
-    if ( not p ) or ( p == "" ) then return nil end
+    if ( not p ) or p == "" then return nil end
     local h = crypto.evp.digest("sha1", p)
     return h
 end
@@ -200,7 +199,7 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     if m:match(nickmatch) then
         m = m:gsub(nickmatch, "")
     end
-    if ( m == "" ) or m:match("^%s+") or m:match("%\001") then return nil end
+    if m == "" or m:match("^%s+") or m:match("%\001") then return nil end
     m = m:gsub("%s+$", "")
     cmdFound = false
     local cmdfunc, catch

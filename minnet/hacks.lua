@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- hacks.lua - file to write hacks for Minnet that will be inserted while running
+-- hacks.lua - file containing hacks for Minnet to be inserted while running
 -- Copyright Stæld Lakorv, 2011 <staeld@staeld.co.cc>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3, see ../COPYING

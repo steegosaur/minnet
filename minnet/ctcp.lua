@@ -12,7 +12,7 @@ end
 function ctcp.action(u, chan, act) -- send an ACTION (/me) to 'channel'
     act = act:gsub("%%", "%%%%")
     sendRaw("PRIVMSG " .. chan .. " :\001ACTION " .. act .. "\001")
-    log("Sent CTCP ACTION '" .. act .. "' to " .. net.name .. "/" .. chan, u, "info")
+    log("Sent CTCP ACTION '" .. act .. "' to " .. net.name .. "/" .. chan, u, "debug")
 end
 function ctcp.version(arg) -- request a VERSION reply to 'arg'
     arg = arg:match("^(%S+)")
@@ -25,7 +25,7 @@ function ctcp.check_active(o, t)
     if not ( o and t ) then return nil end
     local wQ, num
     for i, name in ipairs(ctcp.active[t]) do
-        if ( o:lower() == name:lower() ) then
+        if o:lower() == name:lower() then
             wQ = true
             num = i
             break

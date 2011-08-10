@@ -5,19 +5,92 @@
 -- Minnet is released under the GPLv3 - see ../COPYING
 
 -- This file contains an array which is referenced by the meta-array in
---  cmdvocab.lua, so that several triggers there can use the same command
---  definition, thus enabling re-use of portions or wholes of the code.
+--+ cmdvocab.lua, so that several triggers there can use the same command
+--+ definition, thus enabling re-use of portions or wholes of the code.
 
 cmdlist = {
     -- time: report the current time (optionally, in a given numerical tz)
     time = {
-        help = "So you wonder what the time is?",
+        help = "Want to know what the time is?",
         func = function(u, chan, m)
             local response = "%s: The time is currently %.2d:%.2d:%.2d %s, " ..
                 "%s %.4d-%.2d-%.2d."
             local now, tz = time.get_current(m)
+            if tz == "unknown" then
+                send(chan, u.nick .. ": Sorry, I don't know that timezone.")
+                return nil
+            elseif not now then
+                return nil
+            end
             send(chan, response:format(u.nick, now.hour, now.min, now.sec, tz,
                 time.wdays.short[now.wday], now.year, now.month, now.day))
+        end
+    },
+    timezones = {
+        help = "Want a list of the timezones I know?",
+        func = function(u, chan, m)
+            local tzs = time.timezones
+            table.sort(tzs)
+            local list, i = {}, 1
+            for zone in pairs(tzs) do
+                if not list[1] then
+                    list[1] = u.nick .. ": The timezones I know are:"
+                    i = i + 1
+                end
+                if not list[i] then
+                    list[i] = zone
+                elseif list[i] and string.len(list[i] .. " " .. zone) < 81 then
+                    list[i] = list[i] .. " " .. zone
+                elseif list[i] and string.len(list[i] .. " " .. zone) > 80 then
+                    i = i + 1
+                    list[i] = zone
+                end
+            end
+            log("Outputting timezone list to " .. chan, u, "trivial")
+            for i, line in ipairs(list) do
+                send(chan, line)
+            end
+        end
+    },
+    twentytwo_seven = {
+        help = "The worst tragedy in Norwegian history - how long has it been?",
+        func = function(u, chan, m)
+            local when = {
+                -- Times are UTC (local time was +2h)
+                year  = 2011,
+                month = 7,
+                day   = 22,
+                oslo  = { hour = 13, min = 26 },
+                utoya = { hour = 15, min = 15 }
+            }
+            m = m:lower()
+            local now = os.time(time.get_current(" UTC"))
+            local incident, incident_time
+            if m:match("ut[oøe]-ya") then
+                incident = "Utøya"
+                inc_var  = "utoya"
+            elseif ( m:match("oslo") or m:match("norway") ) and
+              m:match("bomb") then
+                incident = "Oslo"
+                inc_var  = "oslo"
+            end
+            if incident then
+                incident_time = os.time({ year = when.year, month = when.month,
+                    day = when.day, hour = when[inc_var].hour,
+                    min = when[inc_var].min })
+                print(now, incident_time)
+                local diff = os.difftime(now, incident_time)
+                print(diff)
+                local days, hours, mins = time.calculate(diff)
+                local re_pattern = "%s: It has been %s%s%s since the %s " ..
+                    "incident, which occured at %.4d-%.2d-%.2d, %.2d:%.2d UTC."
+                local response = re_pattern:format(u.nick, days, hours, mins,
+                    incident, when.year, when.month, when.day,
+                    when[inc_var].hour, when[inc_var].min)
+                send(chan, response)
+            else
+                send(chan, u.nick .. ": Pardon, what did you say?")
+            end
         end
     },
     -- uptime: report uptime of self or server hosting self
@@ -40,11 +113,13 @@ cmdlist = {
              )
             then
                 local diff = os.difftime(os.time(), bot.start)
-                local days, hours, mins = time.calculate(diff)
-                if ( days == "" ) and ( hours == "" ) and ( mins == "" ) then
+                local weeks, days, hours, mins = time.calculate(diff)
+                if weeks == "" and days == "" and hours == "" and
+                  mins == "" then
                     send(chan, u.nick .. ": I just got online!")
                 else
-                    send(chan, u.nick .. ": I've been online for " .. days .. hours .. mins .. ".")
+                    send(chan, u.nick .. ": I've been online for " ..
+                        weeks .. days .. hours .. mins .. ".")
                 end
             elseif
              (
@@ -62,16 +137,23 @@ cmdlist = {
                 local sysword = r[math.random(1, #r)]
                 -- Read standard GNU/Linux uptime file
                 -- TODO: Make this cross-platform by implementing Windows alternative too?
-                local uptime_file = assert(io.open("/proc/uptime"))
+                local uptime_file = io.open("/proc/uptime")
+                if not uptime_file then
+                    log("/proc/uptime unavailable, skipping uptime reporting",
+                        "info")
+                    send(chan, "Sorry, but I couldn't find the uptime.")
+                    return nil
+                end
                 local utime = uptime_file:read()
                 uptime_file:close()
                 utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
-                local days, hours, mins = time.calculate(utime)
-                if days == "" and hours == "" and mins == "" then
+                local weeks, days, hours, mins = time.calculate(utime)
+                if weeks == "" and days == "" and hours == "" and
+                  mins == "" then
                     send(chan, u.nick .. ": It was just booted!")
                 else
                     send(chan, u.nick .. ": The " .. sysword .. " went up " ..
-                      days .. hours .. mins .. " ago.")
+                        weeks .. days .. hours .. mins .. " ago.")
                 end
             else
                 send(chan, "Err, what?")
@@ -106,6 +188,35 @@ cmdlist = {
             else
                 log("Received unauthorised be command", u, "trivial")
                 send(u.nick, msg.notauth)
+            end
+        end
+    },
+    belong = {
+        help = "Want to own me?",
+        func = function(u, chan)
+            if db.check_auth(u, "owner") then
+                send(chan, "You already own me, silly.")
+            elseif db.check_auth(u, "oper") then
+                local owner = db.get_owner()
+                local first_letter = owner:sub(1, 1)
+                owner = owner:gsub("^%l", first_letter:upper())
+                send(chan, u.nick .. ": Sorry, you'll have to ask " .. owner ..
+                    ".")
+            else
+                send(chan, "Who do you think you are?")
+            end
+        end
+    },
+    owner = {
+        help = "Want to know who's my owner?",
+        func = function(u, chan, m)
+            local owner = tostring(db.get_owner())
+            if owner:lower() == u.nick:lower() then
+                send(chan, "You are my bloody owner, silly.")
+            else
+                local first_letter = owner:sub(1, 1)
+                owner = owner:gsub("^%l", first_letter:upper())
+                send(chan, u.nick .. ": My owner is " .. owner .. ".")
             end
         end
     },
@@ -526,30 +637,109 @@ cmdlist = {
             end
         end
     },
-    -- vocablist: list all known command vocab in raw form
-    --[[ WIP
-    vocablist = {
-        help = "List all the available commands with their respective matches",
-        func = function(u, chan, m)
-            if db.check_auth(u, "user") then
-                local cmds = {}
-                for cmd, names in pairs(bot.commands) do
-                    local cmd = {}
-                    table.insert(cmds, cmd)
-                    for _, name in ipairs(names) do
-                        table.insert(cmds[cmd], name)
+    -- help: get general help, or help on a specific command
+    help = {
+        help = "You don't know what I can do!",
+        func = function(u, chan, m, catch)
+            if m:match("^" .. catch .. "$") then
+                -- Nothing more specified; show general help message
+                log("Giving general help message in channel " .. chan,
+                    "trivial")
+                send(chan, "This is " .. name)
+                send(chan, "For a full list of functionality, ask for help " ..
+                    "on the commands.")
+            elseif m:match("commands") then
+                send(chan, "The available commands are:")
+                -- Create plain cmdlist
+                local commandlist = {}
+                for cmd in pairs(bot.commands) do
+                    table.insert(commandlist, cmd)
+                end
+                table.sort(commandlist)
+                -- Crop the list so it fits IRC
+                local width     = 92
+                local cols      = 5
+                local numprints = 0
+                local sendtext  = ""
+                for i, word in ipairs(commandlist) do
+                    local spacing = width/cols - word:len()
+                    sendtext = sendtext .. string.rep(" ", spacing) .. word
+                    numprints = numprints + 1
+                    if numprints == cols or i == #commandlist then
+                        -- Line fully built; send it and start a new
+                        send(chan, sendtext)
+                        sendtext  = ""
+                        numprints = 0
                     end
                 end
-                log("Listing all available commands and their patterns in "..
-                    "channel " .. chan, u, "info")
-                -- OUTPUT GOES HERE; send via query?
+                send(chan, "Remember that these are the internal " ..
+                    "representations, and that they do not necessarily " ..
+                    "correspond with the triggering commands.")
             else
-                log("Received unauthorised quit command", u, "warn")
+                -- Something more than the catch was specified; identify it:
+                --+ (pattern matches single word, only supports internal names)
+                local helpcmd = m:match(catch .. "%s-(%l+)")
+                local cmdFound = false
+                for command in pairs(bot.commands) do
+                    if helpcmd == command then
+                        cmdFound = true
+                        break
+                    end
+                end
+                if cmdFound == true then
+                    send(chan, cmdlist[helpcmd].help)
+                    log("Sending help for command " .. helpcmd ..
+                        " to channel " .. chan, "debug")
+                else
+                    send(chan, "Sorry, I don't know that command. Need " ..
+                        "some help?")
+                end
+            end
+        end
+    },
+    -- ignore: ignore users
+    ignore = {
+        help = "Make me ignore someone; specify whether given pattern is of " ..
+            "type nick, user or host. Patterns are Lua-style.",
+        func = function(u, chan, m)
+            if db.check_auth(u, "oper") then
+                m = getarg(m)
+                m = m:lower()
+                local class
+                if m:match("%s+user%s+") or m:match("username") then
+                    class = "user"
+                elseif m:match("%s+host[maskne]-") then
+                    class = "host"
+                else
+                    class = "nick"
+                    m = m:gsub("^%s-the%s+", "")
+                    m = m:gsub("^%s-person%s+", "")
+                    m = m:gsub("^with", "")
+                    m = m:gsub("^%s-the", "")
+                    m = m:gsub("^.*%sname%s+", "")
+                end
+                m = m:gsub("^.*%s" .. class .. "%w-%s+", "")
+                local pattern = m:match("^(%W+)")
+                local channel = m:match("in%s+#([^%.%?!,%s]+)")
+                if not channel then channel = chan end
+                if not pattern then
+                    send(chan, "Uhm, who did you mean again?")
+                    log("Could not find pattern in ignore command", "debug")
+                    return nil
+                else
+                    pattern = string.format("%q", tostring(pattern))
+                    log("Pattern found by ignore function: " .. pattern, "internal")
+                    if not bot.ignore[channel] then bot.ignore[channel] = {} end
+                    table.insert(bot.ignore[channel], class .. "/" .. pattern)
+                    log("Commencing ignoring of " .. class .. " '" ..
+                        pattern .. "'", "info")
+                end
+            else
+                log("Received unauthorised ignore command", u, "warn")
                 send(u.nick, msg.notauth)
             end
         end
     },
-    --]]
     -- disable: do not react to anything
     disable = {
         help = "Make me shut up",
@@ -557,7 +747,8 @@ cmdlist = {
             if db.check_auth(u, "oper") then
                 local silchan = m:match("#([^%s%.!%?,]+)")
                 if not silchan then silchan = chan end
-                log("Entering response freeze for channel " .. silchan, u, "info")
+                log("Entering response freeze for channel " .. silchan, u,
+                    "info")
                 bot.disabled[chan] = true
                 send(chan, msg.shutup)
             else

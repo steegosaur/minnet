@@ -9,8 +9,8 @@ hooks = {
         name    = "happy",
         action  = function(u, chan, m)
             if check_disabled(chan) == true then return nil end
-            if ( chan == conn.nick ) then chan = u.nick end
-            m = m:lower()
+            if chan == conn.nick then chan = u.nick end
+            m = desat(m):lower()
             if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
                 ctcp.action(u, chan, "doesn't worry, is happy! :D")
             end
@@ -18,9 +18,21 @@ hooks = {
     },
     {
         event   = "OnChat",
+        name    = "own",
+        action  = function(u, chan, m)
+            if check_disabled(chan, "belong") == true then return nil end
+            m = desat(m):lower()
+            if m:match("^!" .. conn.nick:lower()) then
+                log("Triggered !ownership hook", "debug")
+                cmdlist.belong.func(u, chan)
+            end
+        end
+    },
+    {
+        event   = "OnChat",
         name    = "logchat",
         action  = function(u, chan, m)
-            if ( chan == conn.nick ) then
+            if chan == conn.nick then
                 chan = u.nick
             end
             m = desat(m)
@@ -68,8 +80,8 @@ hooks = {
         action  = function(u, chan, m)
             m = desat(m)
             local ismsg = false
-            if ( chan:lower() == conn.nick:lower() ) then ismsg = true; chan = u.nick end
-            if ( ismsg == true ) or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+") then
+            if chan:lower() == conn.nick:lower() then ismsg = true; chan = u.nick end
+            if ismsg == true or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+") then
                 wit(u, chan, m)
             end
         end
@@ -83,7 +95,7 @@ hooks = {
         event   = "OnKick",
         name    = "rejoin",
         action  = function(chan, nick, k, r)
-            if ( nick:lower() == conn.nick:lower() ) then
+            if nick:lower() == conn.nick:lower() then
                 log("Kicked from channel " .. chan, k, "info")
                 if not channel_remove(chan) then
                     log("Error: Could not remove channel " .. chan ..
@@ -106,7 +118,7 @@ hooks = {
         name    = "greet",
         action  = function(u, chan, m)
             if check_disabled(chan) == true then return nil end
-            if ( chan == conn.nick ) then chan = u.nick end
+            if chan == conn.nick then chan = u.nick end
             m = m:lower()
             if not m:match(conn.nick:lower()) then return nil end
             local g = {
@@ -145,31 +157,31 @@ hooks = {
                 if m:match(pattern .. "[%s%p]+" .. conn.nick:lower()) then
                     local word
 
-                    if ( name == "tim" ) then  -- What time is it?
+                    if name == "tim"  then  -- What time is it?
                         local hour = time.get_current().hour
-                        if ( hour < 12 ) and ( hour >= 4 ) then
+                        if hour < 12 and hour >= 4 then
                             word = r.morning[math.random(1, #r.morning)]
-                        elseif ( hour < 4 ) or ( hour >= 20 ) then
+                        elseif hour < 4 or hour >= 20 then
                             word = r.eve[math.random(1, #r.eve)]
-                        elseif ( hour >= 12 ) and ( hour < 16 ) then
+                        elseif hour >= 12 and hour < 16 then
                             word = r.day[math.random(1, #r.day)]
-                        elseif ( hour >= 16 ) and ( hour < 20 ) then
+                        elseif hour >= 16 and hour < 20 then
                             word = r.noon[math.random(1, #r.noon)]
                         else -- How the hell did we get here?
                             log("Out of cheese in time calculation for greeting hook - time is " .. tostring(hour), "warn")
                             word = "Hello" -- Safe fallback in case of fuckup
                         end
-                    elseif ( name == "how" ) then
+                    elseif name == "how" then
                         local now = os.time()
                         local diff = os.difftime(now, howdoTime[chan]) or 200
-                        if ( diff < 60 ) then
+                        if diff < 60 then
                             log("Was asked for feelings <60s ago, grumbling..", u, "debug")
                             local grbl = {
                                 "I just said", "You must be deaf",
                                 "You oughta have heard the first time",
                             }
                             word = grbl[math.random(1, #grbl)]
-                        elseif ( diff < 120 ) then
+                        elseif diff < 120 then
                             log("Was asked for feelings <120s ago, repeating..", u, "debug")
                             word = "I said like a minute ago. " .. r[name][wordNum]
                         else
@@ -177,14 +189,14 @@ hooks = {
                             wordNum = math.random(1, #r[name])
                             word = r[name][wordNum]
                         end
-                    elseif ( name == "hi" ) then
+                    elseif name == "hi" then
                         word = r[name][math.random(1, #r[name])]
-                        if ( math.random(1, 8 ) < 3 ) then
+                        if math.random(1, 8) < 3 then
                             word = word .. " there"
                         end
-                    elseif ( name == "hei" ) then
+                    elseif name == "hei" then
                         word = r[name][math.random(1, #r[name])]
-                        if ( math.random(1, 8 ) < 3 ) then
+                        if math.random(1, 8) < 3 then
                             word = word .. " der"
                         end
                     else

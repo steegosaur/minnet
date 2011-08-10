@@ -134,4 +134,38 @@ avoid silencing her without an option to re-enable her.
 
 4.4 LIST OF COMMANDS
 
-TBW
+For a full list of Minnet's commands, as represented by the internal names, 
+say 'help commands'. For a description of each command, say 
+'help <command_name>', where the command name is the internal name of the 
+command, as found in the command list or in cmdvocab.lua and cmdarray.lua.
+
+The following is an approximate list, but it is not necessarily completely up 
+to date.
+
+----------------|------------------------|-------------------------------------
+ Internal name  | Description            | Triggers (incomplete list)
+----------------|------------------------|-------------------------------------
+ join           | Join a channel         | "join", "go to"
+ part           | Part a channel         | "part", "get out (of)"
+ quit           | Disconnect             | "shut down", "quit", "disconnect"
+ reload         | Reload a part of Minnet| "reload"
+ set            | Set logging level      | "set"
+ load           | Load a hook            | "load"
+ unload         | Unload a hook          | "unload", "remove"
+ reseed         | Re-seed math.random    | "reseed", "reset the crypto.* seed"
+ say            | Make Minnet talk       | "say"
+ version        | Send CTCP VERSION req  | "(ctcp) version"
+ identify       | Log into the user db   | "identify", "i am"
+ db             | Database operations    | "db", "database"
+ belong         | "Own" Minnet (TST)     | "belong.* me", ".* me .* own you"
+ ignore         | Ignore input from mask | "ignore", "disregard"
+ help           | Get help on commands   | "help"
+ owner          | Ownership-related      | "who owns you", "be mine"
+ uptime         | Server/bot uptime      | "how long", "(what is your) uptime"
+ time           | Current time w/zones   | "(what is the) time"
+ timezones      | List known timezones   | "list.* timezones", "what timezones"
+ disable        | Disable for channel    | "disable", "shut up", "be quiet"
+ enable         | Re-enable Minnet       | "re-enable", "unsilence", "speak"
+ be             | CTCP ACTION            | "be"
+ twentytwo_seven| How long since #Utøya? | ".* utøya", ".* oslo", "2011-07-22"
+----------------|------------------------|-------------------------------------

@@ -11,10 +11,6 @@
 -- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command" }
 
 bot.commands = {
-    uptime  = { "how%s+long", "for%s+how%s+long", "what'?s?%s+.*uptime.*",
-        "^uptime" },
-    time    = { "what'?%s-i?s%s+.*%s+time", "what'?%s-i?s%s+.*%s+clock",
-        "what%stime'?%s-i?s'?%s-it", "^time%s" },
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out" },
     quit    = { "get%s+off", "shut%s+down", "quit", "disconnect" },
@@ -27,14 +23,36 @@ bot.commands = {
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
     identify= { "identify", "i'?%s-a?m" },
     db      = { "db", "database" },
+    belong  = { "belong.*%sme", ".*%sme%s.*%sown%s+you", ".*%si%s.*own%s+you" },
+    ignore  = { "ignore", "disregard" },
+    help    = { "help", },
+    owner   = {
+        "who.*'?i?s%s+y[aoue]+r.*%s+owner", "who.*%sowns?%s+y[aoue]+",
+        "be%s+mine", "be%s+my"
+    },
+    uptime  = {
+        "how%s+long", "for%s+how%s+long", "what'?s?%s+.*uptime.*", "uptime"
+    },
+    time    = {
+        "what'?%s-i?s%s+.*%s+time", "what'?%s-i?s%s+.*%s+clock",
+        "what%stime'?%s-i?s'?%s-it", "time"
+    },
     disable = {
         "shut%s-up", "shaddap", "keep%s+quiet", "be%s+quiet", "stay%s+quiet",
         "silence", "stay%s+off", "disable"
     },
+    be      = { "be%s+" },
     enable  = {
         "y[oua]+'?re?%s+free", "speak", "r?e?%-?enable", "unsilence",
         "live", "go%s+on"
     },
-    be      = { "be" },
+    timezones = {
+        "what.*timezones", "list.*timezones", "timezone%s+list",
+        "how.*timezones", "which.*timezones"
+    },
+    twentytwo_seven = {
+        ".*%sut[øoe]-ya", ".*%soslo", "[howhen]+.*22/7", ".*2011%-07%-22",
+        ".*22nd%s+[of%s]*jul[yi]"
+    },
 }
 -- EOF

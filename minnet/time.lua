@@ -23,8 +23,8 @@ time.timezones = {
     RET = "+4", SAMT = "+4", SCT = "+4", AFT = "+0430",
     AMST = "+5", HMT = "+5", PKT = "+5", YEKT = "+5", IST = "+0530",
     SLT = "+0530", NPT = "+0545",
-    BIOT = "+6", BTT = "+6", OMST = "+6", CCT = "+0630", UT = "+6", XUT = "+6",
-    XT = "+6",
+    BIOT = "+6", BTT = "+6", OMST = "+6", UT = "+6", XT = "+6", XUT = "+6",
+    CCT = "+0630",
     CXT = "+7", ICT = "+7", KRAT = "+7", THA = "+7",
     ACT = "+8", AWST = "+8", BDT = "+8", BT = "+8", CT = "+8", HKT = "+8",
     IRKT = "+8", MST = "+8", MYT = "+8", SGT = "+8", SST = "+8", WST = "+8",
@@ -42,7 +42,7 @@ time.timezones = {
     FKT = "-4", GYT = "-4", VET = "-0430",
     CDT = "-5", COT = "-5", ECT = "-5", EST = "-5",
     CST = "-6", EAST = "-6", GALT = "-6", MDT = "-6",
-    MST = "+7", PDT = "+7",
+    MST = "-7", PDT = "-7",
     AKDT = "-8", CIST = "-8", PST = "-8",
     AKST = "-9", GIT = "-9", HADT = "-9", MIT = "-0930",
     CKT = "-10", HAST = "-10", HST = "-10", TAHT = "-10",
@@ -53,19 +53,21 @@ time.timezones = {
 --  Also returns local time and zone w/out input or by unspecified input
 function time.get_current(m)
     if not m then return os.date("*t"), os.date("%z") end
-    local now, tz, nonnum
-    local mod = {
-        text = m:match("([%+%-]%d%d?:?%d?%d?)")
-    }
+    local now, tz
+    local nonnum = false
+    local mod = { text = m:match("([%+%-]%d%d?:?%d?%d?)") }
     if not mod.text then
         for zone, value in pairs(time.timezones) do
-            if m:match("%s" .. zone) then
-                tz = zone
+            if m:match("%W" .. zone) then
+                tz       = zone
                 mod.text = value
-                nonnum = true
+                nonnum   = true
                 break
             end
         end
+    end
+    if nonnum == false and m:match("%s%u%u%u[%.%?!,%)%]%s]") then
+        return nil, "unknown"
     end
     if mod.text then
         mod.op = mod.text:match("^([%+%-])")    -- Add or subtract?
@@ -96,40 +98,68 @@ function time.get_current(m)
     return now, tz
 end
 
-function time.calculate(t)
-    local time = os.date("*t", t)
-    time.day, time.hour = time.day - 1, time.hour - 1
-    local ending = { day = "", hour = "", minute = "" }
-    if ( time.day   ~= 1 ) then ending.day      = "s" end
-    if ( time.hour  ~= 1 ) then ending.hour     = "s" end
-    if ( time.min   ~= 1 ) then ending.minute   = "s" end
-    local days, hours, mins
+-- time.calculate(): Calculate the amount of weeks, days, hours and minutes
+--+ a given timediff contains; this expects Unix behaviour
+function time.calculate(t, utc)
+    local length
+    if utc then
+        length = os.date("!*t", t)
+    else
+        length = os.date("*t", t)
+    end
+    length.weeks = 0
+    -- Subtract Unix epoch values
+    length.day, length.hour = length.day - 1, length.hour - 1
+    length.month, length.year = length.month - 1, length.year - 1970
+    -- Calculate weeks
+    while length.day > 6 do
+        length.day = length.day - 7
+        length.weeks = length.weeks + 1
+    end
+    local ending = { weeks = "", day = "", hour = "", min = "" }
+    if length.weeks ~= 1 then ending.weeks = "s" end
+    if length.day   ~= 1 then ending.day   = "s" end
+    if length.hour  ~= 1 then ending.hour  = "s" end
+    if length.min   ~= 1 then ending.min   = "s" end
+    local weeks, days, hours, mins
     local pre = ""
-    if ( time.day  > 0 ) then
-        days = time.day .. " day" .. ending.day
+    if length.weeks > 0 then
+        weeks = length.weeks .. " week" .. ending.weeks
     else
-        days = ""
+        weeks = ""
     end
-    if ( time.hour > 0 ) then
-        if ( days ~= "" ) and ( time.min > 0 ) then
+    if length.day > 0 then
+        if weeks ~= "" and ( length.hour > 0 or length.min > 0 ) then
             pre = ", "
-        elseif ( days ~= "" ) and ( time.minute <= 0 ) then
-            pre = " and "
-        end
-        hours = pre .. time.hour .. " hour" .. ending.hour
-    else
-        hours = ""
-    end
-    if ( time.min > 0 ) then
-        if ( days ~= "" ) or ( hours ~= "" ) then
+        elseif days ~= "" and ( length.hour <= 0 or length.min <= 0 ) then
             pre = " and "
         else
             pre = ""
         end
-        mins = pre .. time.min .. " minute" .. ending.minute
+        days = pre .. length.day .. " day" .. ending.day
+    else
+        days = ""
+    end
+    if length.hour > 0 then
+        if days ~= "" and length.min > 0 then
+            pre = ", "
+        elseif days ~= "" and length.min <= 0 then
+            pre = " and "
+        end
+        hours = pre .. length.hour .. " hour" .. ending.hour
+    else
+        hours = ""
+    end
+    if length.min > 0 then
+        if weeks ~= "" or days ~= "" or hours ~= "" then
+            pre = " and "
+        else
+            pre = ""
+        end
+        mins = pre .. length.min .. " minute" .. ending.min
     else
         mins = ""
     end
-    return days, hours, mins
+    return weeks, days, hours, mins
 end
 -- EOF

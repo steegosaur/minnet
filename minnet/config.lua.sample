@@ -52,6 +52,9 @@ bot = {
     -- disabled = { channame = true, chan2 = false };
     -- this is used during runtime, but can be predefined for special needs
     disabled = {}
+    -- ignore = { chan = { "nick/$nick", "user/$pattern", "host/$pattern" } }
+    -- used for ignoring people, per-channel
+    ignore = {},
 }
 msg = {
     noargs  = "invalid arguments specified. See --help",
