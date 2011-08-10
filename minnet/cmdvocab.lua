@@ -13,7 +13,7 @@
 bot.commands = {
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out" },
-    quit    = { "get%s+off", "shut%s+down", "quit", "disconnect" },
+    quit    = { "get%s+off", "shut%s+down", "quit", "disconnect", "die" },
     reload  = { "reload" },
     set     = { "set" },
     load    = { "load" },

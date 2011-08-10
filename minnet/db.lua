@@ -140,8 +140,12 @@ end
 function db.check_auth(u, level)
     local info = db.get_user(u.nick)
     if not info then
+        log("User " .. u.nick .. " not present in udb, considering " ..
+            "unauthorised..", u, "internal")
         return false
     end
+    log("Found user " .. u.nick .. " having level " .. info.level ..
+        ", numerically " .. bot.levels[info.level], "internal")
     if bot.levels[level] >= bot.levels[info.level] then
         return true
     else
@@ -168,8 +172,8 @@ end
 
 -- db.show_user(): Get info on users through irc
 function db.show_user(u, name)
-    if not db.check_auth(u, "admin") or not
-    ( u.nick == name and u.host:match(db.get_user(name).host) ) then
+    if ( not db.check_auth(u, "admin") ) and not
+      ( u.nick == name and u.host:match(db.get_user(name).host) ) then
         log("Attempted to get info about user " .. name .. " on " .. net.name, u, "warn")
         send(u.nick, msg.notauth)
         return nil
@@ -205,7 +209,7 @@ end
 
 -- db.rem_user(): Delete a user from the udb
 function db.rem_user(u, nick)
-    if not db.check_auth(u, "admin") or not db.check_auth(u, "owner") then
+    if not db.check_auth(u, "admin") and not db.check_auth(u, "owner") then
         log("Unauthorised user attempted to remove user " .. nick ..
             " from table " .. net.name, u, "warn")
         send(u.nick, msg.notauth)
