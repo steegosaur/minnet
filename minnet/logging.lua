@@ -120,7 +120,6 @@ end
 
 function lognote(u, chan, m, bullet)
     logchan("note", u, chan, m, bullet)
-    log(m, u, "trivial")
 end
 function logchat(u, chan, m)
     logchan("chat", u, chan, m)

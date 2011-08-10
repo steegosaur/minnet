@@ -23,7 +23,7 @@ hooks = {
             if check_disabled(chan, "belong") == true then return nil end
             m = desat(m):lower()
             if m:match("^!" .. conn.nick:lower()) then
-                log("Triggered !ownership hook", "debug")
+                log("Triggered !ownership hook", u, "internal")
                 cmdlist.belong.func(u, chan)
             end
         end
@@ -36,7 +36,12 @@ hooks = {
                 chan = u.nick
             end
             m = desat(m)
-            logchat(u, chan, m)
+            if m:match("^[^%l%s]-ACTION") then
+                m = m:gsub("^[^%l%s]-ACTION%s+", "")
+                lognote(u, chan, m, "*")
+            else
+                logchat(u, chan, m)
+            end
         end
     },
     {
@@ -57,21 +62,20 @@ hooks = {
         event   = "OnKick",
         name    = "logkick",
         action  = function(chan, nick, k, r)
-            if not ( nick:lower() == conn.nick:lower() ) then
-                local u = conn:whois(nick).userinfo
-                u.nick     = nick
-                u.username = u.username or "user"
-                u.host     = u.host     or "host"
-                lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")
-            end
+            local u = conn:whois(nick).userinfo
+            if not u then u = {} end
+            u.nick     = nick
+            u.username = u[3] or "user"
+            u.host     = u[4] or "host"
+            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")
         end
     },
-    --[[
+    --[[ Disabled due to lack of channel information, which makes it hard to log
     {
         event   = "OnQuit",
         name    = "logquit",
         action  = function(u, msg)
-            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] ", "-->")
+            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] (" .. msg .. ")", "-->")
         end
     }, --]]
     {   -- Main hook for command reading
