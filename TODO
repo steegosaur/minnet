@@ -55,6 +55,7 @@ Roadmap:
         Causes a part of Hell to freeze over
 
 Todo atm:
+    Userinfo database (separate) for country, timezone, etc (config-settable!)
     Per-command disabling (disable certain functions)
     Unignoring, listing ignores
     Add USERINFO, CLIENTINFO, FINGER, etc

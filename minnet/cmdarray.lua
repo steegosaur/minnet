@@ -533,26 +533,36 @@ cmdlist = {
     identify = {
         help = "Identify yourself to validate your access level",
         func = function(u, chan, m, catch)
-            local args = m:match(catch .. "%s+(.*)") or ""
-            args = args:gsub("^me%s+", "")
+            local args = m:lower()
+            args = args:match(catch .. "%s+(.*)") or ""
+            -- Get rid of human-input nonsense (might invalidate certain nicks)
+            args = args:gsub("^me%p?%s+", "")
             if args:match("^for%s+%S+") then
                 args = args:gsub("^for%s+", "")
             elseif args:match("^as%s+%S+") then
                 args = args:gsub("^as%s+", "")
             end
+            args = args:gsub("^the%s+", "")
             args = args:gsub("^user%s+", "")
-            local name = args:match("^([^%s%.,]+)") -- Capture the name
-            args = args:gsub("^" .. name:gsub("(%p)", "%%%1") .. "%s*", "")
+            if args:match("^called%p?%s+%S+") then
+                args = args:gsub("^called%p?%s+", "")
+            elseif args:match("^named%p?%s+%S+") then
+                args = args:gsub("^named%p?%s+", "")
+            end
+            local name = args:match("^([^%s%.,!%?]+)") -- Capture the name
+            if not name then
+                send(u.nick, "You forgot telling me your name.")
+                return nil
+            end
+            args = args:gsub("^" .. name:gsub("(%p)", "%%%1") .. "%p?%s*", "")
             if args:match("^with%s+%S+") then
                 args = args:gsub("with%s+", "")
             end
             args = args:gsub("^the%s+", "")
             args = args:gsub("^password%s+", "")
+            args = args:gsub("^is%s+", "")
             local passwd = args:match("^(%S+)")
-            if not name then
-                send(u.nick, "You forgot telling me your name.")
-                return nil
-            elseif not passwd then
+            if not passwd then
                 send(u.nick, "You forgot the password.")
                 return nil
             end
