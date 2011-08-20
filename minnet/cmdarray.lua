@@ -575,7 +575,7 @@ cmdlist = {
         func = function(u, chan, m, catch)
             local field, value = m:match(catch)
             log("idb_set triggered: field == " .. tostring(field) ..
-                "; value == " .. tostring(value) .. " catch == " .. catch,
+                "; value == " .. tostring(value) .. "; catch == " .. catch,
                 u, "internal")
             if not field then
                 send(chan, "Sorry, I didn't get that.. what was it again?")
@@ -594,6 +594,9 @@ cmdlist = {
         func = function(u, chan, m, catch)
             local selfcheck
             local nick, field = m:match(catch)
+            log("idb_get triggered: nick == " .. tostring(nick) ..
+                "; field == " .. tostring(field) .. "; catch == " .. catch,
+                u, "internal")
             if not nick then
                 send(chan, "Sorry, who did you want to know about?")
                 return nil

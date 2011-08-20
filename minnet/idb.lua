@@ -88,6 +88,7 @@ end
 
 -- idb.chanid(): get or create chanid for given channel (locked to current net)
 function idb.get_chanid(chan)
+    chan = chan:lower()
     for result in infodb:nrows("SELECT * FROM chans WHERE channame = '" ..
       chan .. "' AND netid = " .. net.id .. ";") do
         return result.chanid
@@ -128,7 +129,7 @@ end
 -- idb.set_data(): main function for saving data to the idb
 function idb.set_data(u, chan, nick, field, value)
     local chan_id   -- Make sure it's defined in a broad enough scope
-    chan_id = idb.get_chanid(chan:lower())
+    chan_id = idb.get_chanid(chan)
     if not chan_id then
         -- If we're here, there is no chanid for this channel yet; let us fix that!
         local chan_count = db.countrows(infodb, "chans")
