@@ -95,7 +95,7 @@ cmdlist = {
     },
     -- uptime: report uptime of self or server hosting self
     uptime = {
-        help = "Report uptime of server or connection",
+        help = "Report uptime of server or connection.",
         func = function(u, chan, m)
             m = m:lower()
             if
@@ -163,7 +163,7 @@ cmdlist = {
     },
     -- be: send /me is 'arg' to 'chan'
     be = {
-        help = "Make me be something",
+        help = "Make me be something.",
         func = function(u, chan, m)
             if db.check_auth(u, "user") then
                 local arg = getarg(m)
@@ -212,7 +212,7 @@ cmdlist = {
         func = function(u, chan, m)
             local owner = tostring(db.get_owner())
             if owner:lower() == u.nick:lower() then
-                send(chan, "You are my bloody owner, silly.")
+                send(chan, "You are my bloody owner.")
             else
                 local first_letter = owner:sub(1, 1)
                 owner = owner:gsub("^%l", first_letter:upper())
@@ -222,7 +222,7 @@ cmdlist = {
     },
     -- join: join 'chan'
     join = {
-        help = "Make me join a channel",
+        help = "Make me join a channel.",
         func = function(u, chan, m, catch)
             if db.check_auth(u, "admin") then
                 local arg = m:match(catch .. "%s+(.*)")
@@ -259,7 +259,7 @@ cmdlist = {
     },
     -- part: part 'chan'
     part = {
-        help = "Make me leave a channel",
+        help = "Make me leave a channel.",
         func = function(u, chan, m, catch)
             if db.check_auth(u, "admin") then
                 m = m:lower()
@@ -296,7 +296,7 @@ cmdlist = {
     },
     -- reload: reload/rerun files
     reload = {
-        help = "Reload or re-run files",
+        help = "Reload or re-run files.",
         func = function(u, chan, m)
             if db.check_auth(u, "admin") then
                 local arg = getarg(m)
@@ -323,7 +323,7 @@ cmdlist = {
     },
     -- set: set variables
     set = {
-        help = "Set variables",
+        help = "Set variables.",
         func = function(u, chan, m)
             if db.check_auth(u, "admin") then
                 m = m:lower()
@@ -362,7 +362,7 @@ cmdlist = {
     },
     -- load: load stuff (atm: hooks)
     load = {
-        help = "Load hooks or something",
+        help = "Load hooks or something.",
         func = function(u, chan, m)
             if db.check_auth(u, "admin") then
                 m = getarg(m)
@@ -398,7 +398,7 @@ cmdlist = {
     },
     -- unload: unload stuff (ie., hooks)
     unload = {
-        help = "Unload hooks and stuff",
+        help = "Unload hooks and stuff.",
         func = function(u, chan, m)
             if db.check_auth(u, "admin") then
                 m = getarg(m)
@@ -436,7 +436,7 @@ cmdlist = {
     -- reseed: reseed random number seed
     -- TODO: Automate this?
     reseed = {
-        help = "Make a new seed for the random number generator",
+        help = "Make a new seed for the random number generator.",
         func = function(u, chan, m)
             math.randomseed(os.time())
             log("Reseeded math.random", u, "info")
@@ -445,7 +445,7 @@ cmdlist = {
     },
     -- say: output message to channel
     say = {
-        help = "Make me say something",
+        help = "Make me say something.",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 local arg = getarg(m)
@@ -511,7 +511,7 @@ cmdlist = {
     },
     -- version: send a CTCP VERSION request to someone
     version = {
-        help = "Have me request a VERSION reply from someone",
+        help = "Have me request a VERSION reply from someone.",
         func = function(u, chan, m, catch)
             if db.check_auth(u, "user") then
                 local arg = m:match(catch .. "%s+(.*)")
@@ -531,7 +531,7 @@ cmdlist = {
     },
     -- identify: identify user with self
     identify = {
-        help = "Identify yourself to validate your access level",
+        help = "Identify yourself to validate your access level.",
         func = function(u, chan, m, catch)
             local args = m:lower()
             args = args:match(catch .. "%s+(.*)") or ""
@@ -569,10 +569,49 @@ cmdlist = {
             db.ident_user(u, name, passwd)
         end
     },
+    -- idb_set: save user information in the infodb
+    idb_set = {
+        help = "Set user information.",
+        func = function(u, chan, m, catch)
+            local field, value = m:match(catch)
+            log("idb_set triggered: field == " .. tostring(field) ..
+                "; value == " .. tostring(value) .. " catch == " .. catch,
+                u, "internal")
+            if not field then
+                send(chan, "Sorry, I didn't get that.. what was it again?")
+                return nil
+            elseif not value then
+                send(chan, "What did you say your " .. field .. " was?")
+                return nil
+            end
+            field, value = field:gsub("%s+$", ""), value:gsub("%s+$", "")
+            idb.set_data(u, chan, u.nick, field, value)
+        end
+    },
+    -- idb_get: fetch user information in the infodb; TODO: add reverse syntax
+    idb_get = {
+        help = "Want to know something about someone?",
+        func = function(u, chan, m, catch)
+            local selfcheck
+            local nick, field = m:match(catch)
+            if not nick then
+                send(chan, "Sorry, who did you want to know about?")
+                return nil
+            elseif not field then
+                send(chan, "Uhm, what did you want to know?")
+                return nil
+            end
+            if nick == "my" then
+                selfcheck = true
+            end
+            field = field:gsub("%s+$", "")
+            idb.get_data(u, chan, nick, field, selfcheck)
+        end
+    },
     -- db: database management meta-command
     db = {
         help = "Manage the database and carry out related operations; see " ..
-            "'db help' for more information",
+            "'db help' for more information.",
         func = function(u, chan, m, catch)
             if chan:match("^#") then
                 send(chan, "I can't let you do database operations in a " ..
@@ -631,7 +670,8 @@ cmdlist = {
                 local mode, value = arg:match("(%S+)%s+(%S+)")
                 db.set_user(u, mode, value)
             elseif cmd == "flush" then
-                db.flush(u)
+                local isauth = db.flush(udb, u)
+                if isauth then db.flush(idb, u) end    -- Avoid double notauth
             elseif cmd == "help" then
                 send(chan, "Syntax: db (set|get|mod|add)")
                 send(chan, "Add and mod are admin-level, and need NICK, " ..
@@ -651,7 +691,7 @@ cmdlist = {
     help = {
         help = "You don't know what I can do!",
         func = function(u, chan, m, catch)
-            if m:match("^" .. catch .. "$") then
+            if m:match("^" .. catch .. "[%s%p]-$") then
                 -- Nothing more specified; show general help message
                 log("Giving general help message in channel " .. chan,
                     "trivial")
@@ -752,7 +792,7 @@ cmdlist = {
     },
     -- disable: do not react to anything
     disable = {
-        help = "Make me shut up",
+        help = "Make me shut up.",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 local silchan = m:match("#([^%s%.!%?,]+)")
@@ -769,7 +809,7 @@ cmdlist = {
     },
     -- enable: commence responding again
     enable = {
-        help = "Make me respond again",
+        help = "Make me respond again.",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 log("Unfreezing channel " .. chan, u, "info")
@@ -783,7 +823,7 @@ cmdlist = {
     },
     -- quit: disconnect from the network
     quit = {
-        help = "Disconnect me from the network",
+        help = "Disconnect me from the network.",
         func = function(u, chan, m)
             if db.check_auth(u, "owner") then
                 if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then

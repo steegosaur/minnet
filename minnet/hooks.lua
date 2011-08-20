@@ -21,7 +21,8 @@ hooks = {
         name    = "own",
         action  = function(u, chan, m)
             if check_disabled(chan, "belong") == true then return nil end
-            m = desat(m):lower()
+            m = m:lower()
+            m = desat(m)
             if m:match("^!" .. conn.nick:lower()) then
                 log("Triggered !ownership hook", u, "internal")
                 cmdlist.belong.func(u, chan)

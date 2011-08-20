@@ -43,6 +43,7 @@ Roadmap:
         Has documented internal debug info enabled by output level "internal", 
          and more widely used "debug" level output
     0.8.0
+        Has a user-info database, separate from the auth db
         Has user-ignore functionality
         Can disable single functions per-channel or per-net (and store this?)
     0.9.0
@@ -53,6 +54,9 @@ Roadmap:
         Has a purpose
         Has no (or few) known bugs
         Causes a part of Hell to freeze over
+    1.5.0
+        Has central, documented message database (msgs.lua)
+            This will require going through all send() calls, abstracting them
 
 Todo atm:
     Userinfo database (separate) for country, timezone, etc (config-settable!)

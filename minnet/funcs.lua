@@ -18,7 +18,7 @@ end
 function desat(m)
     if not m then return nil end
     m = tostring(m)
-    m = m:gsub("^[^%w%p%s]%d%d", "")
+    m = m:gsub("^[^%w%p%s]+%d%d?%d?", "")
     return m
 end
 
@@ -27,14 +27,16 @@ function reload(u, chan, file)
     if not file then
         return nil
     end
-    if file == "functions" then file = "funcs"
+    if file == "functions"         then file = "funcs"
     elseif file == "configuration" then file = "config"
-    elseif file == "database" then file = "db"
-    elseif file == "log" then file = "logging"
+    elseif file == "infodb"        then file = "idb"
+    elseif file == "database"      then file = "db"
+    elseif file == "log"           then file = "logging"
     end
-    if file == "funcs" or file == "ctcp" or file == "db" or file == "hooks" or
-      file == "config" or file == "cmdvocab" or file == "cmdarray" or
-      file == "time" or file == "logging" or file == "hacks" then
+    if file == "funcs" or file == "ctcp" or file == "db" or file == "idb" or
+      file == "hooks" or file == "config" or file == "cmdvocab" or
+      file == "cmdarray" or file == "time" or file == "logging" or
+      file == "hacks" then
         if assert(io.open("minnet/" .. file .. ".lua", "r")) then
             dofile("minnet/" .. file .. ".lua")
         else
@@ -195,7 +197,7 @@ function getarg(m) -- Gets everything after *first* word
 end
 
 function wit(u, chan, m) -- Main hook function for reacting to commands
-    local nickmatch = "^" .. conn.nick .. "%s-[,:;%-$]+%s+"
+    local nickmatch = "^" .. conn.nick .. "%s-[,:;%-]+%s+"
     if m:match(nickmatch) then
         m = m:gsub(nickmatch, "")
     end
@@ -205,8 +207,9 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     local cmdfunc, catch
     for cmd, names in pairs(bot.commands) do
         for _, name in ipairs(names) do
-            catch = m:lower():match("^(" .. name .. ")")
-            if catch then
+            local match = m:lower():match("^" .. name .. "")
+            if match then
+                catch = name
                 cmdFound = true
                 break
             end

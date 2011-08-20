@@ -83,6 +83,7 @@ levels = {
 verbosity = levels["info"]  -- Set initial value
 
 db    = { file = "users.minnet.db" }
+idb   = { file = "info.minnet.db"  }
 ctcp  = {
     active = {
         version = {},

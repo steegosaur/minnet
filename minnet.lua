@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.7.0 - the unuseful lua irc bot
+-- minnet.lua 0.7.2 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet
@@ -28,6 +28,7 @@ require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
 require("minnet.config")
 require("minnet.funcs")
 require("minnet.db")
+require("minnet.idb")
 require("minnet.ctcp")
 require("minnet.hooks")
 require("minnet.logging")
@@ -35,7 +36,8 @@ require("minnet.time")     -- Time functionality
 require("minnet.cmdarray") -- The command functions
 require("minnet.cmdvocab") -- The command recognition vocabulary
 
-udb = sqlite3.open(db.file)
+udb = sqlite3.open(db.file)     -- The user auth database
+infodb = sqlite3.open(idb.file) -- The user info database
 bot.start = os.time()
 math.randomseed(os.time())
 create_help()
@@ -133,13 +135,17 @@ else
     check_create_dir(netdir)
     logs[syslog] = io.open(syslog, "a+")
 
-    db.check()   -- Check that the net's table exists
+    -- Check that the net's table exists in the databases
+    db.check()
+    idb.check()
+    db.ucheck()  -- Check that the net's user table is not empty
+
+    net.id = idb.get_netid()
     conn = irc.new({
         nick = bot.nick,
         username = bot.uname,
         realname = bot.rname
     })
-    db.ucheck()  -- Check that the net's table is not empty
     log("", "info")
 
     -- Tables to be initiated on startup only:

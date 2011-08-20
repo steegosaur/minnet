@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- db.lua - database functions file for minnet
--- Copyright Stæld Lakorv, 2010 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -17,7 +17,7 @@ function db.check()
     if udb:errmsg() == "no such table: " .. net.name then
         udb:exec("CREATE TABLE " .. net.name ..
             " (nick,level,host,passhash,email,cur_nick);")
-        log("Created sql table " .. net.name, "info")
+        log("Created udb sql table " .. net.name, "info")
     end
 end
 -- db.ucheck(): Check whether the network table is empty
@@ -31,21 +31,32 @@ function db.ucheck()
         print()
         print("Error: There are no users in this network's database.")
         print("A one-time authentification key has been generated. To " ..
-            "identify yourself as the owner, please run the following" ..
-            "command in a qurey to " .. conn.nick .. ":")
+            "identify yourself as \nthe owner, please run the following" ..
+            " command in a query to " .. bot.nick .. ":")
         print("db otk " .. otk[n])
         print()
     end
 end
-function db.flush(u) -- db.flush(): Just what it sounds like
+
+-- db.countrows(): count rows present in database.tab
+function db.countrows(database, tab)
+    local count = 0
+    for result in database:nrows("SELECT * from " .. tab .. ";") do
+        count = count + 1
+    end
+    return count
+end
+
+function db.flush(database, u) -- db.flush(): Just what it sounds like
     if db.check_auth(u, "admin") then
-        if udb:exec("COMMIT;") ~= sqlite3.OK or nil then
+        if database:exec("COMMIT;") ~= sqlite3.OK or nil then
             send(u.nick, "I wrote the latest stuff down so I won't forget.")
             log("Committed recent changes to database", "info")
         else
-            db.error(u, "Could not commit: " .. udb:errcode() .. " - " ..
-                udb:errmsg())
+            db.error(u, "Could not commit: " .. database:errcode() .. " - " ..
+                database:errmsg())
         end
+        return true
     else
         send(u.nick, msg.notauth)
         log("Unauthorised attempt at flushing SQL database", "warn")
@@ -60,15 +71,23 @@ function db.check_otk(u, key)
     else
         if key == otk[n] then
             log("Successful OTK auth; owner access granted", u, "warn")
-            -- Data:    u, mode,  nick,   level,   host,   passhash,                email)
-            db.set_data(u, "add", u.nick, "owner", u.host, passgen(tostring(otk[n])), nil, true)
-            send(u.nick, "Congrats, you just identified and added yourself as the owner, with the otk as your password.")
-            send(u.nick, "You will want to modify your database entry asap by writing 'db mod " .. u.nick .. " owner " .. u.host .. " <password> <email>'.")
-            send(u.nick, "For more help on managing the database, write 'db help'.")
+            -- Data:    u, mode,  nick,   level,   host,
+            db.set_data(u, "add", u.nick, "owner", u.host,
+                -- passhash,               email, otk
+                passgen(tostring(otk[n])), nil, true)
+            send(u.nick, "Congrats, you just identified and added yourself " ..
+                "as the owner, with the otk as your password.")
+            send(u.nick, "You will want to modify your database entry asap " ..
+                "by writing 'db mod " .. u.nick .. " owner " .. u.host ..
+                " <password> <email>'.")
+            send(u.nick, "For more help on managing the database, write " ..
+                "'db help'.")
             otk[n] = nil
         else
-            log("Attempted to gain access through OTK auth with wrong key", u, "warn")
-            send(u.nick, "I'm sorry, but that's not the active key for this network.")
+            log("Attempted to gain access through OTK auth with wrong key", u,
+                "warn")
+            send(u.nick, "I'm sorry, but that's not the active key for this" ..
+                " network.")
         end
     end
 end
@@ -77,11 +96,23 @@ local function forgot(u, f)
         f .. ".")
 end
 
+-- db.check_column(): check whether a given column exists
+function db.check_column(database, tab, col)
+    if database:exec("SELECT " .. col .. " FROM " .. tab ..
+      ";") ~= sqlite3.OK then
+        return false
+    else
+        return true
+    end
+    return nil
+end
+
 -- db.check_table(): Check whether field 'data' exists in table 'tab'
-function db.check_table(tab, data)
-    local get_stmt = udb:prepare("SELECT * FROM " .. tab .. " WHERE nick=$nick LIMIT 1;")
+function db.check_table(database, tab, field, data)
+    local get_stmt = database:prepare("SELECT * FROM " .. tab .. " WHERE " ..
+        field .. "=$value LIMIT 1;")
     data = data:lower()
-    get_stmt:bind_names({ nick = data })
+    get_stmt:bind_names({ value = data })
     for i in get_stmt:nrows() do
         get_stmt:reset()
         return i
@@ -214,7 +245,7 @@ function db.rem_user(u, nick)
             " from table " .. net.name, u, "warn")
         send(u.nick, msg.notauth)
     else
-        if not db.check_table(net.name, nick) then
+        if not db.check_table(udb, net.name, "nick", nick) then
             log("User " .. nick .. " does not exist, ignoring", u, "trivial")
             send(u.nick, "I don't know anyone by that name.")
             return nil
@@ -277,7 +308,7 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
                 forgot(u, "level")
                 return nil
             end
-            if db.check_table(net.name, nick) then
+            if db.check_table(udb, net.name, "nick", nick) then
                 log("User " .. nick .. " already exists, ignoring", u, "trivial")
                 send(u.nick, "I already know that guy. Try modifying the user instead.")
                 return nil
@@ -298,7 +329,7 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
             ins_stmt:reset()
 
         elseif mode == "mod" then
-            if not db.check_table(net.name, nick) then
+            if not db.check_table(udb, net.name, "nick", nick) then
                 log("User " .. nick .. " doesn't exist, ignoring", u, "trivial")
                 send(u.nick, "I don't know anyone by that name. Try adding the user first.")
                 return nil
@@ -352,7 +383,7 @@ end
 -- Set userdata function; do not confuse with db.set_data()
 -- This function sets password and email entries for user: 'db set password/email'
 function db.set_user(u, mode, val)
-    if not db.check_table(net.name, u.nick) then
+    if not db.check_table(udb, net.name, "nick", u.nick) then
         send(u.nick, "I'm sorry, but I don't think I know you.")
         log("Tried to set information for an unknown user", u, "trivial")
         return nil

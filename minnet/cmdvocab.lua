@@ -11,21 +11,37 @@
 -- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command" }
 
 bot.commands = {
-    join    = { "join", "go%s+to" },
-    part    = { "part", "get%s+out" },
-    quit    = { "get%s+off", "shut%s+down", "quit", "disconnect", "die" },
-    reload  = { "reload" },
-    set     = { "set" },
-    load    = { "load" },
-    unload  = { "unload", "remove" },
-    reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     say     = { "say" },
-    version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
-    identify= { "identify", "i'?%s-a?m" },
+    set     = { "set%s+[^my]+" },
+    help    = { "help" },
+    load    = { "load" },
+    reload  = { "reload" },
     db      = { "db", "database" },
-    belong  = { "belong.*%sme", ".*%sme%s.*%sown%s+you", ".*%si%s.*own%s+you" },
+    join    = { "join", "go%s+to" },
+    unload  = { "unload", "remove" },
+    part    = { "part", "get%s+out" },
     ignore  = { "ignore", "disregard" },
-    help    = { "help", },
+    identify= { "identify", "i'?%s-a?m" },
+    reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
+    quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
+    version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
+    -- The IDB catches are special: the () catches aid in extracting info
+    idb_set = {
+        "[Ss]et%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?,!]-$",
+        "[Mm]y%s+([%w%s]+)%sis%s+(.-)[%.%?,!]-$"
+    },
+    idb_get = {
+        -- Reverse syntax disabled at the moment; not implemented yet
+        --"get%s+t?h?e?%s-(.-)%s+of%s+(%S+)",
+        --"what%'?%s-i?s%s+t?h?e?%s+(.-)%s+of%s+(%S+)",
+        "what%'?%s-i?s%s+([^%s%']+)%'s%s+(.-)%p-$",
+        "what%'?%s-i?s%s+(my)%s+(.-)%p-$",
+        "get%s+(%S+)%'?s?%s+(.-)[%.%?,!]%p-$",
+        "tell%s+me%s.*(%S+)%'s%s-i?s?%s+(.-)%p-$",
+        "tell%s+me%s.*%s(my)%s-i?s?%s+(.-)%p-$",
+        "give%s+me%s+.*(%S+)%'s%s+i?s?%s-(.-)%p-$",
+    },
+    belong  = { "belong.*%sme", ".*%sme%s.*%sown%s+you", ".*%si%s.*own%s+you" },
     owner   = {
         "who.*'?i?s%s+y[aoue]+r.*%s+owner", "who.*%sowns?%s+y[aoue]+",
         "be%s+mine", "be%s+my"
