@@ -59,10 +59,15 @@ Roadmap:
             This will require going through all send() calls, abstracting them
 
 Todo atm:
-    Userinfo database (separate) for country, timezone, etc (config-settable!)
-    Per-command disabling (disable certain functions)
-    Unignoring, listing ignores
-    Add USERINFO, CLIENTINFO, FINGER, etc
+    Self-status check (if isop())
+        Set topic (access: oper)
+
+    THINK: Is it better to let the config decide what fields can be set in the
+        info database, or should people be allowed to set virtually any field?
+    
+    Per-command disabling (disable certain functions for a channel or net)
+    User unignoring, listing ignores
+    Add CTCP USERINFO, CLIENTINFO, FINGER, etc
 
     Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
     Check vulnerabilities for more than one user with the same nick

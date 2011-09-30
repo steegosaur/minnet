@@ -54,7 +54,11 @@ function idb.get_data(u, chan, nick, field, selfcheck)
     end
     local nick_id = idb.get_nickid(chan_id, nick)
     if not nick_id then
-        send(chan, "Sorry, I don't know that person.")
+        if selfcheck then
+            send(chan, "Sorry, I don't know you yet. You tell me!")
+        else
+            send(chan, "Sorry, I don't know that person.")
+        end
         return nil
     end
 
@@ -180,7 +184,7 @@ function idb.set_data(u, chan, nick, field, value)
         end
     end
     if idb.set_field(nick_id, field, value) == true then
-        send(chan, "Got that.")
+        send(chan, u.nick .. ": Got that.")
         log("Set " .. field .. " to '" .. value .. "' in the IDB", u, "debug")
     else
         send(chan, "Sorry, I couldn't write that down.. Come again?")
