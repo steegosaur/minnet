@@ -8,7 +8,9 @@ hooks = {
         event   = "OnChat",
         name    = "happy",
         action  = function(u, chan, m)
-            if check_disabled(chan) == true then return nil end
+            if is_ignored(u, chan) or ( check_disabled(chan) == true ) then
+                return nil
+            end
             if chan == conn.nick then chan = u.nick end
             m = desat(m):lower()
             if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
@@ -20,7 +22,10 @@ hooks = {
         event   = "OnChat",
         name    = "own",
         action  = function(u, chan, m)
-            if check_disabled(chan, "belong") == true then return nil end
+            if is_ignored(u, chan) or
+              ( check_disabled(chan, "belong") == true ) then
+                return nil
+            end
             m = m:lower()
             m = desat(m)
             if m:match("^!" .. conn.nick:lower()) then
@@ -122,7 +127,9 @@ hooks = {
         event   = "OnChat",
         name    = "greet",
         action  = function(u, chan, m)
-            if check_disabled(chan) == true then return nil end
+            if is_ignored(u, chan) or ( check_disabled(chan) == true ) then
+                return nil
+            end
             if chan == conn.nick then chan = u.nick end
             m = m:lower()
             if not m:match(conn.nick:lower()) then return nil end
@@ -223,6 +230,9 @@ hooks = {
         event   = "OnChat",
         name    = "yw",
         action  = function(u, chan, m)
+            if is_ignored(u, chan) or ( check_disabled(chan) == true ) then
+                return nil
+            end
             m = m:lower()
             local thanks = { "ty", "thanks", "thank%s+y[aoue]+" }
             for _, word in ipairs(thanks) do

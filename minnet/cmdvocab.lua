@@ -22,6 +22,7 @@ bot.commands = {
     part    = { "part", "get%s+out" },
     ignore  = { "ignore", "disregard" },
     unignore= { "unignore", "listen%s+to" },
+    lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" }
     identify= { "identify", "i'?%s-a?m" },
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
