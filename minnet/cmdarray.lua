@@ -753,7 +753,8 @@ cmdlist = {
     -- ignore: ignore users
     ignore = {
         help = "Make me ignore someone; specify whether given pattern is of " ..
-            "type nick, user or host. Patterns are Lua-style.",
+            "type nick, user or host. Patterns are Lua-style. Remember to " ..
+            "escape special characters like [] etc.",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 m = getarg(m)
@@ -761,7 +762,7 @@ cmdlist = {
                 local class
                 if m:match("%s+user%s+") or m:match("username") then
                     class = "user"
-                elseif m:match("%s+host[maskne]-") then
+                elseif m:match("%s+host[maskne]-") or m:match("%%%.") then
                     class = "host"
                 else
                     class = "nick"
@@ -772,23 +773,82 @@ cmdlist = {
                     m = m:gsub("^.*%sname%s+", "")
                 end
                 m = m:gsub("^.*%s" .. class .. "%w-%s+", "")
-                local pattern = m:match("^(%W+)")
-                local channel = m:match("in%s+#([^%.%?!,%s]+)")
+                local pattern = m:match("^(%S+)")
+                local channel = m:match("%s+in%s+(#[^%.%?!,%s]+)")
                 if not channel then channel = chan end
                 if not pattern then
-                    send(chan, "Uhm, who did you mean again?")
+                    send(chan, "Uhm, who did you say?")
                     log("Could not find pattern in ignore command", "debug")
                     return nil
                 else
-                    pattern = string.format("%q", tostring(pattern))
-                    log("Pattern found by ignore function: " .. pattern, "internal")
+                    log("Pattern found by ignore function: " .. pattern,
+                        "internal")
                     if not bot.ignore[channel] then bot.ignore[channel] = {} end
                     table.insert(bot.ignore[channel], class .. "/" .. pattern)
                     log("Commencing ignoring of " .. class .. " '" ..
                         pattern .. "'", "info")
+                    send(chan, "Okay, ignoring messages matching that in " ..
+                        "this channel.")
                 end
             else
                 log("Received unauthorised ignore command", u, "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
+    -- unignore: unignore a user
+    unignore = {
+        help = "Make me unignore someone; specify numeric index or pattern.",
+        func = function(u, chan, m)
+            if db.check_auth(u, "oper") then
+                m = getarg(m)
+                m = m:lower()
+                local pattern = m:match("^(%S+)")
+                local channel = m:match("%s+in%s+(#[^%.%?!,%s]+)")
+                if not channel then channel = chan end
+                if not bot.ignore[channel] then
+                    -- We don't have any ignores active here
+                    send(chan, "Sorry, but there are no ignores for this " ..
+                        "channel yet.")
+                    log("Attempted to unignore in channel " .. channel ..
+                        " without active ignore table", u, "debug")
+                    return nil
+                end
+                if not pattern then
+                    send(chan, "Unignore who?")
+                    log("Could not find target in unignore command", "debug")
+                else
+                    if pattern:match("^%d+$") then
+                    -- pattern is a numeric, thus gives a pattern id
+                        local id = tonumber(pattern)
+                        if not bot.ignore[channel][id] then
+                            send(chan, "Sorry, that id is nonexisting.")
+                            log("Caught out-of-bounds id for unignore",
+                                "debug")
+                            return nil
+                        end
+                        local remd = table.remove(bot.ignore[channel], id)
+                        log("Unignored pattern '" .. remd .. "' with id " .. id,
+                            u, "info")
+                        send(chan, "Okay, not ignoring the user " ..
+                            "any more.")
+                    else
+                        for i, entry in ipairs(bot.ignore[channel]) do
+                            if entry == pattern then
+                                log("Found match for pattern '" .. pattern ..
+                                    "' in table; id = " .. i, "debug")
+                                remd = table.remove(bot.ignore[channel], i)
+                                log("Unignored pattern '" .. remd .. "' with"..
+                                    " id " .. i, u, "info")
+                                send(chan, "Okay, not ignoring the user " ..
+                                    "any more.")
+                                break
+                            end
+                        end
+                    end
+                end
+            else
+                log("Received unauthorised unignore command", u, "warn")
                 send(u.nick, msg.notauth)
             end
         end

@@ -152,8 +152,9 @@ hooks = {
                 eve = { "Good evening", "Eve" },
                 noon= { "Good afternoon" },
                 how = { "I'm fine thanks", "I'm good", "All's well with me",
-                    "Eh, I'm alright", "I'm doing fine", "Meh, could've been better",
-                    "Well - I am"
+                    "Eh, I'm alright", "I'm doing fine",
+                    "Meh, could've been better", "Well - I am",
+                    "Sorry, my creator didn't implement feelings yet."
                 },
             }
             local wordFound = false
@@ -216,6 +217,21 @@ hooks = {
                 end
             end -- per-word
             end -- per-class
+        end
+    },
+    { -- Some more politeness won't hurt
+        event   = "OnChat",
+        name    = "yw",
+        action  = function(u, chan, m)
+            m = m:lower()
+            local thanks = { "ty", "thanks", "thank%s+y[aoue]+" }
+            for _, word in ipairs(thanks) do
+                if m:match("%s-" .. word .. "%s-%p-%s+" ..
+                  conn.nick:lower()) then
+                    send(chan, "You're welcome, " .. u.nick .. ".")
+                    return nil
+                end
+            end
         end
     },
     --[[

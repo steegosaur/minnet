@@ -14,6 +14,34 @@ function check_disabled(chan, cmdfunc)
     end
 end
 
+-- is_ignored(): Check if a user is to be ignored
+function is_ignored(u, chan)
+    if chan == conn.nick then return nil end
+    if db.check_auth(u, "oper") then
+        log("User is of oper or higher level; not ignoring..", u, "debug")
+        return nil
+    end
+    if not bot.ignore[chan] then
+        log("No table for given channel, not ignoring.", "debug")
+        return nil
+    end
+    for _, patt in ipairs(bot.ignore[chan]) do
+        local type = patt:match("^(%l+)/")
+        patt = patt:gsub("^" .. type .. "/", "", 1)
+        local field
+        if type == "user" then
+            field = "username"
+        else
+            field = type
+        end
+        if u[field]:lower():match(patt) then
+            return true
+        end
+        log("Did not find any matching ignore pattern; not ignoring.", u,
+            "debug")
+    end
+end
+
 -- desat(): Strip colours from messages
 function desat(m)
     if not m then return nil end
@@ -197,6 +225,11 @@ function getarg(m) -- Gets everything after *first* word
 end
 
 function wit(u, chan, m) -- Main hook function for reacting to commands
+    -- Check if user is ignored
+    if is_ignored(u, chan) then
+        log("Ignoring user on channel " .. chan, u, "internal")
+        return nil
+    end
     local nickmatch = "^" .. conn.nick .. "%s-[,:;%-]+%s+"
     if m:match(nickmatch) then
         m = m:gsub(nickmatch, "")
@@ -219,6 +252,9 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             break
         end
     end
+    -- Check if the command is disabled:
+    -- (This currently only checks if the command is 'unsilence' or not;
+    --+ it will later on enable per-channel per-function disabling)
     if check_disabled(chan, cmdfunc) == true then return nil end
     if cmdFound == true then
         log("chan == " .. chan .. "; cmdfunc == " .. cmdfunc, u, "internal")

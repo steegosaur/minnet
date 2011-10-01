@@ -21,6 +21,7 @@ bot.commands = {
     unload  = { "unload", "remove" },
     part    = { "part", "get%s+out" },
     ignore  = { "ignore", "disregard" },
+    unignore= { "unignore", "listen%s+to" },
     identify= { "identify", "i'?%s-a?m" },
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
