@@ -1,0 +1,61 @@
+Changelog and roadmap for Minnet
+
+Rough feature changelog:
+    0.0.1
+        Connects with set userinfo to table-defined servers and channels
+    0.0.5
+        Initial command reception code
+    0.1.0
+        Help command
+        Quit command is protected (user recognition)
+        Takes commands in channels and /msg
+        Configuration in separate file
+        Commands take arguments
+    0.2.0
+        Has a useful TODO and README
+        Has commands for part, say, etc
+    0.3.0
+        Uses a working SQL user database system
+    0.3.5
+        Has UDB functions like OTL in the case of an empty database
+    0.4.0
+        Is secured through prepared sql statements
+        Has several (at least 2) logging levels
+        Abstracts irc message sending into a function wrapper (send())
+    0.4.5
+        Greets after being greeted
+        Only connects to one network per instance
+            -Has a -n|--net[work] switch using bot.nets[i].name to select
+            -Has a default net defined in the config
+    0.4.8
+        Uses ssl
+        Dynamically uses config-defined levels to define allowed_level
+    0.5.0
+        Does stuff. </lazy> (Refer to commits for actual changes at this point)
+    0.6.0
+        Has liberal recognition of commands (hooks that look for keywords)
+        Has multiple possible commands per action ("(what|how long) uptime")
+    0.7.0
+        Has hook unload functionality
+        Supports fully (single-)coloured lines (commands and logging)
+        Has help functionality
+        Provides the time when asked
+        Has documented internal debug info enabled by output level "internal", 
+         and more widely used "debug" level output
+
+Future roadmap:
+    0.8.0
+        Has a user-info database, separate from the auth db
+        Has user-ignore functionality
+        Can disable single functions per-channel or per-net (and store this?)
+    0.9.0
+        Is compatible with the CTCP specs for USERINFO, FINGER, CLIENTINFO etc.
+    1.0.0
+        Works
+        Has documentation
+        Has a purpose
+        Has no (or few) known bugs
+        Causes a part of Hell to freeze over
+    1.5.0
+        Has central, documented message database (msgs.lua)
+            This will require going through all send() calls, abstracting them
