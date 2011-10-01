@@ -367,10 +367,18 @@ cmdlist = {
             if db.check_auth(u, "admin") then
                 m = getarg(m)
                 m = m:gsub("%s*the%s*", "", 1)
-                m = m:gsub("%s*hook%s*", "", 1)
+                m = m:gsub("^%s*hooks?%s*", "", 1)
                 m = m:gsub("%s*called%s*", "", 1)
                 local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
                 if hookname then
+                    if hookname == "all" then
+                        log("Reloading all hooks..", u, "info")
+                        for i, h in ipairs(hooks) do
+                            conn:hook(h.event, h.name, h.action)
+                        end
+                        send(chan, u.nick .. ": So, reloaded all the hooks.")
+                        return nil
+                    end
                     local hookfound = false
                     for i, h in ipairs(hooks) do
                         if h.name == hookname then
