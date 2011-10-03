@@ -149,6 +149,9 @@ end
 function sendNotice(nick, str)
     -- Wrapper function for sending notices
     -- Mostly used for ctcp replies
+    if type(chan) == "table" then
+        if chan.nick then chan = chan.nick end
+    end
     sendRaw("NOTICE " .. nick .. " :" .. str)
 end
 

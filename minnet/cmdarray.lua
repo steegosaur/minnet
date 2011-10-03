@@ -229,7 +229,7 @@ cmdlist = {
                 if not arg then
                     send(chan, u.nick .. ": Go to what channel?")
                 else
-                    local cn = arg:match("(#[^%s%.,]+)")
+                    local cn = arg:match("(#" .. cname_patt .. ")")
                     arg = arg:gsub("^.*channel%s+", "")
                     arg = arg:gsub("#%S+%s+", "")
                     --arg = arg:gsub("^with%s+", "")
@@ -263,7 +263,7 @@ cmdlist = {
         func = function(u, chan, m, catch)
             if db.check_auth(u, "admin") then
                 m = m:lower()
-                local arg = m:match(catch .. "%s+(of%s+#?[^%s%.!,]+)")
+                local arg = m:match(catch .. "%s+(of%s+#?" .. cname_patt ..")")
                 if ( not arg ) or arg:match("^of%s+here") then
                     send(chan, msg.bye)
                     conn:part(chan)
@@ -274,7 +274,7 @@ cmdlist = {
                             net.name .. ")", "warn")
                     end
                 elseif arg:match("^of%s+#%S") then
-                    arg = arg:match("^of%s+(#[^%s%.!,]+)")
+                    arg = arg:match("^of%s+(#" .. cname_patt .. ")")
                     send(chan, "Leaving " .. arg)
                     send(arg, msg.bye)
                     conn:part(arg)
@@ -463,8 +463,10 @@ cmdlist = {
                     local inchan = false
                     local nick
                     local say = ""
-                    local t = arg:match("^%s-(#%S+)%s+%S+") -- Channel to output to?
-                    if arg:match("%s+to%s+[^%s!%?%.,]+") then -- Telling someone something?
+                    -- Channel to output to?
+                    local t = arg:match("^%s-(#" .. cname_patt .. ")%s+%S+")
+                    -- Telling someone something?
+                    if arg:match("%s+to%s+[^%s!%?%.,]+") then
                         nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
                         local q = conn:whois(nick)
                         if q.channels then
@@ -861,12 +863,47 @@ cmdlist = {
             end
         end
     },
+    lignore = {
+        help = "What, you don't remember who you told me to disregard?",
+        func = function(u, chan, m)
+            if db.check_auth(u, "oper") then
+                -- Channel is either specified or current chan
+                local channel = m:match("(#" .. cname_patt .. ")") or chan
+                if bot.ignore[channel] and #bot.ignore[channel] > 0 then
+                    log("Listing ignores for channel " .. channel, u, "info")
+                    send(u.nick, "Ignores for channel " .. channel .. ":")
+                    socket.sleep(0.5)
+                    -- Output style: 1 (nick) someperson
+                    local fmtstr = "%d (%s) %s"
+                    -- Iterate over every ignore, sending one per line
+                    for i, entry in ipairs(bot.ignore[channel]) do
+                        local type = entry:match("^(%l+)/")
+                        local patt = entry:match(type .. "/(%S+)")
+                        -- Output via query to avoid channel spam
+                        send(u.nick, fmtstr:format(i, type, patt))
+                        -- Minor pause per 5th sending
+                        if i / 5 == math.floor(i / 5) then
+                            socket.sleep(1)
+                        end
+                    end
+                else
+                    log("No users ignored for channel " .. channel ..
+                        "; reporting empty list", u, "debug")
+                    send(chan, u.nick .. ": There are no ignored users " ..
+                        "in the list.")
+                end
+            else
+                log("Received unauthorised request to list ignores", u, "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
     -- disable: do not react to anything
     disable = {
         help = "Make me shut up.",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
-                local silchan = m:match("#([^%s%.!%?,]+)")
+                local silchan = m:match("#(" .. cname_patt .. ")")
                 if not silchan then silchan = chan end
                 log("Entering response freeze for channel " .. silchan, u,
                     "info")
