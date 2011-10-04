@@ -903,6 +903,91 @@ cmdlist = {
             end
         end
     },
+    -- enfunc: re-enable a given function
+    enfunc = {
+        help = "",
+        func = function(u, chan, m)
+            if db.check_auth(u, "oper") then
+                m = getarg(m)
+                m = m:gsub("^your%s+")
+                m = m:gsub("function%w*")
+                local target = m:match("['\"«»]([%l_]+)")
+                if not target then
+                    target = m:match("^([%l_]+)")
+                end
+                if not target then
+                    log("Could not catch function to enable", "debug")
+                    send(chan, "Enable what, you say?")
+                    return nil
+                end
+                local channel = m:match("(" .. cprefix .. cname_patt .. ")")
+                  or chan
+                if not bot.disfuncs[channel] or #bot.disfuncs[channel] < 1 then
+                -- List is either nonexistent or empty
+                    log("Received request to enable function '" .. target ..
+                        "' in channel " .. channel .. ", but no functions " ..
+                        "disabled", u, "debug")
+                    send(chan, "Eh, say what? There's nothing currently " ..
+                        "disabled.")
+                    return nil
+                end
+                local index = nil
+                for i, entry in ipairs(bot.disfuncs[channel]) do
+                    if entry == target then
+                        index = i
+                        break
+                    end
+                end
+                if not index then -- Didn't find target in the list
+                    log("Received request to enable un-disabled function",
+                        "debug")
+                    send(chan, "You know.. that wasn't even disabled in " ..
+                        "the first place.")
+                    return nil
+                end
+                log("Enabling function '" .. target "' in channel " ..
+                    channel, u, "info")
+                table.remove(bot.disfuncs[channel], index)
+                send(chan, u.nick .. ": Okay, I'll consider doing that. " ..
+                    "If they're nice.")
+            else
+                log("Received unauthorised request to enable a function",
+                    "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
+    -- disfunc: disable a given function
+    disfunc = {
+        help = "Want me to quit doing that one thing?",
+        func = function(u, chan, m)
+            if db.check_auth(u, "oper") then
+                m = getarg(m)
+                m = m:gsub("^your%s+")
+                m = m:gsub("function%w*")
+                local target = m:match("['\"«»]([%l_]+)")
+                if not target then
+                    target = m:match("^([%l_]+)")
+                end
+                if not target then
+                    log("Could not catch function to disable", "debug")
+                    send(chan, "Disable what, you say?")
+                    return nil
+                end
+                local channel = m:match("(" .. cprefix .. cname_patt .. ")")
+                  or chan
+                log("Disabling function '" .. target .. "' in channel " ..
+                    channel, u, "info")
+                if not bot.disfuncs[channel] then bot.disfuncs[channel] ={} end
+                table.insert(bot.disfuncs[channel], target)
+                send(chan, u.nick .. ": Fine, I'll quit doing that..")
+            else
+                log("Received unauthorised request to disable a function", u,
+                    "warn")
+                send(u.nick, msg.notauth)
+            end
+        end
+    },
     -- disable: do not react to anything
     disable = {
         help = "Make me shut up.",

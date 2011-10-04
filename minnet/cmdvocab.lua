@@ -27,6 +27,8 @@ bot.commands = {
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
+--    enfunc  = { "enable.*function", "enable.*command" },
+--    disfunc = { "disable.*function", "disable.*command" },
     -- The IDB catches are special: the () catches aid in extracting info
     idb_set = {
         "[Ss]et%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$",
