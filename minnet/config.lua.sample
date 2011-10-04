@@ -51,10 +51,13 @@ bot = {
     },
     -- disabled = { channame = true, chan2 = false };
     -- this is used during runtime, but can be predefined for special needs
-    disabled = {}
+    disabled = {},
     -- ignore = { chan = { "nick/$nick", "user/$pattern", "host/$pattern" } }
     -- used for ignoring people, per-channel
     ignore = {},
+    -- disfuncs = { channame = { "funcname", "func2" } }
+    -- used for disabling a certain function in a given channel
+    disfuncs = {},
 }
 msg = {
     noargs  = "invalid arguments specified. See --help",
@@ -91,6 +94,11 @@ ctcp  = {
         time    = {},
     }
 }
+
+cprefix    = "[#&]"
+cname_patt = "[^%s%.,%?!]+"
+nick_patt  = "[^%s%.,%?!]+"
+
 otk   = {}
 logs  = {}
 vchan = ""
