@@ -15,14 +15,18 @@ function check_disabled(chan, cmdfunc)
 end
 
 -- is_ignored(): Check if a user is to be ignored
-function is_ignored(u, chan)
+function is_ignored(u, chan, bool)
     if chan == conn.nick then return nil end
     if db.check_auth(u, "oper") then
-        log("User is of oper or higher level; not ignoring..", u, "debug")
+        if not bool then
+            log("User is of oper or higher level; not ignoring..", u, "debug")
+        end
         return nil
     end
     if not bot.ignore[chan] then
-        log("No table for given channel, not ignoring.", "debug")
+        if not bool then
+            log("No table for given channel, not ignoring.", "debug")
+        end
         return nil
     end
     for _, patt in ipairs(bot.ignore[chan]) do
@@ -37,8 +41,10 @@ function is_ignored(u, chan)
         if u[field]:lower():match(patt) then
             return true
         end
-        log("Did not find any matching ignore pattern; not ignoring.", u,
+        if not bool then
+            log("Did not find any matching ignore pattern; not ignoring.", u,
             "debug")
+        end
     end
 end
 

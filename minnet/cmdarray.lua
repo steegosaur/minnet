@@ -782,9 +782,10 @@ cmdlist = {
                     m = m:gsub("^%s-the", "")
                     m = m:gsub("^.*%sname%s+", "")
                 end
-                m = m:gsub("^.*%s" .. class .. "%w-%s+", "")
-                local pattern = m:match("^(%S+)")
-                local channel = m:match("%s+in%s+(#[^%.%?!,%s]+)")
+                m = m:gsub("^.*%s-" .. class .. "%w-%s+", "")
+                -- Ignore quotes when catching the pattern
+                local pattern = m:match("^['\"«»]-([^%s'\"«»]+)")
+                local channel = m:match("(#[^%.%?!,%s]+)")
                 if not channel then channel = chan end
                 if not pattern then
                     send(chan, "Uhm, who did you say?")
@@ -814,7 +815,7 @@ cmdlist = {
                 m = getarg(m)
                 m = m:lower()
                 local pattern = m:match("^(%S+)")
-                local channel = m:match("%s+in%s+(#[^%.%?!,%s]+)")
+                local channel = m:match("(#[^%.%?!,%s]+)")
                 if not channel then channel = chan end
                 if not bot.ignore[channel] then
                     -- We don't have any ignores active here
@@ -872,13 +873,17 @@ cmdlist = {
                 if bot.ignore[channel] and #bot.ignore[channel] > 0 then
                     log("Listing ignores for channel " .. channel, u, "info")
                     send(u.nick, "Ignores for channel " .. channel .. ":")
-                    socket.sleep(0.5)
+                    socket.sleep(0.2)
                     -- Output style: 1 (nick) someperson
                     local fmtstr = "%d (%s) %s"
                     -- Iterate over every ignore, sending one per line
                     for i, entry in ipairs(bot.ignore[channel]) do
                         local type = entry:match("^(%l+)/")
                         local patt = entry:match(type .. "/(%S+)")
+                        if not ( type and patt ) then
+                            log("Failed to extract class and pattern from " ..
+                                "ignore list for 'lignore'", "error")
+                        end
                         -- Output via query to avoid channel spam
                         send(u.nick, fmtstr:format(i, type, patt))
                         -- Minor pause per 5th sending

@@ -8,7 +8,6 @@ Todo atm:
         info database, or should people be allowed to set virtually any field?
     
     Per-command disabling (disable certain functions for a channel or net)
-    User unignoring, listing ignores
     Add CTCP USERINFO, CLIENTINFO, FINGER, etc
 
     Check if the WHERE nick OR cur_nick sql might be abused by nickchanging

@@ -8,12 +8,13 @@ hooks = {
         event   = "OnChat",
         name    = "happy",
         action  = function(u, chan, m)
-            if is_ignored(u, chan) or ( check_disabled(chan) == true ) then
+            if is_ignored(u, chan, true) or ( check_disabled(chan) == true ) then
                 return nil
             end
             if chan == conn.nick then chan = u.nick end
             m = desat(m):lower()
             if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
+                log("Triggered hook 'happy'", "internal")
                 ctcp.action(u, chan, "doesn't worry, is happy! :D")
             end
         end
@@ -22,14 +23,14 @@ hooks = {
         event   = "OnChat",
         name    = "own",
         action  = function(u, chan, m)
-            if is_ignored(u, chan) or
+            if is_ignored(u, chan, true) or
               ( check_disabled(chan, "belong") == true ) then
                 return nil
             end
             m = m:lower()
             m = desat(m)
             if m:match("^!" .. conn.nick:lower()) then
-                log("Triggered !ownership hook", u, "internal")
+                log("Triggered hook 'own'", u, "internal")
                 cmdlist.belong.func(u, chan)
             end
         end
@@ -106,7 +107,7 @@ hooks = {
         name    = "rejoin",
         action  = function(chan, nick, k, r)
             if nick:lower() == conn.nick:lower() then
-                log("Kicked from channel " .. chan, k, "info")
+                log("Kicked from channel " .. chan, k, "warn")
                 if not channel_remove(chan) then
                     log("Error: Could not remove channel " .. chan ..
                       " from table bot.nets[" .. n  .. "].joined (" ..
@@ -118,6 +119,7 @@ hooks = {
                 --end
             else
                 if check_disabled(chan) == true then return nil end
+                log("Triggered OnKick hook for other nick", "internal")
                 send(chan, "o/` Another one bites the dust, oh - " ..
                   "another one bites the dust! o/`")
             end
@@ -127,7 +129,7 @@ hooks = {
         event   = "OnChat",
         name    = "greet",
         action  = function(u, chan, m)
-            if is_ignored(u, chan) or ( check_disabled(chan) == true ) then
+            if is_ignored(u, chan, true) or ( check_disabled(chan) == true ) then
                 return nil
             end
             if chan == conn.nick then chan = u.nick end
@@ -230,7 +232,7 @@ hooks = {
         event   = "OnChat",
         name    = "yw",
         action  = function(u, chan, m)
-            if is_ignored(u, chan) or ( check_disabled(chan) == true ) then
+            if is_ignored(u, chan, true) or ( check_disabled(chan) == true ) then
                 return nil
             end
             m = m:lower()
@@ -238,6 +240,7 @@ hooks = {
             for _, word in ipairs(thanks) do
                 if m:match("%s-" .. word .. "%s-%p-%s+" ..
                   conn.nick:lower()) then
+                    log("Triggered hook 'yw'", "internal")
                     send(chan, "You're welcome, " .. u.nick .. ".")
                     return nil
                 end

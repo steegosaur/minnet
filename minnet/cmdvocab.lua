@@ -29,8 +29,8 @@ bot.commands = {
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
     -- The IDB catches are special: the () catches aid in extracting info
     idb_set = {
-        "[Ss]et%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?,!]-$",
-        "[Mm]y%s+([%w%s]+)%sis%s+(.-)[%.%?,!]-$"
+        "[Ss]et%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$",
+        "[Mm]y%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$"
     },
     idb_get = {
         -- Reverse syntax disabled at the moment; not implemented yet
