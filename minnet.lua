@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.7.3 - the unuseful lua irc bot
+-- minnet.lua 0.7.4 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
 --
 -- This file is part of Minnet

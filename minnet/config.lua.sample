@@ -9,9 +9,10 @@ logdir = os.getenv("HOME") .. "/.minnetlogs"
 
 -- Main static info for the bot, including networks
 bot = {
-    nick  = "Minnet",
-    uname = "Minnet",
-    rname = "Minnet",
+    nick  = "Minnet",   -- Nickname (nick!uname@host)
+    uname = "Minnet",   -- Username
+    rname = "Minnet",   -- Realname (shows in whois)
+    -- { name = netname, port, secure = bool for ssl, c = { "#channel", "#channel2" }, modes = modes to add for self on connect, default = bool }
     nets  = {
         {
             name    = "dummynet",
@@ -45,6 +46,7 @@ bot = {
         { text = "annoyed", face = ":|" },
         { text = "annoying",face = ">:)"},
         { text = "dumb",    face = ":B" },
+        { text = "silly",   face = ":B" },
         { text = "stupid",  face = ":B" },
         { text = "sexy",    face = ";)" },
         { text = "smart",   face = "8)" },
@@ -55,7 +57,7 @@ bot = {
     -- ignore = { chan = { "nick/$nick", "user/$pattern", "host/$pattern" } }
     -- used for ignoring people, per-channel
     ignore = {},
-    -- disfuncs = { channame = { "funcname", "func2" } }
+    -- disfuncs = { channame = { "funcname", "func2" }, _netname = { "f3" } }
     -- used for disabling a certain function in a given channel
     disfuncs = {},
 }

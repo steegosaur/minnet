@@ -785,21 +785,27 @@ cmdlist = {
                 m = m:gsub("^.*%s-" .. class .. "%w-%s+", "")
                 -- Ignore quotes when catching the pattern
                 local pattern = m:match("^['\"«»]-([^%s'\"«»]+)")
-                local channel = m:match("(#[^%.%?!,%s]+)")
-                if not channel then channel = chan end
                 if not pattern then
                     send(chan, "Uhm, who did you say?")
                     log("Could not find pattern in ignore command", "debug")
                     return nil
                 else
+                    m = m:gsub(pattern .. "%s*", "", 1)
+                    local channel
+                    if m:match("global") or m:match("%Lnet") then
+                    -- This is a global ignore
+                        channel = "_" .. net.name
+                    else
+                        channel = m:match("(#[^%.%?!,%s]+)")
+                        if not channel then channel = chan end
+                    end
                     log("Pattern found by ignore function: " .. pattern,
                         "internal")
                     if not bot.ignore[channel] then bot.ignore[channel] = {} end
                     table.insert(bot.ignore[channel], class .. "/" .. pattern)
                     log("Commencing ignoring of " .. class .. " '" ..
                         pattern .. "'", "info")
-                    send(chan, "Okay, ignoring messages matching that in " ..
-                        "this channel.")
+                    send(chan, "Okay, ignoring messages matching that.")
                 end
             else
                 log("Received unauthorised ignore command", u, "warn")
@@ -815,8 +821,14 @@ cmdlist = {
                 m = getarg(m)
                 m = m:lower()
                 local pattern = m:match("^(%S+)")
-                local channel = m:match("(#[^%.%?!,%s]+)")
-                if not channel then channel = chan end
+                local channel
+                if m:match("global") or m:match("%Lnet") then
+                -- This is a global ignore
+                    channel = "_" .. net.name
+                else
+                    local channel = m:match("(#[^%.%?!,%s]+)")
+                    if not channel then channel = chan end
+                end
                 if not bot.ignore[channel] then
                     -- We don't have any ignores active here
                     send(chan, "Sorry, but there are no ignores for this " ..
@@ -868,8 +880,13 @@ cmdlist = {
         help = "What, you don't remember who you told me to disregard?",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
-                -- Channel is either specified or current chan
-                local channel = m:match("(#" .. cname_patt .. ")") or chan
+                -- Channel is either specified or current chan, or current net
+                local channel
+                if m:match("global") or m:match("%Lnet") then
+                    channel = "_" .. net.name
+                else
+                    channel = m:match("(#" .. cname_patt .. ")") or chan
+                end
                 if bot.ignore[channel] and #bot.ignore[channel] > 0 then
                     log("Listing ignores for channel " .. channel, u, "info")
                     send(u.nick, "Ignores for channel " .. channel .. ":")
@@ -920,8 +937,14 @@ cmdlist = {
                     send(chan, "Enable what, you say?")
                     return nil
                 end
-                local channel = m:match("(" .. cprefix .. cname_patt .. ")")
-                  or chan
+                m = m:gsub(target .. "%s*", "", 1)
+                local channel
+                if m:match("global") or m:match("%Lnet") then
+                    channel = "_" .. net.name
+                else
+                    channel = m:match("(" .. cprefix .. cname_patt .. ")")
+                        or chan
+                end
                 if not bot.disfuncs[channel] or #bot.disfuncs[channel] < 1 then
                 -- List is either nonexistent or empty
                     log("Received request to enable function '" .. target ..
@@ -945,8 +968,8 @@ cmdlist = {
                         "the first place.")
                     return nil
                 end
-                log("Enabling function '" .. target "' in channel " ..
-                    channel, u, "info")
+                log("Enabling function '" .. target "' in " .. channel, u,
+                    "info")
                 table.remove(bot.disfuncs[channel], index)
                 send(chan, u.nick .. ": Okay, I'll consider doing that. " ..
                     "If they're nice.")
@@ -974,10 +997,15 @@ cmdlist = {
                     send(chan, "Disable what, you say?")
                     return nil
                 end
-                local channel = m:match("(" .. cprefix .. cname_patt .. ")")
-                  or chan
-                log("Disabling function '" .. target .. "' in channel " ..
-                    channel, u, "info")
+                m = m:gsub(target .. "%s*", "", 1)
+                if m:match("global") or m:match("%Lnet") then
+                    channel = "_" .. net.name
+                else
+                    channel = m:match("(" .. cprefix .. cname_patt .. ")")
+                        or chan
+                end
+                log("Disabling function '" .. target .. "' in " .. channel, u,
+                    "info")
                 if not bot.disfuncs[channel] then bot.disfuncs[channel] ={} end
                 table.insert(bot.disfuncs[channel], target)
                 send(chan, u.nick .. ": Fine, I'll quit doing that..")

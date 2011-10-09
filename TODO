@@ -6,9 +6,18 @@ Todo atm:
 
     THINK: Is it better to let the config decide what fields can be set in the
         info database, or should people be allowed to set virtually any field?
+
+        Solution: Use config to decide; setting it to '_ALL' or something alike
+            means all fields allow; anything else restricts the fields.
+
+    THINK: Should allowed fields in IDB be restricted per-channel, per-net or
+        globally?
     
     Per-command disabling (disable certain functions for a channel or net)
     Add CTCP USERINFO, CLIENTINFO, FINGER, etc
+
+    THINK: Should ADMIN, OPER, USER levels be per-channel instead of global, in
+        order to avoid unwanted privileges in differing channels?
 
     Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
     Check vulnerabilities for more than one user with the same nick
