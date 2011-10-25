@@ -23,6 +23,7 @@ Todo atm:
     Check vulnerabilities for more than one user with the same nick
 
 Command ideas:
+    Nickserv identification
     Flood protection - warn then kick (then ban?); check for own op status
 
     ? JOTI functionality

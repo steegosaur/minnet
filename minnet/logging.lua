@@ -53,6 +53,8 @@ function log(m, u, l) -- Log function, takes message, user table and loglevel
     end
     if not l then
         err("No info level defined for parent function; FIXME")
+    else
+        l = l:lower()   -- Make sure it's all lowercase
     end
 
     -- Log to syslog before filtering for verbosity

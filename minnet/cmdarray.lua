@@ -559,7 +559,7 @@ cmdlist = {
             elseif args:match("^named%p?%s+%S+") then
                 args = args:gsub("^named%p?%s+", "")
             end
-            local name = args:match("^([^%s%.,!%?]+)") -- Capture the name
+            local name = args:match("^(" .. nick_patt .. ")") -- Capture the name
             if not name then
                 send(u.nick, "You forgot telling me your name.")
                 return nil
@@ -626,7 +626,7 @@ cmdlist = {
         help = "Manage the database and carry out related operations; see " ..
             "'db help' for more information.",
         func = function(u, chan, m, catch)
-            if chan:match("^#") then
+            if chan:match("^" .. cprefix) then
                 send(chan, "I can't let you do database operations in a " ..
                     "channel, sorry.")
                 return nil
@@ -926,8 +926,8 @@ cmdlist = {
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 m = getarg(m)
-                m = m:gsub("^your%s+")
-                m = m:gsub("function%w*")
+                m = m:gsub("^your%s+", "")
+                m = m:gsub("function%w*", "")
                 local target = m:match("['\"«»]([%l_]+)")
                 if not target then
                     target = m:match("^([%l_]+)")
@@ -968,7 +968,7 @@ cmdlist = {
                         "the first place.")
                     return nil
                 end
-                log("Enabling function '" .. target "' in " .. channel, u,
+                log("Enabling function '" .. target .. "' in " .. channel, u,
                     "info")
                 table.remove(bot.disfuncs[channel], index)
                 send(chan, u.nick .. ": Okay, I'll consider doing that. " ..
@@ -986,8 +986,9 @@ cmdlist = {
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
                 m = getarg(m)
-                m = m:gsub("^your%s+")
-                m = m:gsub("function%w*")
+                m = m:gsub("^your%s+", "")
+                m = m:gsub("^the%s+", "")
+                m = m:gsub("function%w*", "")
                 local target = m:match("['\"«»]([%l_]+)")
                 if not target then
                     target = m:match("^([%l_]+)")

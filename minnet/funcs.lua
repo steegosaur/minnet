@@ -7,7 +7,22 @@
 -- {{{ Internal functionality
 -- check_disabled(): Check if disabled in a channel
 function check_disabled(chan, cmdfunc)
-    if bot.disabled[chan] == true and cmdfunc ~= "enable" then
+    local is_disabled
+    local targets = { bot.disfuncs[chan], bot.disfuncs["_" .. net.name] }
+    for _, t in ipairs(targets) do
+        if type(t) == "table" and cmdfunc and cmdfunc ~= "enable" then
+            for _, f in ipairs(t) do
+                if f == cmdfunc then
+                    is_disabled = true
+                    log("Command '" .. cmdfunc .. "' is disabled, skipping..",
+                        "debug")
+                    break
+                end
+            end
+        end
+    end
+    if ( bot.disabled[chan] == true and cmdfunc ~= "enable" ) or
+      is_disabled then
         return true
     else
         return false
@@ -23,28 +38,34 @@ function is_ignored(u, chan, bool)
         end
         return nil
     end
-    if not bot.ignore[chan] then
+    if not bot.ignore[chan] and not bot.ignore["_" .. net.name] then
         if not bool then
             log("No table for given channel, not ignoring.", "debug")
         end
         return nil
     end
-    for _, patt in ipairs(bot.ignore[chan]) do
-        local type = patt:match("^(%l+)/")
-        patt = patt:gsub("^" .. type .. "/", "", 1)
-        local field
-        if type == "user" then
-            field = "username"
-        else
-            field = type
+    local is_ignored
+    local targets = { bot.ignore[chan], bot.ignore["_" .. net.name] }
+    for _, t in ipairs(targets) do
+        if type(t) == "table" then
+            for _, patt in ipairs(t) do
+                local type = patt:match("^(%l+)/")
+                patt = patt:gsub("^" .. type .. "/", "", 1)
+                local field
+                if type == "user" then
+                    field = "username"
+                else
+                    field = type
+                end
+                if u[field]:lower():match(patt) then
+                    return true
+                end
+            end
         end
-        if u[field]:lower():match(patt) then
-            return true
-        end
-        if not bool then
-            log("Did not find any matching ignore pattern; not ignoring.", u,
+    end
+    if not bool then
+        log("Did not find any matching ignore pattern; not ignoring.", u,
             "debug")
-        end
     end
 end
 

@@ -77,9 +77,9 @@ function db.check_otk(u, key)
                 passgen(tostring(otk[n])), nil, true)
             send(u.nick, "Congrats, you just identified and added yourself " ..
                 "as the owner, with the otk as your password.")
-            send(u.nick, "You will want to modify your database entry asap " ..
-                "by writing 'db mod " .. u.nick .. " owner " .. u.host ..
-                " <password> <email>'.")
+            send(u.nick, "You'll want to modify your data asap by writing " ..
+                "'db set password <password>' and, optionally, " ..
+                "'db set email <email>'.")
             send(u.nick, "For more help on managing the database, write " ..
                 "'db help'.")
             otk[n] = nil
