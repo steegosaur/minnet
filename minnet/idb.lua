@@ -92,9 +92,11 @@ end
 
 -- idb.chanid(): get or create chanid for given channel (locked to current net)
 function idb.get_chanid(chan)
-    chan = chan:lower()
-    for result in infodb:nrows("SELECT * FROM chans WHERE channame = '" ..
-      chan .. "' AND netid = " .. net.id .. ";") do
+    local get_stmt = infodb:prepare("SELECT * FROM chans WHERE " ..
+        "channame=$chan AND netid=$netid")
+    get_stmt:bind_names({ chan = chan, netid = net.id })
+    for result in get_stmt:nrows() do
+        get_stmt:reset()
         return result.chanid
     end
     -- If we're here, there was no id. Return nil.
@@ -133,14 +135,18 @@ end
 -- idb.set_data(): main function for saving data to the idb
 function idb.set_data(u, chan, nick, field, value)
     local chan_id   -- Make sure it's defined in a broad enough scope
+    chan = chan:lower()
     chan_id = idb.get_chanid(chan)
     if not chan_id then
-        -- If we're here, there is no chanid for this channel yet; let us fix that!
+        -- If we're here, there is no chanid for this channel yet; fix that!
         local chan_count = db.countrows(infodb, "chans")
         chan_id = chan_count + 1
         -- Add channel and check for success
-        if infodb:exec("INSERT INTO chans VALUES (" .. chan_id .. ", '" ..
-          chan:lower() .. "', " .. net.id .. ");") ~= sqlite3.OK then
+        local set_stmt = infodb:prepare("INSERT INTO chans VALUES ( " ..
+            "$chan_id, $chan, $net_id )")
+        set_stmt:bind_names({ chan_id = chan_id, chan = chan, net_id = net.id})
+
+        if set_stmt:step() ~= sqlite3.DONE then
             db.error(u, "Could not add " .. chan .. " to the chans list: " ..
                 infodb:errcode() .. " - " .. infodb:errmsg())
             return nil

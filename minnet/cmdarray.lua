@@ -78,9 +78,7 @@ cmdlist = {
                 incident_time = os.time({ year = when.year, month = when.month,
                     day = when.day, hour = when[inc_var].hour,
                     min = when[inc_var].min })
-                print(now, incident_time)
                 local diff = os.difftime(now, incident_time)
-                print(diff)
                 local days, hours, mins = time.calculate(diff)
                 local re_pattern = "%s: It has been %s%s%s since the %s " ..
                     "incident, which occured at %.4d-%.2d-%.2d, %.2d:%.2d UTC."
@@ -178,7 +176,8 @@ cmdlist = {
                         end
                     end
                     if not smile then smile = "" end
-                    local arg1 = arg:match("^%s-(#%S+)%s+%S+")
+                    -- Check if we're outputting to another channel
+                    local arg1 = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
                     if arg1 and check_joined(arg1) then
                         chan = arg1
                         arg = arg:match("^%s-%S+%s+(.*)$")
@@ -229,9 +228,9 @@ cmdlist = {
                 if not arg then
                     send(chan, u.nick .. ": Go to what channel?")
                 else
-                    local cn = arg:match("(#" .. cname_patt .. ")")
+                    local cn = arg:match("(" ..cprefix..cname_patt.. ")")
                     arg = arg:gsub("^.*channel%s+", "")
-                    arg = arg:gsub("#%S+%s+", "")
+                    arg = arg:gsub("" ..cprefix..cname_patt.. "%s+", "")
                     --arg = arg:gsub("^with%s+", "")
                     local k
                     if arg:match("key%s+%S+") then
@@ -263,7 +262,7 @@ cmdlist = {
         func = function(u, chan, m, catch)
             if db.check_auth(u, "admin") then
                 m = m:lower()
-                local arg = m:match(catch .. "%s+(of%s+#?" .. cname_patt ..")")
+                local arg = m:match(catch .. "%s+(of%s+" .. cprefix .. "?" .. cname_patt ..")")
                 if ( not arg ) or arg:match("^of%s+here") then
                     send(chan, msg.bye)
                     conn:part(chan)
@@ -273,8 +272,8 @@ cmdlist = {
                             " from table bot.nets[" .. n .. "].joined (" ..
                             net.name .. ")", "warn")
                     end
-                elseif arg:match("^of%s+#%S") then
-                    arg = arg:match("^of%s+(#" .. cname_patt .. ")")
+                elseif arg:match("^of%s+" .. cprefix .. cname_patt) then
+                    arg = arg:match("^of%s+(" ..cprefix..cname_patt.. ")")
                     send(chan, "Leaving " .. arg)
                     send(arg, msg.bye)
                     conn:part(arg)
@@ -464,13 +463,13 @@ cmdlist = {
                     local nick
                     local say = ""
                     -- Channel to output to?
-                    local t = arg:match("^%s-(#" .. cname_patt .. ")%s+%S+")
+                    local t = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
                     -- Telling someone something?
                     if arg:match("%s+to%s+[^%s!%?%.,]+") then
                         nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
                         local q = conn:whois(nick)
                         if q.channels then
-                            for w in q.channels[3]:gmatch("(#%S+)") do
+                            for w in q.channels[3]:gmatch("(" ..cprefix..cname_patt.. ")") do
                                 if w == chan then
                                     inchan = true
                                     break
@@ -543,6 +542,7 @@ cmdlist = {
     identify = {
         help = "Identify yourself to validate your access level.",
         func = function(u, chan, m, catch)
+        -- Syntax: identify nick password
             local args = m:lower()
             args = args:match(catch .. "%s+(.*)") or ""
             -- Get rid of human-input nonsense (might invalidate certain nicks)
@@ -680,16 +680,19 @@ cmdlist = {
                 local name = arg:match("(%S+)")
                 db.show_user(u, name)
             elseif cmd == "set" then
-                local mode, value = arg:match("(%S+)%s+(%S+)")
+                arg = arg:gsub("^my%s+", "")
+                arg = arg:gsub("%s+to%s+", " ")
+                local mode, value = arg:match("^(%S+)%s+(%S+)")
                 db.set_user(u, mode, value)
+            --[[ Bugged:
             elseif cmd == "flush" then
                 local isauth = db.flush(udb, u)
-                if isauth then db.flush(idb, u) end    -- Avoid double notauth
+                if isauth then db.flush(idb, u) end    -- Avoid double notauth --]]
             elseif cmd == "help" then
                 send(chan, "Syntax: db (set|get|mod|add)")
-                send(chan, "Add and mod are admin-level, and need NICK, " ..
+                send(chan, "Add and mod are admin-level, and take NICK, " ..
                     "LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. " ..
-                    "EMAIL is voluntary.")
+                    "All but NICK and LEVEL are voluntary for mod.")
                 send(chan, "Get needs NICK, and shows the registered " ..
                     "information for that nick.")
                 send(chan, "Set needs MODE and VALUE. It allows you to set " ..
@@ -796,7 +799,7 @@ cmdlist = {
                     -- This is a global ignore
                         channel = "_" .. net.name
                     else
-                        channel = m:match("(#[^%.%?!,%s]+)")
+                        channel = m:match("(" ..cprefix..cname_patt.. ")")
                         if not channel then channel = chan end
                     end
                     log("Pattern found by ignore function: " .. pattern,
@@ -826,7 +829,7 @@ cmdlist = {
                 -- This is a global ignore
                     channel = "_" .. net.name
                 else
-                    local channel = m:match("(#[^%.%?!,%s]+)")
+                    local channel = m:match("(" ..cprefix..cname_patt.. ")")
                     if not channel then channel = chan end
                 end
                 if not bot.ignore[channel] then
@@ -885,7 +888,7 @@ cmdlist = {
                 if m:match("global") or m:match("%Lnet") then
                     channel = "_" .. net.name
                 else
-                    channel = m:match("(#" .. cname_patt .. ")") or chan
+                    channel = m:match("(" ..cprefix..cname_patt.. ")") or chan
                 end
                 if bot.ignore[channel] and #bot.ignore[channel] > 0 then
                     log("Listing ignores for channel " .. channel, u, "info")
@@ -942,7 +945,7 @@ cmdlist = {
                 if m:match("global") or m:match("%Lnet") then
                     channel = "_" .. net.name
                 else
-                    channel = m:match("(" .. cprefix .. cname_patt .. ")")
+                    channel = m:match("(" ..cprefix..cname_patt.. ")")
                         or chan
                 end
                 if not bot.disfuncs[channel] or #bot.disfuncs[channel] < 1 then
@@ -1002,7 +1005,7 @@ cmdlist = {
                 if m:match("global") or m:match("%Lnet") then
                     channel = "_" .. net.name
                 else
-                    channel = m:match("(" .. cprefix .. cname_patt .. ")")
+                    channel = m:match("(" ..cprefix..cname_patt.. ")")
                         or chan
                 end
                 log("Disabling function '" .. target .. "' in " .. channel, u,
@@ -1022,7 +1025,7 @@ cmdlist = {
         help = "Make me shut up.",
         func = function(u, chan, m)
             if db.check_auth(u, "oper") then
-                local silchan = m:match("#(" .. cname_patt .. ")")
+                local silchan = m:match("(" ..cprefix..cname_patt.. ")")
                 if not silchan then silchan = chan end
                 log("Entering response freeze for channel " .. silchan, u,
                     "info")

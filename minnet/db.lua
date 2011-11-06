@@ -13,17 +13,17 @@ end
 
 -- db.check(): Check whether network table exists
 function db.check()
-    udb:exec("INSERT INTO " .. net.name .. " VALUES (db_test);")
-    if udb:errmsg() == "no such table: " .. net.name then
-        udb:exec("CREATE TABLE " .. net.name ..
+    udb:exec("INSERT INTO " .. net.name:lower() .. " VALUES (db_test);")
+    if udb:errmsg() == "no such table: " .. net.name:lower() then
+        udb:exec("CREATE TABLE " .. net.name:lower() ..
             " (nick,level,host,passhash,email,cur_nick);")
-        log("Created udb sql table " .. net.name, "info")
+        log("Created udb sql table " .. net.name:lower(), "info")
     end
 end
 -- db.ucheck(): Check whether the network table is empty
 function db.ucheck()
     local info
-    for result in udb:nrows("SELECT * FROM " .. net.name .. " LIMIT 1;") do
+    for result in udb:nrows("SELECT * FROM " .. net.name:lower() .. " LIMIT 1;") do
         info = result
     end
     if not info then
@@ -47,6 +47,7 @@ function db.countrows(database, tab)
     return count
 end
 
+--[[ FIXME: This crashes with "attempt to call method 'exec' (nil value)"
 function db.flush(database, u) -- db.flush(): Just what it sounds like
     if db.check_auth(u, "admin") then
         if database:exec("COMMIT;") ~= sqlite3.OK or nil then
@@ -62,6 +63,7 @@ function db.flush(database, u) -- db.flush(): Just what it sounds like
         log("Unauthorised attempt at flushing SQL database", "warn")
     end
 end
+--]]
 -- db.check_otk(): Check the input of a 'db otk' command
 function db.check_otk(u, key)
     if not otk[n] then
@@ -120,7 +122,7 @@ function db.check_table(database, tab, field, data)
 end
 function db.get_user(nick) -- db.get_user(): Query the udb for user info
     local usr_stmt = udb:prepare("SELECT nick,level,host,passhash,email,cur_nick FROM " ..
-        net.name .. " WHERE cur_nick = $nick or nick = $nick LIMIT 1;")
+        net.name:lower() .. " WHERE cur_nick = $nick or nick = $nick LIMIT 1;")
     usr_stmt:bind_names({ nick = nick:lower() })
     for userinfo in usr_stmt:nrows() do
         usr_stmt:reset()
@@ -129,7 +131,7 @@ function db.get_user(nick) -- db.get_user(): Query the udb for user info
 end
 function db.get_owner() -- db.get_owner(): Check who is bot owner
     local owner
-    for result in udb:nrows("SELECT nick FROM " .. net.name ..
+    for result in udb:nrows("SELECT nick FROM " .. net.name:lower() ..
       " WHERE level = 'owner' LIMIT 1;") do
         owner = result.nick
     end
@@ -193,7 +195,7 @@ function db.ident_user(u, name, passwd)
     end
     local passwd = passgen(passwd)
     if ref.passhash == passwd then
-        --          n, u,    cur_nick, nick, host
+        --          u, cur_nick,       nick, host
         db.upd_user(u, u.nick:lower(), name, u.host)
     else
         log("Unsuccessful login attempt for user " .. name, u, "warn")
@@ -205,7 +207,7 @@ end
 function db.show_user(u, name)
     if ( not db.check_auth(u, "admin") ) and not
       ( u.nick == name and u.host:match(db.get_user(name).host) ) then
-        log("Attempted to get info about user " .. name .. " on " .. net.name, u, "warn")
+        log("Attempted to get info about user " .. name .. " on " .. net.name:lower(), u, "warn")
         send(u.nick, msg.notauth)
         return nil
     elseif not name then
@@ -242,10 +244,10 @@ end
 function db.rem_user(u, nick)
     if not db.check_auth(u, "admin") and not db.check_auth(u, "owner") then
         log("Unauthorised user attempted to remove user " .. nick ..
-            " from table " .. net.name, u, "warn")
+            " from table " .. net.name:lower(), u, "warn")
         send(u.nick, msg.notauth)
     else
-        if not db.check_table(udb, net.name, "nick", nick) then
+        if not db.check_table(udb, net.name:lower(), "nick", nick) then
             log("User " .. nick .. " does not exist, ignoring", u, "trivial")
             send(u.nick, "I don't know anyone by that name.")
             return nil
@@ -256,8 +258,8 @@ function db.rem_user(u, nick)
             return nil
         end
 
-        log("Deleting user " .. nick .. " from table " .. net.name, u, "info")
-        local del_stmt = udb:prepare("DELETE FROM " .. net.name ..
+        log("Deleting user " .. nick .. " from table " .. net.name:lower(), u, "info")
+        local del_stmt = udb:prepare("DELETE FROM " .. net.name:lower() ..
             " WHERE nick = $nick")
         del_stmt:bind_names({ nick = nick })
         if del_stmt:step() ~= sqlite3.DONE then
@@ -273,7 +275,6 @@ end
 -- db mod/add function; used for setting complete user data
 -- Params: usertable, add/mod, nick, accesslevel, hostmask, passhash, email
 function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
---    print(u.nick, mode, nick, level, host)
     if not nick or ( nick == "" ) then
         forgot(u, "nick")
         return nil
@@ -308,12 +309,12 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
                 forgot(u, "level")
                 return nil
             end
-            if db.check_table(udb, net.name, "nick", nick) then
+            if db.check_table(udb, net.name:lower(), "nick", nick) then
                 log("User " .. nick .. " already exists, ignoring", u, "trivial")
                 send(u.nick, "I already know that guy. Try modifying the user instead.")
                 return nil
             end
-            local ins_stmt = udb:prepare("INSERT INTO " .. net.name ..
+            local ins_stmt = udb:prepare("INSERT INTO " .. net.name:lower() ..
                 " VALUES ($nick, $level, $host, $pass, $email, $cur_nick)")
             ins_stmt:bind_names({ nick = nick, level = level, host = host,
                 pass = passhash, email = email, cur_nick= cur_nick })
@@ -323,13 +324,13 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
             else
                 log("Added user with fields nick, level, host, passhash, email (" ..
                     nick .. ", " .. level .. ", " .. host .. ", " .. passhash ..
-                    ", " .. email .. ") on net " .. net.name, u, "info")
+                    ", " .. email .. ") on net " .. net.name:lower(), u, "info")
                 send(u.nick, "I added the user.")
             end
             ins_stmt:reset()
 
         elseif mode == "mod" then
-            if not db.check_table(udb, net.name, "nick", nick) then
+            if not db.check_table(udb, net.name:lower(), "nick", nick) then
                 log("User " .. nick .. " doesn't exist, ignoring", u, "trivial")
                 send(u.nick, "I don't know anyone by that name. Try adding the user first.")
                 return nil
@@ -344,7 +345,7 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
             if ( not level ) or level == "" then
                 level = db.get_user(nick).level
             end
-            local mod_stmt = udb:prepare("UPDATE " .. net.name .. " SET nick=$nick, level=$level, host=$host, passhash=$pass, email=$email WHERE nick = $nick")
+            local mod_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET nick=$nick, level=$level, host=$host, passhash=$pass, email=$email WHERE nick = $nick")
             mod_stmt:bind_names({ nick = nick, level = level, host = host,
                 pass = passhash, email = email })
 
@@ -368,13 +369,17 @@ function db.upd_user(u, cur_nick, nick, host)
     else
         nick = nick:lower()
 
-        local upd_stmt = udb:prepare("UPDATE " .. net.name .. " SET cur_nick=$cur_nick, host=$host WHERE nick=$nick")
+        local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() ..
+            " SET cur_nick=$cur_nick, host=$host WHERE nick=$nick")
         upd_stmt:bind_names({ cur_nick = cur_nick, host = host, nick = nick })
 
         if upd_stmt:step() ~= sqlite3.DONE then
-            db.error(u, "Could not update user info: " .. udb:errcode() .. " - " .. udb:errmsg())
+            db.error(u, "Could not update user info: " .. udb:errcode() ..
+                " - " .. udb:errmsg())
         else
-            log("Updated user with fields nick, cur_nick, host (" .. nick .. ", " .. cur_nick .. ", " .. host .. ") on net " .. net.name, u, "info")
+            log("Updated user with fields nick, cur_nick, host (" .. nick ..
+                ", " .. cur_nick .. ", " .. host .. ") on net " .. net.name,
+                u, "info")
             send(u.nick, "Right, sorry about that. I'll try to remember next time.")
         end
         upd_stmt:reset()
@@ -383,7 +388,8 @@ end
 -- Set userdata function; do not confuse with db.set_data()
 -- This function sets password and email entries for user: 'db set password/email'
 function db.set_user(u, mode, val)
-    if not db.check_table(udb, net.name, "nick", u.nick) then
+    if not db.check_table(udb, net.name:lower(), "cur_nick", u.nick) or
+      not u.host:match(db.get_user(u.nick).host) then
         send(u.nick, "I'm sorry, but I don't think I know you.")
         log("Tried to set information for an unknown user", u, "trivial")
         return nil
@@ -392,8 +398,9 @@ function db.set_user(u, mode, val)
         if not val then
             send(u.nick, "You forgot telling me your email address.")
         else
-            local upd_stmt = udb:prepare("UPDATE " .. net.name .. " SET email = $email WHERE cur_nick = $nick;")
+            local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET email=$email WHERE cur_nick=$nick")
             upd_stmt:bind_names({ email = val, nick = u.nick })
+
             if upd_stmt:step() ~= sqlite3.DONE then
                 db.error(u, "Could not update user data: " .. udb:errcode() .. " - " .. udb:errmsg())
             else
@@ -406,7 +413,9 @@ function db.set_user(u, mode, val)
             send(u.nick, "You forgot telling me your new password. Don't worry, I'm not telling it to anybody.")
         else
             local val = passgen(val)
-            local upd_stmt = udb:prepare("UPDATE " .. net.name .. " SET passhash = $pass WHERE cur_nick = $nick;")
+            -- Could this be abused? cf. cur_nick - someone could steal a nick..? TODO: Add host for security.
+            local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET passhash = $pass WHERE cur_nick = $nick")
+            upd_stmt:bind_names({ pass = val, nick = u.nick })
             if upd_stmt:step() ~= sqlite3.DONE then
                 db.error(u, "Could not update user data: " .. udb:errcode() .. " - " .. udb:errmsg())
             else
