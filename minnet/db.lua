@@ -292,6 +292,12 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
         if level:match("%%") then level = level:gsub("%%", "")  end
         if host:match("%%")  then host  = host:gsub("%%", "")   end
         if email and email:match("%%") then email = email:gsub("%%", "") end
+        if email and not email:match("[^!%?,]+@%S+%.%S+") then
+            send("That's not a valid email address.")
+            log("Attempted to " .. mode .. " user with invalid email",
+                u, "trivial")
+            return nil
+        end
 
         nick = nick:lower()
         local cur_nick = nick
@@ -407,6 +413,7 @@ function db.set_user(u, mode, val)
                 log("Updated user " .. u.nick .. " on net " .. net.name .. " with new email " .. val, u, "info")
                 send(u.nick, "Got it.")
             end
+            upd_stmt:reset()
         end
     elseif mode == "password" then
         if not val then
@@ -414,7 +421,7 @@ function db.set_user(u, mode, val)
         else
             local val = passgen(val)
             -- Could this be abused? cf. cur_nick - someone could steal a nick..? TODO: Add host for security.
-            local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET passhash = $pass WHERE cur_nick = $nick")
+            local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET passhash=$pass WHERE cur_nick=$nick")
             upd_stmt:bind_names({ pass = val, nick = u.nick })
             if upd_stmt:step() ~= sqlite3.DONE then
                 db.error(u, "Could not update user data: " .. udb:errcode() .. " - " .. udb:errmsg())
@@ -422,6 +429,7 @@ function db.set_user(u, mode, val)
                 log("Updated user " .. u.nick .. " on net " .. net.name .. " with new password.", u, "info")
                 send(u.nick, "Got it.")
             end
+            upd_stmt:reset()
         end
     else
         send(u.nick, "Uhm, sorry - I can either set your password or your email. Which did you want to change?")

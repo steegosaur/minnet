@@ -800,8 +800,8 @@ cmdlist = {
                         channel = "_" .. net.name
                     else
                         channel = m:match("(" ..cprefix..cname_patt.. ")")
-                        if not channel then channel = chan end
                     end
+                    if not channel then channel = chan end
                     log("Pattern found by ignore function: " .. pattern,
                         "internal")
                     if not bot.ignore[channel] then bot.ignore[channel] = {} end
@@ -829,9 +829,9 @@ cmdlist = {
                 -- This is a global ignore
                     channel = "_" .. net.name
                 else
-                    local channel = m:match("(" ..cprefix..cname_patt.. ")")
-                    if not channel then channel = chan end
+                    channel = m:match("(" ..cprefix..cname_patt.. ")")
                 end
+                if not channel then channel = chan end
                 if not bot.ignore[channel] then
                     -- We don't have any ignores active here
                     send(chan, "Sorry, but there are no ignores for this " ..
@@ -860,7 +860,7 @@ cmdlist = {
                             "any more.")
                     else
                         for i, entry in ipairs(bot.ignore[channel]) do
-                            if entry == pattern then
+                            if entry:gsub("^%w+/", "", 1) == pattern then
                                 log("Found match for pattern '" .. pattern ..
                                     "' in table; id = " .. i, "debug")
                                 remd = table.remove(bot.ignore[channel], i)
