@@ -14,6 +14,7 @@ bot.commands = {
     say     = { "say" },
     set     = { "set%s+[^my]+" },
     help    = { "help" },
+    areyou  = { "are%s+you" },
     load    = { "load", "reload%s.*hook" },
     reload  = { "reload" },
     db      = { "db", "database" },

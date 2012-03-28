@@ -65,7 +65,7 @@ function idb.get_data(u, chan, nick, field, selfcheck)
     -- field will be sanitised in idb.get_field(); pass it raw
     local data = idb.get_field(nick_id, field)
     if not data then
-        send(chan, "Sorry, I don't know that. May I help with anything else?")
+        send(chan, "Uh, I don't know. Go ask them yourself! Sheesh.")
     elseif selfcheck then
         send(chan, u.nick .. ": Your " .. field .. " is " .. data .. ".")
         log("Reporting " .. nick .. "'s " .. field .. " on " .. chan,

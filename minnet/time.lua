@@ -123,8 +123,10 @@ function time.calculate(t, utc)
     if length.min   ~= 1 then ending.min   = "s" end
     local weeks, days, hours, mins
     local pre = ""
+    local prev = 0
     if length.weeks > 0 then
         weeks = length.weeks .. " week" .. ending.weeks
+        prev = length.weeks
     else
         weeks = ""
     end
@@ -137,6 +139,7 @@ function time.calculate(t, utc)
             pre = ""
         end
         days = pre .. length.day .. " day" .. ending.day
+        prev = length.day
     else
         days = ""
     end
@@ -147,6 +150,7 @@ function time.calculate(t, utc)
             pre = " and "
         end
         hours = pre .. length.hour .. " hour" .. ending.hour
+        prev = length.hour
     else
         hours = ""
     end

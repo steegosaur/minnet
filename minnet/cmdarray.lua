@@ -450,6 +450,19 @@ cmdlist = {
             send(chan, u.nick .. ": Done.")
         end
     },
+    -- areyou: respond to stupid questions with stupid answers
+    areyou = {
+        help = "No.",
+        func = function(u, chan, m, catch)
+            local predic = m:match(catch)
+            if predic:match("^.+ing%s") then
+                send(chan, "No, I'm not.")
+            else
+                local resp = { "Nope", "Nah", "Nay", "No", "Pff", "Duh", "Don't ask" }
+                send(chan, resp[math.random(1, #resp)] .. ".")
+            end
+        end
+    },
     -- say: output message to channel
     say = {
         help = "Make me say something.",
@@ -608,10 +621,10 @@ cmdlist = {
                 "; field == " .. tostring(field) .. "; catch == " .. catch,
                 u, "internal")
             if not nick then
-                send(chan, "Sorry, who did you want to know about?")
+                send(chan, "Huh? Who did you say?")
                 return nil
             elseif not field then
-                send(chan, "Uhm, what did you want to know?")
+                send(chan, "Uhm, say what?")
                 return nil
             end
             if nick == "my" then
