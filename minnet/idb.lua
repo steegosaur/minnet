@@ -20,7 +20,8 @@ function idb.check()
     infodb:exec([[CREATE TABLE IF NOT EXISTS nicks (
         nickid      INTEGER     PRIMARY KEY,
         nick        TEXT,
-        chanid      INTEGER
+        chanid      INTEGER,
+        todo        TEXT
         );]])
 
     -- Check if net exists in the tables; TODO: Tidy this code
@@ -189,9 +190,12 @@ function idb.set_data(u, chan, nick, field, value)
             log("Added column " .. field .. " to info database", "info")
         end
     end
-    if idb.set_field(nick_id, field, value) == true then
-        send(chan, u.nick .. ": Got that.")
+    local didWrite = idb.set_field(nick_id, field, value)
+    if didWrite == true then
+        send(chan, "Whatever floats your boat.")
         log("Set " .. field .. " to '" .. value .. "' in the IDB", u, "debug")
+    elseif didWrite == 1 then
+        send(chan, u.nick .. ": That's reserved, go set something else.")
     else
         send(chan, "Sorry, I couldn't write that down.. Come again?")
     end
@@ -199,8 +203,9 @@ end
 
 -- idb.set_field(): populate a field in the nicks table, IDB
 function idb.set_field(nick_id, field, value)
-    if field == "nickid" or field == "nick" or field == "chanid" then
-        return false
+    if field == "nickid" or field == "nick" or field == "chanid" or
+      field = "todo" then
+        return 1
     end
     local upd_stmt = infodb:prepare("UPDATE nicks SET \"" .. field ..
         "\" = $val WHERE nickid = $nickid;" )

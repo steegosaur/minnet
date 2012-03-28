@@ -1,20 +1,18 @@
 TODO file for Minnet
 
 Todo atm:
-    New purpose: NickServ replacement on own network.
-        Ideas:
-            Set bot.isService in config to enable/disable
-            If true, check for ircop access availability
-            If ircop, ask server for user list; check if all are unknown or identified
-            If unidentified user, warn then renick
-            Use the current UDB, and extend its data/functionality
-                Improve db design using keys (currently unnamed columns; possible security flaw)
+- New purpose: NickServ replacement on own network.
+  + Ideas:
+    + Set bot.isService in config to enable/disable
+        If true, check for ircop access availability
+        If ircop, ask server for user list; check if all are unknown or identified
+        If unidentified user, warn then renick
+        Use the current UDB, and extend its data/functionality
 
+- Self-status check (if isop())
+- Set topic (access: oper)
 
-    Self-status check (if isop())
-        Set topic (access: oper)
-
-    THINK: Is it better to let the config decide what fields can be set in the
+* THINK: Is it better to let the config decide what fields can be set in the
         info database, or should people be allowed to set virtually any field?
 
         Solution: Use config to decide; setting it to '_ALL' or something alike
