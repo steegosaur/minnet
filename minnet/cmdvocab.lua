@@ -21,6 +21,15 @@ bot.commands = {
     unload  = { "unload", "remove" },
     part    = { "part", "get%s+out" },
     ignore  = { "ignore", "disregard" },
+    remember= {
+        "remind%s+me%s+to%s+([^,%.]+)", "remind%s+me%s+that%s+([^,%.]+)",
+        "remember%s+that%s+([^,%.]+)", "todo%s+add%s+(.+)$",
+        "add%s+(.-)%s+to%s+my%s+todo"
+    },
+    remind  = {
+        "what.+%smy%s+todo.*(%d*)", "remind%s+me.*(%d*)", "todo%s+(%d*)",
+        "todo%s+read%s-(%d*)", "todo%s+get%s-(%d*)",
+    },
     unignore= { "unignore", "listen%s+to" },
     lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
     identify= { "identify", "i'?%s-a?m" },
@@ -31,8 +40,8 @@ bot.commands = {
     disfunc = { "disable.*function", "disable.*command" },
     -- The IDB catches are special: the () catches aid in extracting info
     idb_set = {
-        "[Ss]et%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$",
-        "[Mm]y%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$"
+        "set%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$",
+        "my%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$"
     },
     idb_get = {
         -- Reverse syntax disabled at the moment; not implemented yet

@@ -579,6 +579,30 @@ cmdlist = {
             db.ident_user(u, name, passwd)
         end
     },
+    remember = {
+        help = "Got anything you want me to remember?",
+        func = function(u, chan, m, catch)
+            local note = m:match(catch)
+            log("remember triggered: catch == " .. catch, u, "internal")
+            if not note then
+                send(chan, "Eh, say what?")
+                return nil
+            end
+            idb.set_todo(u, chan, note)
+        end
+    },
+    remind = {
+        help = "So you forgot, eh?",
+        func = function(u, chan, m, catch)
+            local item = m:match(catch)
+            log("remind triggered: catch == " catch, u, "internal")
+            if not item then
+                send(chan, "I don't think you told me about that.")
+                return nil
+            end
+            idb.get_todo(u, chan, item)
+        end
+    },
     -- idb_set: save user information in the infodb
     idb_set = {
         help = "Set user information.",

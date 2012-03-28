@@ -270,7 +270,7 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     local cmdfunc, catch
     for cmd, names in pairs(bot.commands) do
         for _, name in ipairs(names) do
-            local match = m:lower():match("^" .. name .. "")
+            local match = m:lower():match("^" .. name)
             if match then
                 catch = name
                 cmdFound = true
