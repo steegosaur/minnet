@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- funcs.lua - functions file for minnet
--- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -260,12 +260,19 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
         log("Ignoring user on channel " .. chan, u, "internal")
         return nil
     end
+    -- Check if bot's name is mentioned in one of two recognised ways
     local nickmatch = "^" .. conn.nick .. "%s-[,:;%-]+%s+"
     if m:match(nickmatch) then
         m = m:gsub(nickmatch, "")
+    else
+        nickmatch = "[,]+%s+" .. conn.nick .. "[%s%.!%?]*$"
+        if m:match(nickmatch) then
+            m = m:gsub(nickmatch, "")
+        end
     end
+
     if m == "" or m:match("^%s+") or m:match("%\001") then return nil end
-    m = m:gsub("%s+$", "")
+    m = m:gsub("%s+$", "")  -- Just a simple clean-up
     cmdFound = false
     local cmdfunc, catch
     for cmd, names in pairs(bot.commands) do

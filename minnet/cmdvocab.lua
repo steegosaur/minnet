@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- cmdvocab.lua - command vocabulary file for minnet
--- Copyright Stæld Lakorv, 2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2011-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -12,8 +12,8 @@
 
 bot.commands = {
     say     = { "say" },
-    set     = { "set%s+[^my]+" },
     help    = { "help" },
+    set     = { "set%s+[^mywch]+" },
     areyou  = { "are%s+you%s-(.*)" },
     load    = { "load", "reload%s.*hook" },
     reload  = { "reload" },
@@ -24,19 +24,24 @@ bot.commands = {
     ignore  = { "ignore", "disregard" },
     remember= {
         "remind%s+me%s+to%s+([^,%.]+)", "remind%s+me%s+that%s+([^,%.]+)",
-        "remember%s+that%s+([^,%.]+)", "todo%s+add%s+(.+)$",
-        "add%s+(.-)%s+to%s+my%s+todo"
+        "remember%s+that%s+([^,%.]+)", "todo%s+add:?%s+(.+)$", "add%s+todo:?%s+(.+)$",
+        "add%s+(.-)%s+to%s+my%s+todo", "todo%s+new:?%s+(.+)$"
     },
     remind  = {
         "what.+%smy%s+todo.*(%d*)", "remind%s+me.*(%d*)", "todo%s+(%d*)",
-        "todo%s+read%s-(%d*)", "todo%s+get%s-(%d*)",
+        "todo%s+read%s-(%d*)", "todo%s+get%s-(%d*)", "read%s.*todo%s*(%d*)"
     },
+    forget  = {
+        "delete%s.-todo.-(%d+)", "forget%s.-(%d+)", "todo%s+delete%s.-(%d+)",
+        "todo%s+forget%s.-(%d+)"
+    }
     unignore= { "unignore", "listen%s+to" },
     lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
     identify= { "identify", "i'?%s-a?m" },
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
+    topic   = { "set%s+.*topic%s+[to:]%s+(.+)$", "[new]-%s-topic:?%s+(.+)$" },
     enfunc  = { "enable.*function", "enable.*command" },
     disfunc = { "disable.*function", "disable.*command" },
     -- The IDB catches are special: the () catches aid in extracting info

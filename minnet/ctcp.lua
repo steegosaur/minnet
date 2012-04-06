@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- ctcp.lua - ctcp functions file for minnet
--- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 

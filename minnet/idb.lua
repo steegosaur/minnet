@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- db.lua - info database functions file for minnet
--- Copyright Stæld Lakorv, 2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2011-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 

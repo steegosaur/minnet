@@ -23,7 +23,6 @@ Todo atm:
     THINK: Should allowed fields in IDB be restricted per-channel, per-net or
         globally?
 
-    Per-command disabling (disable certain functions for a channel or net)
     Add CTCP USERINFO, CLIENTINFO, FINGER, etc
 
     THINK: Should ADMIN, OPER, USER levels be per-channel instead of global, in
@@ -65,4 +64,3 @@ Known bugs:
 
 Known irc.lua bugs (these really should be fixed, but I don't maintain it):
     Quitting always results in a crash.                             WONTFIX
-    Someone joining a given channel results in crash.               NEEDFIX

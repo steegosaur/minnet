@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- hooks.lua - hook register for Minnet
--- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 hooks = {
@@ -92,7 +92,11 @@ hooks = {
             m = desat(m)
             local ismsg = false
             if chan:lower() == conn.nick:lower() then ismsg = true; chan = u.nick end
-            if ismsg == true or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+") then
+            -- Criteria for a message to be a command: query, nick prepended or nick appended
+            if ismsg == true
+                -- TODO: Sync these patterns with the one used in funcs.lua for wit()
+              or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+")
+              or m:lower():match("[,]+%s-" .. conn.nick:lower() .. "[%.%?!%s]*$") then
                 wit(u, chan, m)
             end
         end

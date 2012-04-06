@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- minnet.lua 0.7.4 - the unuseful lua irc bot
--- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 --
 -- This file is part of Minnet
 --
@@ -47,22 +47,24 @@ create_help()
 -- Non-executing modes first:
 if arg[1] == "--licence" then
     local read = {
-        list  = { "/bin/less", "/bin/more", "/usr/bin/nano", "/usr/bin/emacs",
-            "/usr/bin/vim", "/usr/bin/vi", "/bin/cat" },
+        list  = { "less", "more", "nano", "emacs",
+            "vim", "vi", "pico", "dog", "cat" },
         cmd = nil
     }
-    for i = 1, #read.list do
-        if io.open(read.list[i], "r") then
-            read.cmd = read.list[i]
+    for i, command in ipairs(read.list) do
+        local path = io.popen("which " .. command):read()
+        if result:match("^/.*" .. command .. "$") then
+            read.cmd = path
             break
         end
     end
     if read.cmd then
         os.execute(read.cmd .. " COPYING")
+        -- TODO: make this dynamically find the licence
     else
         io.stdout:write("Could not find a program for viewing the licence ",
         "file; please take a look at the GPL v3 yourself. It can be found in ",
-        "the file COPYING in the Minnet main directory.\n")
+        "the file COPYING in Minnet's main directory.\n")
     end
     os.exit()
 elseif arg[1] == "--help" then

@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- config.lua.sample - config file for minnet
--- Copyright Stæld Lakorv, 2010-2011 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2012 <staeld@staeld.co.cc>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -17,8 +17,8 @@ bot = {
         {
             name    = "dummynet",
             addr    = "irc.dummynet.org",
-            port    = "6667", -- Optional; defaults to 6667
-            secure  = false; -- Optional; defaults to false [enables ssl]
+            port    = "6667",   -- Optional, defaults to 6667
+            secure  = false,    -- Optional, defaults to false [enables ssl]
             c       = { "#channelA", "#Chan2" },
             modes   = "pxB",
             default = true,
@@ -26,7 +26,7 @@ bot = {
         {
             name    = "net2",
             addr    = "irc.net2.org",
-            port    = "6697", -- SSL
+            port    = "6697",   -- SSL
             secure  = true,
             c       = { "#talk", "#somechan" },
             modes   = "iB",
@@ -55,7 +55,7 @@ bot = {
     -- this is used during runtime, but can be predefined for special needs
     disabled = {},
     -- ignore = { chan = { "nick/$nick", "user/$pattern", "host/$pattern" } }
-    -- used for ignoring people, per-channel
+    -- used for ignoring people, per-channel or per-net (_NETNAME)
     ignore = {},
     -- disfuncs = { channame = { "funcname", "func2" }, _netname = { "f3" } }
     -- used for disabling a certain function in a given channel
