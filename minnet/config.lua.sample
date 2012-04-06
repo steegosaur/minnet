@@ -21,7 +21,13 @@ bot = {
             secure  = false,    -- Optional, defaults to false [enables ssl]
             c       = { "#channelA", "#Chan2" },
             modes   = "pxB",
-            default = true,
+            -- Information needed to cooperate with existing Services:
+            services= {
+                hostmask = "services.dummynet.org", -- Empty disables hostcheck
+                nickserv = { enabled = true, servnick = "NickServ",
+                    passwd = "p4ssw0rd" }
+            }
+            default = true,     -- Connect to this if no network specified
         },
         {
             name    = "net2",
@@ -30,6 +36,10 @@ bot = {
             secure  = true,
             c       = { "#talk", "#somechan" },
             modes   = "iB",
+            services= {
+                hostmask = "",
+                nickserv = { enabled = false }
+            }
         },
     },
     -- Access levels; owner is obligatory and must be lowest number

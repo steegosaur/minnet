@@ -83,13 +83,13 @@ for i, val in ipairs(arg) do
                 err(msg.noargs)
             end
         end
-    elseif val:match("^%-%-net[work]-$") or ( val == "-n" ) then
+    elseif val:match("^%-%-net[work]*$") or ( val == "-n" ) then
         local nname = arg[i+1] or nil
         if ( not nname ) or nname:match("%-") then
             err(msg.noargs)
         end
         for j, net in ipairs(bot.nets) do
-            if ( net.name:lower() == nname:lower() ) then
+            if net.name:lower() == nname:lower() then
                 netnr = j
                 break
             end
@@ -104,11 +104,11 @@ end
 -- }}}
 
 -- {{{ Run
-if ( runmode == "dry" ) then
-    if not ( arg[-1] == "-i" ) then
+if runmode == "dry" then
+    if not arg[-1] == "-i" then
         print("Attempting to re-run self in interactive mode..")
-        print("If this doesn't work, run lua manually, specifying -i for " ..
-            "interactive execution.")
+        print("If this doesn't work, please run Minnet manually, " ..
+            "using `lua -i ./minnet.lua --dry' from within the installation directory.")
         print()
         os.execute("lua -i " .. arg[0] .. " --dry -v debug")
     else
@@ -116,10 +116,11 @@ if ( runmode == "dry" ) then
         print("Entering debug mode - dryrun variables for u and conn set.")
     end
 else
+    -- This is where the bot actually connects
     log("Starting Minnet..", "info")
     if not netnr then -- No network defined by switch; look for a default net
         for i, net in ipairs(bot.nets) do
-            if net.default and ( net.default == true ) then
+            if net.default and net.default == true then
                 netnr = i
             end
         end
@@ -133,28 +134,28 @@ else
     check_create_dir(logdir)
     syslog = logdir .. "/debug_" .. os.date("%F_%H%M%S", bot.start) .. ".log"
     netdir = logdir .. "/" .. net.name
-    check_create(syslog)
-    check_create_dir(netdir)
-    logs[syslog] = io.open(syslog, "a+")
+    check_create(syslog)        -- Create system logfile
+    check_create_dir(netdir)    -- Create network log dir if not existing
+    logs[syslog] = io.open(syslog, "a+")    -- Open syslog for writing
 
     -- Check that the net's table exists in the databases
-    db.check()
-    idb.check()
-    db.ucheck()  -- Check that the net's user table is not empty
+    db.check()  -- Check that the user database is okay
+    idb.check() -- Check that the info database is okay
+    db.ucheck() -- Check that the net's user table is not empty
 
-    net.id = idb.get_netid()
-    conn = irc.new({
+    net.id = idb.get_netid()    -- Get the net's ID for use w/the info database
+    conn = irc.new({            -- Create new irc object
         nick = bot.nick,
         username = bot.uname,
         realname = bot.rname
     })
     log("", "info")
 
-    -- Tables to be initiated on startup only:
+    -- Tables to be initiated during startup:
     net.joined = {}
     howdoTime = {}
 
-    conn.port   = net.port or "6667"
+    conn.port   = net.port or "6667"    -- TODO: check if this is necessary
     conn.secure = net.secure or false
     if net.secure then require("ssl") else net.secure = false end
     log("Connecting to " .. net.name .. " server at " .. net.addr, "info")
@@ -167,20 +168,37 @@ else
     end
 
     log("Current nick on " .. net.name .. ": " .. conn.nick, "info")
+    if net.services and net.services.nickserv.enabled == true then
+        local q = conn:whois(net.services.nickserv.servnick)
+        if q then
+            if q.host and
+              ( net.services.hostmask == "" or q.host == net.services.hostmask ) then
+                send(net.services.nickserv.servnick,
+                    "IDENTIFY " .. net.services.nickserv.passwd)
+            else
+                log("NickServ's hostmask did not match defined hostmask, " ..
+                    "skipping..", "warn")
+            end
+        else
+            log("Could not find NickServ, skipping..", "warn")
+        end
+    else
+        log("Services not enabled, skipping..", "debug")
+    end
 
-    for j = 1, #net.c do
-        log("Joining channel " .. net.c[j] .. " on " .. net.name, "info")
-        conn:join(net.c[j])
-        channel_add(net.c[j])
+    for _, channel in ipairs(net.c) do
+        log("Joining channel " .. channel .. " on " .. net.name, "info")
+        conn:join(channel)
+        channel_add(channel)
     end
 
     -- Register event hooks
     log("Registering hooks..", "debug")
-    for i, j in ipairs(hooks) do
-        log("Assigning hook " .. j.name .. " for event " .. j.event, "debug")
-        conn:hook(j.event, j.name, j.action)
+    for _, h in ipairs(hooks) do
+        log("Assigning hook " .. h.name .. " for event " .. h.event, "debug")
+        conn:hook(h.event, h.name, h.action)
     end
-    log("", "info") -- Separate nets with an empty log line
+    log("", "info")
     log("Successfully connected to network, awaiting commands.", "info")
     log("", "info")
 

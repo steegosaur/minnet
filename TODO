@@ -1,6 +1,35 @@
 TODO file for Minnet
 
 Todo atm:
+    [/] NickServ integration: identify to services if present and configured
+        Drafted, needs testing
+    [/] Support both '^Minnet:' and ', Minnet$' for command recognition
+        Drafted, needs testing
+    [_] Move current hooks into normal command hierarchy
+
+General stuff:
+    Self-status check (if isop())
+        Set topic (access: oper)
+    Flood protection - warn then kick (then ban?); check for own op status
+
+    THINK: Is it better to let the config decide what fields can be set in the
+        info database, or should people be allowed to set virtually any field?
+        Solution: Use config to decide; setting it to '_ALL' or something alike
+            means all fields allow; anything else restricts the fields.
+
+    THINK: Should allowed fields in IDB be restricted per-channel, per-net or
+        globally?
+
+    Add CTCP USERINFO, CLIENTINFO, FINGER, etc. to CTCP replies
+
+    THINK: Should ADMIN, OPER, USER levels be per-channel instead of global, in
+        order to avoid unwanted privileges in differing channels?
+
+    Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
+    Check vulnerabilities for more than one user with the same nick
+
+
+Command ideas:
     New purpose: NickServ replacement on own network.
         Ideas:
             Set bot.isService in config to enable/disable
@@ -10,35 +39,9 @@ Todo atm:
             Use the current UDB, and extend its data/functionality
                 Improve db design using keys (currently unnamed columns; possible security flaw)
 
-
-    Self-status check (if isop())
-        Set topic (access: oper)
-
-    THINK: Is it better to let the config decide what fields can be set in the
-        info database, or should people be allowed to set virtually any field?
-
-        Solution: Use config to decide; setting it to '_ALL' or something alike
-            means all fields allow; anything else restricts the fields.
-
-    THINK: Should allowed fields in IDB be restricted per-channel, per-net or
-        globally?
-
-    Add CTCP USERINFO, CLIENTINFO, FINGER, etc
-
-    THINK: Should ADMIN, OPER, USER levels be per-channel instead of global, in
-        order to avoid unwanted privileges in differing channels?
-
-    Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
-    Check vulnerabilities for more than one user with the same nick
-
-Command ideas:
-    whatis unix command wrapper (depends on what's installed;
-        supplement to IDB?)
-    whois IRC wrapper
-    up-check (ping)
-
-    Nickserv identification
-    Flood protection - warn then kick (then ban?); check for own op status
+    whatis unix command wrapper (combine with sql for a TLA/general database?)
+    ping domain/ip       (availability)
+    ping user's hostmask (latency)
 
     ? JOTI functionality
 
@@ -46,6 +49,7 @@ Command ideas:
     Calculations:   Time calculations (how long from now to ${date}) [requires
                       thorough month handling and liberal date reading]
                     Calculator functionality
+                    Unit conversion (call `units'?)
     Weather
     Maps:           "where is <place>?"; "show [me where] <place> [is]"
     Twitter:        Show last tweet(s) from <user>
