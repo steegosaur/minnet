@@ -455,7 +455,7 @@ cmdlist = {
         help = "No.",
         func = function(u, chan, m, catch)
             local predic = m:match(catch)
-            if predic:match("^.+ing%s") then
+            if predic and predic:match("^.+ing%s") then
                 send(chan, "No, I'm not.")
             else
                 local resp = { "Nope", "Nah", "Nay", "No", "Pff", "Duh", "Don't ask" }
@@ -608,7 +608,7 @@ cmdlist = {
         help = "So you forgot, eh?",
         func = function(u, chan, m, catch)
             local item = m:match(catch)
-            log("remind triggered: catch == " catch, u, "internal")
+            log("remind triggered: catch == " .. catch, u, "internal")
             if not item then
                 send(chan, "I don't think you told me about that.")
                 return nil

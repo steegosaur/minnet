@@ -204,7 +204,7 @@ end
 -- idb.set_field(): populate a field in the nicks table, IDB
 function idb.set_field(nick_id, field, value)
     if field == "nickid" or field == "nick" or field == "chanid" or
-      field = "todo" then
+      field == "todo" then
         return 1
     end
     local upd_stmt = infodb:prepare("UPDATE nicks SET \"" .. field ..
