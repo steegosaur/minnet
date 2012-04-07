@@ -8,46 +8,50 @@ hooks = {
         event   = "OnChat",
         name    = "happy",
         action  = function(u, chan, m)
-            if is_ignored(u, chan, true) or ( check_disabled(chan) == true ) then
+            -- Make sure the message is supposed to be heard
+            if is_ignored(u, chan, true) or check_disabled(chan) == true then
                 return nil
             end
             if chan == conn.nick then chan = u.nick end
+            -- Remove colours and make lowercase:
             m = desat(m):lower()
-            if m:match("^don'?t%s+worry%p?%s-be%s+happy") or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
+            if m:match("^don'?t%s+worry%p?%s-be%s+happy")
+              or m:match("^be%s+happy%p?%s-don'?t%s+worry") then
                 log("Triggered hook 'happy'", "internal")
                 ctcp.action(u, chan, "doesn't worry, is happy! :D")
             end
         end
     },
     {
+        -- Ownership hook, for imitating common ownership scripts
         event   = "OnChat",
         name    = "own",
         action  = function(u, chan, m)
             if is_ignored(u, chan, true) or
-              ( check_disabled(chan, "belong") == true ) then
+              check_disabled(chan, "belong") == true then
                 return nil
             end
-            m = m:lower()
-            m = desat(m)
+            m = desat(m):lower()
             if m:match("^!" .. conn.nick:lower()) then
                 log("Triggered hook 'own'", u, "internal")
-                cmdlist.belong.func(u, chan)
+                cmdlist.belong.func(u, chan) -- Call function from cmdarray.lua
             end
         end
     },
     {
+        -- Chat logging hook, responsible for logging general channel activity
         event   = "OnChat",
         name    = "logchat",
         action  = function(u, chan, m)
             if chan == conn.nick then
                 chan = u.nick
             end
-            m = desat(m)
+            m = desat(m) -- Not lowercase: could screw intentional formatting
             if m:match("^[^%l%s]-ACTION") then
-                m = m:gsub("^[^%l%s]-ACTION%s+", "")
-                lognote(u, chan, m, "*")
+                m = m:gsub("^[^%l%s]-ACTION%s+", "") -- Remove the ACTION part
+                lognote(u, chan, m, "*")    -- Log as action
             else
-                logchat(u, chan, m)
+                logchat(u, chan, m)         -- Log as chat message
             end
         end
     },
@@ -74,7 +78,8 @@ hooks = {
             u.nick     = nick
             u.username = u[3] or "user"
             u.host     = u[4] or "host"
-            lognote(u, chan, "[" .. u.username .. "@" .. u.host .. "] was kicked by " .. k.nick .. " (" .. r .. ")", "-->")
+            local entry = "[%s@%s] was kicked by %s (%s)"
+            locnote(u, chan, entry:format(u.username, u.host, k.nick, r), "-->")
         end
     },
     --[[ Disabled due to lack of channel information, which makes it hard to log
@@ -91,10 +96,12 @@ hooks = {
         action  = function(u, chan, m)
             m = desat(m)
             local ismsg = false
+            -- Check if this is a query message; if true, reply in query
             if chan:lower() == conn.nick:lower() then ismsg = true; chan = u.nick end
-            -- Criteria for a message to be a command: query, nick prepended or nick appended
+            -- Criteria for a message to be a command:
+            --+ query, nick prepended or nick appended
             if ismsg == true
-                -- TODO: Sync these patterns with the one used in funcs.lua for wit()
+              -- TODO: Sync these patterns with the one used in funcs.lua for wit()
               or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+")
               or m:lower():match("[,]+%s-" .. conn.nick:lower() .. "[%.%?!%s]*$") then
                 wit(u, chan, m)
@@ -117,11 +124,12 @@ hooks = {
                       " from table bot.nets[" .. n  .. "].joined (" ..
                       net.name .. ")", "warn")
                 end
-                --if not db.check_auth(k, "oper") then
-                    conn:join(chan)
-                    channel_add(chan)
-                --end
+                -- We'll just rejoin, since someone who would actually be
+                --+ authorised to make us leave should just use the 'part' cmd
+                conn:join(chan)
+                channel_add(chan)
             else
+                -- Someone else was kicked; check if silenced, else respond
                 if check_disabled(chan) == true then return nil end
                 log("Triggered OnKick hook for other nick", "internal")
                 send(chan, "o/` Another one bites the dust, oh - " ..
@@ -129,6 +137,7 @@ hooks = {
             end
         end
     },
+    --[[ Deprecated: to be replaced by 'greet' in cmdarray (needs testing)
     {   -- Be a lil' polite, will ya?
         event   = "OnChat",
         name    = "greet",
@@ -231,7 +240,8 @@ hooks = {
             end -- per-word
             end -- per-class
         end
-    },
+    }, --]]
+    --[[ Also deprecated; integrated into 'greet' in cmdarray
     { -- Some more politeness won't hurt
         event   = "OnChat",
         name    = "yw",
@@ -250,8 +260,8 @@ hooks = {
                 end
             end
         end
-    },
-    --[[
+    }, --]]
+    --[[ Extreme debug: dump all input completely raw
     {
         event   = "OnRaw",
         name    = "dump",

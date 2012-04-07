@@ -5,12 +5,16 @@ Todo atm:
         Drafted, needs testing
     [/] Support both '^Minnet:' and ', Minnet$' for command recognition
         Drafted, needs testing
-    [_] Move current hooks into normal command hierarchy
+    [/] Move current hooks into normal command hierarchy
+        Drafted, needs testing
+    [_] Command for (re-)identifying with NickServ
+        Move startup code into cmdarray and call from there upon startup
+
 
 General stuff:
     Self-status check (if isop())
         Set topic (access: oper)
-    Flood protection - warn then kick (then ban?); check for own op status
+        Flood protection - warn then kick (then ban?)
 
     THINK: Is it better to let the config decide what fields can be set in the
         info database, or should people be allowed to set virtually any field?
@@ -68,3 +72,4 @@ Known bugs:
 
 Known irc.lua bugs (these really should be fixed, but I don't maintain it):
     Quitting always results in a crash.                             WONTFIX
+

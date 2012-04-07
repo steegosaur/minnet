@@ -219,6 +219,111 @@ cmdlist = {
             end
         end
     },
+    greet = {
+        help = "Want to have me greet you?",
+        func = function(u, chan, m, catch)
+            m = m:lower()
+            local g = { -- Array of known greetings
+                hei = { "heia?", "[h']?allo" },
+                hi  = { "[h']?ello", "o?h[ae]?[iy][2%a]-", "yo",
+                    "r[ao]wr2?[you]-", "[h']?errow?", "greetings"
+                },
+                bye = { "bye%s?", "see%s-y[aou]+", "cya" },
+                sal = { "sal", "saluton" },
+                tim = { "g[od%s']+day", "g?[od%s']-mor[rownig']+", "eve[nig]-",
+                    "afternoon", "'?noon", "g[od%s]+[ou]n[e']?"
+                },
+                nite= { "[god%s']-nig?h?te?" },
+                wb  = { "wi?bs?", "welc[aou]me?%s-back" },
+                yw  = { "ty", "thanks", "thank%s+y[aoue]+" },
+                how = { "how[%s's%-are]-y?[aou]-" },
+            }
+            local r = { -- Array of replies
+                hei = { "Hei", "Hallo", "Heia" },
+                hi  = { "Hi", "Hello", "Hey", "'Ello" },
+                bye = { "Bye", "Good bye", "G'bye", "See ya", "See you" },
+                sal = { "Sal", "Saluton" },
+                nite= { "G'nite", "Good night", "Night", "'Nite", "Nini" },
+                wb  = { "Thanks", "Thank you" },
+                yw  = { "You're welcome", "No problem", "S'nothing" },
+                morning = { "G'morrow", "Good morning", "Morning" },
+                day = { "G'day", "Good day" },
+                eve = { "Good evening", "Eve", "Evening" },
+                noon= { "Good afternoon" },
+                how = { "I'm fine thanks", "I'm good", "All's well",
+                    "Eh, I'm alright", "I'm doing fine",
+                    "Meh, could've been better",
+                    "Sorry, I don't have feelings yet"
+                }
+            }
+            if catch then   -- We've been told to greet someone
+                local target = m:match(catch)
+                local word = r.hi[math.random(1, #r.hi)]
+                if math.random(1, 8) < 3 then
+                    word = word .. " there"
+                end
+                send(chan, word .. ", " .. target)
+                log("Greeted " .. target .. " in " .. chan, "debug")
+                return nil
+            end
+            for name, t in pairs(g) do
+            for i, pattern in ipairs(t) do
+                if m:match(pattern) then
+                    local word
+                    if name == tim then -- Response is time-dependent
+                        local hour = time.get_current().hour
+                        if hour < 12 and hour >= 4 then
+                            word = r.morning[math.random(1, #r.morning)]
+                        elseif hour < 4 or hour >= 20 then
+                            word = r.eve[math.random(1, #r.eve)]
+                        elseif hour >= 12 and hour < 16 then
+                            word = r.day[math.random(1, #r.day)]
+                        elseif hour >= 16 and hour < 20 then
+                            word = r.noon[math.random(1, #r.noon)]
+                        else -- How the hell did we get here?
+                            log("Out of cheese in 'greet', time is " ..
+                                tostring(hour), "warn")
+                            word = "Hello" -- Safe fallback in case of fuckup
+                        end
+                    elseif name = "how" then -- Asked how we are
+                        local now = os.time()
+                        local diff = os.difftime(now, howdoTime[chan]) or 200
+                        if diff < 60 then
+                            log("Was asked for feelings <60s ago, grumbling..",
+                                u, "debug")
+                            local grbl = { "I just said", "You must be deaf",
+                                "You oughta have heard the first time" },
+                            word = grbl[math.random(1, #grbl)]
+                        elseif diff < 120
+                            log("Was asked for feelings <12s ago, repeating..",
+                                u, "debug")
+                            word = "I said like a minute ago. " .. r[name[wordNum]
+                        else
+                            howdoTime[chan] = os.time()
+                            wordNum = math.random(1, #r[name])
+                            word = r[name][wordNum]
+                        end
+                    else
+                        word = r[name[math.random(1, #r[name])
+                        if name == "hei" then
+                            if math.random(1, 8) < 3 then
+                                word = word .. " der"
+                            end
+                        elseif name == "hi" then
+                            if math.random(1, 8) < 3 then
+                                word = word .. " there"
+                            end
+                        end
+                        word = word or "'Ello"  -- Just another failsafe
+                    end
+                    send(chan, word .. ", " .. u.nick .. ".")
+                    log("Greeted " .. u.nick .. " in " .. chan, "debug")
+                    return nil
+                end
+            end -- per-word
+            end -- per-class
+        end
+    },
     -- join: join 'chan'
     join = {
         help = "Make me join a channel.",

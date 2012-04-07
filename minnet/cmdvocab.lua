@@ -86,8 +86,18 @@ bot.commands = {
         "how.*timezones", "which.*timezones"
     },
     twentytwo_seven = {
-        ".*%sut[øoe]-ya", ".*%soslo", "[howhen]+.*22/7", ".*2011%-07%-22",
+        ".*%sut[øoe]+ya", ".*%soslo", "[howhen]+.*22/7", ".*2011%-07%-22",
         ".*22nd%s+[of%s]*jul[yi]"
+    },
+    greet  = {  -- FIXME: This is a very suboptimal solution;
+                --+ These patterns are now duplicated in cmdvocab and cmdarray
+        "o?he?[iy]+a?", "[h']?[ae]llo", "yo", "r[ao]wr2?[you]-", "[h']?errow?",
+        "bye", "see%s-y[aou]+", "cya", "sal", "saluton", "g[od%s']+day",
+        "g?[od%s']-mor[rownig']+", "eve[nig]-", "afternoon", "'?noon",
+        "g[od%s]+[ou]n[e']?", "wi?bs?", "welc[aou]me?%s-back", "greetings",
+        "how[s's%-are]-y?[aou]-",
+        -- Special catches for greeting as a command:
+        "greet%s+([^%s%.%?!,]+)", "say%s+hi%s+to%s+([^%s!%?%.,]+)"
     },
 }
 -- EOF

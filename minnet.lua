@@ -138,10 +138,10 @@ else
     check_create_dir(netdir)    -- Create network log dir if not existing
     logs[syslog] = io.open(syslog, "a+")    -- Open syslog for writing
 
-    -- Check that the net's table exists in the databases
-    db.check()  -- Check that the user database is okay
-    idb.check() -- Check that the info database is okay
-    db.ucheck() -- Check that the net's user table is not empty
+    -- Check that the databases are ok and ready, or do what's necessary to fix
+    db.check()
+    idb.check()
+    db.ucheck()
 
     net.id = idb.get_netid()    -- Get the net's ID for use w/the info database
     conn = irc.new({            -- Create new irc object
@@ -162,7 +162,7 @@ else
     conn:connect({ host = net.addr, port = net.port, secure = net.secure})
 
     -- Add usermodes for self if defined in config
-    if net.modes and ( net.modes ~= "" ) then
+    if net.modes and net.modes ~= "" then
         log("Setting mode +" .. net.modes .. " on self", "info")
         conn:setMode({ target = conn.nick, add = net.modes })
     end
@@ -202,9 +202,16 @@ else
     log("Successfully connected to network, awaiting commands.", "info")
     log("", "info")
 
+    local randCounter = 0
     while true do
-        conn:think()    -- The black magic stuff
-        socket.sleep(0.5)
+        -- Make sure to change seed for math.random now and then
+        randCounter = randCounter + 1
+        if randCounter < 240 then
+            randCounter = 0
+            math.randomseed(os.time())
+        end
+        conn:think()        -- The black magic stuff
+        socket.sleep(0.5)   -- Take 0.5-second breaks
     end
 end
 -- }}}
