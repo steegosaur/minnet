@@ -130,6 +130,9 @@ else
     n   = netnr
     net = bot.nets[n] -- Convenience, since there is only one connected network
 
+    -- Check that the config is more or less complete
+    require("minnet.validate")
+
     -- Check that logdirs exist
     check_create_dir(logdir)
     syslog = logdir .. "/debug_" .. os.date("%F_%H%M%S", bot.start) .. ".log"
@@ -168,23 +171,10 @@ else
     end
 
     log("Current nick on " .. net.name .. ": " .. conn.nick, "info")
-    if net.services and net.services.nickserv.enabled == true then
-        local q = conn:whois(net.services.nickserv.servnick)
-        if q then
-            if q.host and
-              ( net.services.hostmask == "" or q.host == net.services.hostmask ) then
-                send(net.services.nickserv.servnick,
-                    "IDENTIFY " .. net.services.nickserv.passwd)
-            else
-                log("NickServ's hostmask did not match defined hostmask, " ..
-                    "skipping..", "warn")
-            end
-        else
-            log("Could not find NickServ, skipping..", "warn")
-        end
-    else
-        log("Services not enabled, skipping..", "debug")
-    end
+
+    -- Call the 'reidentify' command as a special case, with 'startup' as true,
+    --+ for identifying with NickServ if configured
+    cmdlist.reidentify.func(nil, nil, nil, true)
 
     for _, channel in ipairs(net.c) do
         log("Joining channel " .. channel .. " on " .. net.name, "info")
@@ -206,7 +196,7 @@ else
     while true do
         -- Make sure to change seed for math.random now and then
         randCounter = randCounter + 1
-        if randCounter < 240 then
+        if randCounter > 240 then
             randCounter = 0
             math.randomseed(os.time())
         end

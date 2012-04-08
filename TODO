@@ -3,12 +3,17 @@ TODO file for Minnet
 Todo atm:
     [/] NickServ integration: identify to services if present and configured
         Drafted, needs testing
+            TODO: Handle replies from NickServ et al. (avoid looping output)
     [/] Support both '^Minnet:' and ', Minnet$' for command recognition
         Drafted, needs testing
     [/] Move current hooks into normal command hierarchy
         Drafted, needs testing
-    [_] Command for (re-)identifying with NickServ
+    [/] Command for (re-)identifying with NickServ
         Move startup code into cmdarray and call from there upon startup
+    [/] Make test suite for config validation, and call at startup/config load
+        Pretty much done; needs testing
+    [_] Make 'say' inherit final punctuation from command ("Say hi to...!")
+    [_] Split config.lua into config.lua and networks.lua
 
 
 General stuff:

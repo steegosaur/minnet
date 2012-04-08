@@ -9,6 +9,49 @@
 --+ definition, thus enabling re-use of portions or wholes of the code.
 
 cmdlist = {
+    -- reidentify: (re-)identify with nickserv (must be configured)
+    reidentify = {
+        help = "Have me re-identify with that NickServ guy",
+        func = function(u, chan, m, startup)
+            if not startup and not db.check_auth(u, "oper") then
+                send(u.nick, msg.notauth)
+                return nil
+            end
+            -- First check that we even know of some NickServ on here
+            if net.services and net.services.nickserv.enabled == true then
+                -- Check if NickServ exists and has correct hostmask
+                local q = conn:whois(net.services.nickserv.servnick)
+                if q then
+                    if q.host and
+                      ( net.services.hostmask == "" or q.host == net.services.hostmask ) then
+                        send(net.services.nickserv.servnick,
+                            "IDENTIFY " .. net.services.nickserv.passwd)
+                        log("Identified with NickServ", q, "info")
+                        if not startup then
+                            send(chan, "Calm down, " .. u.nick .. ", I did. Sheesh.")
+                        end
+                    else
+                        log("NickServ's hostmask did not match expected " ..
+                            "hostmask, skipping..", "warn")
+                        if not startup then
+                            send(chan, "Sorry, but I'm not trusting that guy.")
+                        end
+                    end
+                else
+                    log("Could not find NickServ, skipping..", "warn")
+                    if not startup then
+                        send(chan, "Who even is supposed to approve of my " ..
+                            "existence? " .. net.services.nickserv.servnick .. "?")
+                    end
+                end
+            else
+                log("Services not enabled, skipping..", "debug")
+                if not startup then
+                    send(chan, "Sorry, but I'm not doing that. Tough luck.")
+                end
+            end
+        end
+    },
     -- time: report the current time (optionally, in a given numerical tz)
     time = {
         help = "Want to know what the time is?",
@@ -46,7 +89,7 @@ cmdlist = {
                     list[i] = zone
                 end
             end
-            log("Outputting timezone list to " .. chan, u, "trivial")
+            log("Outputting timezone list to " .. chan, u, "debug")
             for i, line in ipairs(list) do
                 send(chan, line)
             end
@@ -66,7 +109,7 @@ cmdlist = {
             m = m:lower()
             local now = os.time(time.get_current(" UTC"))
             local incident, incident_time
-            if m:match("ut[oøe]-ya") then
+            if m:match("ut[oøe]+ya") then
                 incident = "Utøya"
                 inc_var  = "utoya"
             elseif ( m:match("oslo") or m:match("norway") ) and
@@ -138,7 +181,7 @@ cmdlist = {
                 local uptime_file = io.open("/proc/uptime")
                 if not uptime_file then
                     log("/proc/uptime unavailable, skipping uptime reporting",
-                        "info")
+                        "trivial")
                     send(chan, "Sorry, but I couldn't find the uptime.")
                     return nil
                 end
@@ -169,11 +212,13 @@ cmdlist = {
                 if not arg then
                     send(chan, u.nick .. ": Be what?")
                 else
-                    for i = 1, #bot.smiles do
-                        if string.match(m, "%s+" .. bot.smiles[i].text) then
-                            smile = " " .. bot.smiles[i].face
+                    if bot.smiles and bot.smiles[1] then
+                    for _, s in ipairs(bot.smiles) do
+                        if string.match(m, "%s+" .. s.text) then
+                            smile = " " .. s.face
                             break
                         end
+                    end
                     end
                     if not smile then smile = "" end
                     -- Check if we're outputting to another channel

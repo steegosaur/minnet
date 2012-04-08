@@ -1,8 +1,16 @@
 #!/usr/bin/env lua
 -- config.lua.sample - config file for minnet
--- Copyright Stæld Lakorv, 2010-2012 <staeld@staeld.co.cc>
+-- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
+
+-- This config file should be complete and set according to examples.
+--+ Any inconsistent or wrongly set value may cause unwanted behaviour,
+--+ potentially posing a threat to your system's security and stability.
+--
+-- Note that few, if any, of these values are actually validated at runtime.
+--+ This means that the bot does not necessarily detect a faulty value.
+--+ Doing so is your own responsibility.
 
 -- Directory for logfiles
 logdir = os.getenv("HOME") .. "/.minnetlogs"
@@ -12,6 +20,21 @@ bot = {
     nick  = "Minnet",   -- Nickname (nick!uname@host)
     uname = "Minnet",   -- Username
     rname = "Minnet",   -- Realname (shows in whois)
+
+    --[[ Not yet implemented
+    -- Do you want Minnet to be provide IRC Services?
+    ownServices = {
+        enabled = false,
+        oline   = {
+            username = "",  -- Set this if not equal to bot's nick
+            passwd = "someO-LinePassword"
+        },
+        nickserv= {
+            requireIdent = false,   -- Require that users identify with us?
+        },
+    }, --]]
+
+    -- Define known networks
     -- { name = netname, port, secure = bool for ssl, c = { "#channel", "#channel2" }, modes = modes to add for self on connect, default = bool }
     nets  = {
         {
@@ -61,6 +84,12 @@ bot = {
         { text = "sexy",    face = ";)" },
         { text = "smart",   face = "8)" },
     },
+
+    -- The following empty arrays can simply be left as they are;
+    --+ they will be populated during runtime, and are only left here for
+    --+ the ability to hardcode certain kinds of behaviour for a given net
+    --+ or channel.
+
     -- disabled = { channame = true, chan2 = false };
     -- this is used during runtime, but can be predefined for special needs
     disabled = {},
@@ -68,7 +97,7 @@ bot = {
     -- used for ignoring people, per-channel or per-net (_NETNAME)
     ignore = {},
     -- disfuncs = { channame = { "funcname", "func2" }, _netname = { "f3" } }
-    -- used for disabling a certain function in a given channel
+    -- used for disabling a certain function per channel or per net
     disfuncs = {},
 }
 msg = {

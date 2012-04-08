@@ -22,6 +22,7 @@ bot.commands = {
     unload  = { "unload", "remove" },
     part    = { "part", "get%s+out" },
     ignore  = { "ignore", "disregard" },
+    --[[ These aren't implemented yet
     remember= {
         "remind%s+me%s+to%s+([^,%.]+)", "remind%s+me%s+that%s+([^,%.]+)",
         "remember%s+that%s+([^,%.]+)", "todo%s+add:?%s+(.+)$", "add%s+todo:?%s+(.+)$",
@@ -34,7 +35,7 @@ bot.commands = {
     forget  = {
         "delete%s.-todo.-(%d+)", "forget%s.-(%d+)", "todo%s+delete%s.-(%d+)",
         "todo%s+forget%s.-(%d+)"
-    }
+    }, --]]
     unignore= { "unignore", "listen%s+to" },
     lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
     identify= { "identify", "i'?%s-a?m" },
