@@ -208,32 +208,32 @@ cmdlist = {
     be = {
         help = "Make me be something.",
         func = function(u, chan, m)
-            if db.check_auth(u, "user") then
-                local arg = getarg(m)
-                local smile
-                if not arg then
-                    send(chan, u.nick .. ": Be what?")
-                else
-                    if bot.smiles and bot.smiles[1] then
-                    for _, s in ipairs(bot.smiles) do
-                        if string.match(m, "%s+" .. s.text) then
-                            smile = " " .. s.face
-                            break
-                        end
-                    end
-                    end
-                    if not smile then smile = "" end
-                    -- Check if we're outputting to another channel
-                    local arg1 = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
-                    if arg1 and check_joined(arg1) then
-                        chan = arg1
-                        arg = arg:match("^%s-%S+%s+(.*)$")
-                    end
-                    ctcp.action(u, chan, "is " .. arg .. smile)
-                end
-            else
+            if not db.check_auth(u, "user") then
                 log("Received unauthorised be command", u, "trivial")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            local arg = getarg(m)
+            local smile
+            if not arg then
+                send(chan, u.nick .. ": Be what?")
+            else
+                if bot.smiles and bot.smiles[1] then
+                for _, s in ipairs(bot.smiles) do
+                    if string.match(m, "%s+" .. s.text) then
+                        smile = " " .. s.face
+                        break
+                    end
+                end
+                end
+                if not smile then smile = "" end
+                -- Check if we're outputting to another channel
+                local arg1 = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
+                if arg1 and check_joined(arg1) then
+                    chan = arg1
+                    arg = arg:match("^%s-%S+%s+(.*)$")
+                end
+                ctcp.action(u, chan, "is " .. arg .. smile)
             end
         end
     },
@@ -380,41 +380,41 @@ cmdlist = {
     join = {
         help = "Make me join a channel.",
         func = function(u, chan, m, catch)
-            if db.check_auth(u, "admin") then
-                local arg = m:match(catch .. "%s+(.*)")
-                if not arg then
-                    send(chan, u.nick .. ": Go to what channel?")
-                    return nil
-                end
-                local cn = arg:match("(" ..cprefix..cname_patt.. ")")
-                if not cn then
-                    send(chan,
-                        u.nick .. ": I don't see a channel name in there.")
-                    return nil
-                end
-                arg = arg:gsub("^.*channel%s+", "")
-                arg = arg:gsub("" ..cprefix..cname_patt.. "%s+", "")
-                --arg = arg:gsub("^with%s+", "")
-                local k
-                if arg:match("key%s+%S+") then
-                    k = arg:match("key%s+(%S+)")
-                elseif arg:match("word%s+%S+") then
-                    k = arg:match("word%s+(%S+)")
-                end
-                if check_joined(cn) then
-                    send(chan, "I'm already there!")
-                else
-                    channel_add(cn)
-                    ctcp.action(u, chan, msg.joining .. cn)
-                    if k then
-                        conn:join(cn, k)
-                    else
-                        conn:join(cn)
-                    end
-                end
-            else
+            if not db.check_auth(u, "admin") then
                 log("Received unauthorised join command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            local arg = m:match(catch .. "%s+(.*)")
+            if not arg then
+                send(chan, u.nick .. ": Go to what channel?")
+                return nil
+            end
+            local cn = arg:match("(" ..cprefix..cname_patt.. ")")
+            if not cn then
+                send(chan,
+                    u.nick .. ": I don't see a channel name in there.")
+                return nil
+            end
+            arg = arg:gsub("^.*channel%s+", "")
+            arg = arg:gsub("" ..cprefix..cname_patt.. "%s+", "")
+            --arg = arg:gsub("^with%s+", "")
+            local k
+            if arg:match("key%s+%S+") then
+                k = arg:match("key%s+(%S+)")
+            elseif arg:match("word%s+%S+") then
+                k = arg:match("word%s+(%S+)")
+            end
+            if check_joined(cn) then
+                send(chan, "I'm already there!")
+            else
+                channel_add(cn)
+                ctcp.action(u, chan, msg.joining .. cn)
+                if k then
+                    conn:join(cn, k)
+                else
+                    conn:join(cn)
+                end
             end
         end
     },
@@ -422,36 +422,36 @@ cmdlist = {
     part = {
         help = "Make me leave a channel.",
         func = function(u, chan, m, catch)
-            if db.check_auth(u, "admin") then
-                m = m:lower()
-                local arg = m:match(catch .. "%s+(of%s+" .. cprefix .. "?" .. cname_patt ..")")
-                if ( not arg ) or arg:match("^of%s+here") then
-                    send(chan, msg.bye)
-                    conn:part(chan)
-                    log("Leaving channel " .. chan .. " on " .. net.name, "info")
-                    if not channel_remove(chan) then
-                        log("Error: Could not remove channel " .. chan ..
-                            " from table bot.nets[" .. n .. "].joined (" ..
-                            net.name .. ")", "warn")
-                    end
-                elseif arg:match("^of%s+" .. cprefix .. cname_patt) then
-                    arg = arg:match("^of%s+(" ..cprefix..cname_patt.. ")")
-                    send(chan, "Leaving " .. arg)
-                    send(arg, msg.bye)
-                    conn:part(arg)
-                    log("Leaving channel " .. arg .. " on " .. net.name, "info")
-                    if not channel_remove(arg) then
-                        log("Error: Could not remove channel " .. arg ..
-                            " from table bot.nets[" .. n .. "].joined (" ..
-                            net.name .. ")", "warn")
-                    end
-                else
-                    log("No understandable channel given to part from", "trivial")
-                    send(chan, "Sorry, what channel didya say I should part from?")
-                end
-            else
+            if not db.check_auth(u, "admin") then
                 log("Received unauthorised part command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            m = m:lower()
+            local arg = m:match(catch .. "%s+(of%s+" .. cprefix .. "?" .. cname_patt ..")")
+            if ( not arg ) or arg:match("^of%s+here") then
+                send(chan, msg.bye)
+                conn:part(chan)
+                log("Leaving channel " .. chan .. " on " .. net.name, "info")
+                if not channel_remove(chan) then
+                    log("Error: Could not remove channel " .. chan ..
+                        " from table bot.nets[" .. n .. "].joined (" ..
+                        net.name .. ")", "warn")
+                end
+            elseif arg:match("^of%s+" .. cprefix .. cname_patt) then
+                arg = arg:match("^of%s+(" ..cprefix..cname_patt.. ")")
+                send(chan, "Leaving " .. arg)
+                send(arg, msg.bye)
+                conn:part(arg)
+                log("Leaving channel " .. arg .. " on " .. net.name, "info")
+                if not channel_remove(arg) then
+                    log("Error: Could not remove channel " .. arg ..
+                        " from table bot.nets[" .. n .. "].joined (" ..
+                        net.name .. ")", "warn")
+                end
+            else
+                log("No understandable channel given to part from", "trivial")
+                send(chan, "Sorry, what didya say I should part from?")
             end
         end
     },
@@ -459,26 +459,26 @@ cmdlist = {
     reload = {
         help = "Reload or re-run files.",
         func = function(u, chan, m)
-            if db.check_auth(u, "admin") then
-                local arg = getarg(m)
-                if not arg then
-                    send(chan, u.nick .. ": Reload what?")
-                else
-                    arg = arg:gsub("%s*the%s+", "")
-                    arg = arg:gsub("%s*your%s+", "")
-                    arg = arg:gsub("%s*file%s*", "")
-                    local file = arg:match("^(%S+)")
-                    file = file:match("^(%a+)")
-                    if file then
-                        reload(u, chan, file)
-                    else
-                        log("No file specified or recognised for reload command", "trivial")
-                        send(chan, u.nick ": Reload what?")
-                    end
-                end
-            else
+            if not db.check_auth(u, "admin") then
                 log("Received unauthorised reload command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            local arg = getarg(m)
+            if not arg then
+                send(chan, u.nick .. ": Reload what?")
+            else
+                arg = arg:gsub("%s*the%s+", "")
+                arg = arg:gsub("%s*your%s+", "")
+                arg = arg:gsub("%s*file%s*", "")
+                local file = arg:match("^(%S+)")
+                file = file:match("^(%a+)")
+                if file then
+                    reload(u, chan, file)
+                else
+                    log("No file specified or recognised for reload command", "trivial")
+                    send(chan, u.nick ": Reload what?")
+                end
             end
         end
     },
@@ -486,38 +486,38 @@ cmdlist = {
     set = {
         help = "Set variables.",
         func = function(u, chan, m)
-            if db.check_auth(u, "admin") then
-                m = m:lower()
-                arg = getarg(m)
-                arg = arg:gsub("%s*the%s+", "", 1)
-                local cmd = arg:match("^(%a+)")
-                local arg = getarg(arg)
-                if cmd == "logging" or cmd:match("^verbos") or
-                  cmd:match("^debug") or cmd:match("^output") then
-                    arg = arg:gsub("%s*the%s+", "")
-                    arg = arg:gsub("%s*level%s*", "")
-                    arg = arg:gsub("%s*to%s+", "")
-                    if arg then
-                        local level = arg:match("^(%a+)")
-                        if levels[level] then
-                            verbosity = levels[level]
-                            log("Set verbosity level to " .. level .. " (" .. verbosity .. ")", u, "info")
-                            send(chan, u.nick .. ": Done.")
-                        else
-                            log("Attempted to set unknown verbosity level " .. level, u, "trivial")
-                            send(chan, u.nick .. ": I don't recognise that level.. could you try another?")
-                        end
-                    else
-                        log("No verbosity level specified", u, "debug")
-                        send(chan, u.nick .. ": Set it to what?")
-                    end
-                else
-                    log("User did not specify anything to set", u, "debug")
-                    send(chan, u.nick .. ": Set what?")
-                end
-            else
+            if not db.check_auth(u, "admin") then
                 log("Received unauthorised command: " .. m, u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            m = m:lower()
+            arg = getarg(m)
+            arg = arg:gsub("%s*the%s+", "", 1)
+            local cmd = arg:match("^(%a+)")
+            local arg = getarg(arg)
+            if cmd == "logging" or cmd:match("^verbos") or
+              cmd:match("^debug") or cmd:match("^output") then
+                arg = arg:gsub("%s*the%s+", "")
+                arg = arg:gsub("%s*level%s*", "")
+                arg = arg:gsub("%s*to%s+", "")
+                if arg then
+                    local level = arg:match("^(%a+)")
+                    if levels[level] then
+                        verbosity = levels[level]
+                        log("Set verbosity level to " .. level .. " (" .. verbosity .. ")", u, "info")
+                        send(chan, u.nick .. ": Done.")
+                    else
+                        log("Attempted to set unknown verbosity level " .. level, u, "trivial")
+                        send(chan, u.nick .. ": I don't recognise that level, try another.")
+                    end
+                else
+                    log("No verbosity level specified", u, "debug")
+                    send(chan, u.nick .. ": Set it to what?")
+                end
+            else
+                log("User did not specify anything to set", u, "debug")
+                send(chan, u.nick .. ": Set what?")
             end
         end
     },
@@ -525,43 +525,43 @@ cmdlist = {
     load = {
         help = "Load hooks or something.",
         func = function(u, chan, m)
-            if db.check_auth(u, "admin") then
-                m = getarg(m)
-                m = m:gsub("%s*the%s*", "", 1)
-                m = m:gsub("^%s*hooks?%s*", "", 1)
-                m = m:gsub("%s*called%s*", "", 1)
-                local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
-                if hookname then
-                    if hookname == "all" then
-                        log("Reloading all hooks..", u, "info")
-                        for i, h in ipairs(hooks) do
-                            conn:hook(h.event, h.name, h.action)
-                        end
-                        send(chan, u.nick .. ": So, reloaded all the hooks.")
-                        return nil
-                    end
-                    local hookfound = false
-                    for i, h in ipairs(hooks) do
-                        if h.name == hookname then
-                            log("Assigning hook " .. h.name .. " for event " ..
-                                h.event, u, "info")
-                            conn:hook(h.event, h.name, h.action)
-                            send(chan, u.nick .. ": Okay, I added the hook.")
-                            hookfound = true
-                            break
-                        end
-                    end
-                    if not hookfound then
-                        log("Attempted to load unknown hook " .. hookname, u, "trivial")
-                        send(chan, u.nick .. ": I'm sorry, but I couldn't find any hook by that name.")
-                    end
-                else
-                    log("Could not understand hook name", u, "trivial")
-                    send(chan, u.nick .. ": Load what?")
-                end
-            else
+            if not db.check_auth(u, "admin") then
                 log("Received unauthorised load command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            m = getarg(m)
+            m = m:gsub("%s*the%s*", "", 1)
+            m = m:gsub("^%s*hooks?%s*", "", 1)
+            m = m:gsub("%s*called%s*", "", 1)
+            local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
+            if hookname then
+                if hookname == "all" then
+                    log("Reloading all hooks..", u, "info")
+                    for i, h in ipairs(hooks) do
+                        conn:hook(h.event, h.name, h.action)
+                    end
+                    send(chan, u.nick .. ": So, reloaded all the hooks.")
+                    return nil
+                end
+                local hookfound = false
+                for i, h in ipairs(hooks) do
+                    if h.name == hookname then
+                        log("Assigning hook " .. h.name .. " for event " ..
+                            h.event, u, "info")
+                        conn:hook(h.event, h.name, h.action)
+                        send(chan, u.nick .. ": Okay, I added the hook.")
+                        hookfound = true
+                        break
+                    end
+                end
+                if not hookfound then
+                    log("Attempted to load unknown hook " .. hookname, u, "trivial")
+                    send(chan, u.nick .. ": I'm sorry, but I couldn't find any hook by that name.")
+                end
+            else
+                log("Could not understand hook name", u, "trivial")
+                send(chan, u.nick .. ": Load what?")
             end
         end
     },
@@ -569,36 +569,36 @@ cmdlist = {
     unload = {
         help = "Unload hooks and stuff.",
         func = function(u, chan, m)
-            if db.check_auth(u, "admin") then
-                m = getarg(m)
-                m = m:gsub("%s*the%s*", "", 1)
-                m = m:gsub("%s*called%s*", "", 1)
-                local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
-                if hookname then
-                    local hookfound = false
-                    for i, h in ipairs(hooks) do
-                        if h.name == hookname then
-                            log("Removing hook " .. h.name .. " for event " ..
-                                h.event, u, "info")
-                            conn:hook(h.event, h.name, h.action)
-                            send(chan, u.nick .. ": Okay, got rid of it.")
-                            hookfound = true
-                            break
-                        end
-                    end
-                    if not hookfound then
-                        log("Attempted to remove unknown hook " .. hookname,
-                            u, "trivial")
-                        send(chan, u.nick .. ": I'm sorry, but I couldn't " ..
-                            "find any hook by that name.")
-                    end
-                else
-                    log("Could not understand hook name", u, "trivial")
-                    send(chan, u.nick .. ": Unload what?")
-                end
-            else
+            if not db.check_auth(u, "admin") then
                 log("Received unauthorised unload command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            m = getarg(m)
+            m = m:gsub("%s*the%s*", "", 1)
+            m = m:gsub("%s*called%s*", "", 1)
+            local hookname = m:match("^['\"«»]-([^%s'\"»«]+)")
+            if hookname then
+                local hookfound = false
+                for i, h in ipairs(hooks) do
+                    if h.name == hookname then
+                        log("Removing hook " .. h.name .. " for event " ..
+                            h.event, u, "info")
+                        conn:hook(h.event, h.name, h.action)
+                        send(chan, u.nick .. ": Okay, got rid of it.")
+                        hookfound = true
+                        break
+                    end
+                end
+                if not hookfound then
+                    log("Attempted to remove unknown hook " .. hookname,
+                        u, "trivial")
+                    send(chan, u.nick .. ": I'm sorry, but I couldn't " ..
+                        "find any hook by that name.")
+                end
+            else
+                log("Could not understand hook name", u, "trivial")
+                send(chan, u.nick .. ": Unload what?")
             end
         end
     },
@@ -612,7 +612,7 @@ cmdlist = {
             send(chan, u.nick .. ": Done.")
         end
     },
-    -- areyou: respond to stupid questions with stupid answers
+    -- areyou: because stupid questions deserve stupid answers
     areyou = {
         help = "No.",
         func = function(u, chan, m, catch)
@@ -626,70 +626,70 @@ cmdlist = {
         end
     },
     -- say: output message to channel
-    say = {
+    say = {    -- Validate info related to NickServ
         help = "Make me say something.",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                local arg = getarg(m)
-                if not arg then
-                    send(chan, u.nick .. ": Say what?")
-                else
-                    local inchan = false
-                    local nick
-                    local say = ""
-                    -- Channel to output to?
-                    local t = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
-                    -- Telling someone something?
-                    if arg:match("%s+to%s+[^%s!%?%.,]+") then
-                        nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
-                        local q = conn:whois(nick)
-                        if q.channels then
-                            for w in q.channels[3]:gmatch("(" ..cprefix..cname_patt.. ")") do
-                                if w == chan then
-                                    inchan = true
-                                    break
-                                end
+            if not db.check_auth(u, "oper") then
+                log("Received unauthorised say command", u, "warn")
+                send(u.nick, msg.notauth)
+                return nil
+            end
+            local arg = getarg(m)
+            if not arg then
+                send(chan, u.nick .. ": Say what?")
+            else
+                local inchan = false
+                local nick
+                local say = ""
+                -- Channel to output to?
+                local t = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
+                -- Telling someone something?
+                if arg:match("%s+to%s+[^%s!%?%.,]+") then
+                    nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
+                    local q = conn:whois(nick)
+                    if q.channels then
+                        for w in q.channels[3]:gmatch("(" ..cprefix..cname_patt.. ")") do
+                            if w == chan then
+                                inchan = true
+                                break
                             end
                         end
                     end
-                    if t then
-                        say = arg:match("^%s-" .. t .. "%s+(%S+.*)$") -- Cut out channel name
-                        if not check_joined(t) then
-                            log("Attempted to say something in non-joined channel", u, "warn")
-                            send(chan, "I can't - I'm not it that channel!")
-                            return nil
-                        end
-                    else
-                        -- No channel specified, use the one we received the command in
-                        t = chan
-                        say = arg:match("^(.*)$")
-                    end
-
-                    if inchan then -- It's to a user, who has been found to be in the channel
-                        say = say:gsub("%s+%S+%s+%S+%s-%p-$", "")
-                        say = nick .. ": " .. say
-                        log("Saying " .. say .. " to " .. nick .. " on channel " .. chan, u, "debug")
-                    end
-
-                    -- Fix uppercase letters and initial %'s
-                    local subit, subto
-                    if say:sub(1, 1) == "%" then
-                        subit, subto = "%%", "%%"
-                    else
-                        if inchan then
-                            subit = say:match("^%S+:%s+(%S)")
-                            say = say:gsub(":%s+" .. subit, ": " .. subit:upper())
-                        else
-                            subit = say:sub(1, 1)
-                            subto = say:sub(1, 1):upper()
-                            say = say:gsub(subit, subto, 1)
-                        end
-                    end
-                    send(t, say)
                 end
-            else
-                log("Received unauthorised say command", u, "warn")
-                send(u.nick, msg.notauth)
+                if t then
+                    say = arg:match("^%s-" .. t .. "%s+(%S+.*)$") -- Cut out channel name
+                    if not check_joined(t) then
+                        log("Attempted to say something in non-joined channel", u, "warn")
+                        send(chan, "I can't - I'm not it that channel!")
+                        return nil
+                    end
+                else
+                    -- No channel specified, use the one we received the command in
+                    t = chan
+                    say = arg:match("^(.*)$")
+                end
+
+                if inchan then -- It's to a user, who has been found to be in the channel
+                    say = say:gsub("%s+%S+%s+%S+%s-%p-$", "")
+                    say = nick .. ": " .. say
+                    log("Saying " .. say .. " to " .. nick .. " on channel " .. chan, u, "debug")
+                end
+
+                -- Fix uppercase letters and initial %'s
+                local subit, subto
+                if say:sub(1, 1) == "%" then
+                    subit, subto = "%%", "%%"
+                else
+                    if inchan then
+                        subit = say:match("^%S+:%s+(%S)")
+                        say = say:gsub(":%s+" .. subit, ": " .. subit:upper())
+                    else
+                        subit = say:sub(1, 1)
+                        subto = say:sub(1, 1):upper()
+                        say = say:gsub(subit, subto, 1)
+                    end
+                end
+                send(t, say)
             end
         end
     },
@@ -697,19 +697,19 @@ cmdlist = {
     version = {
         help = "Have me request a VERSION reply from someone.",
         func = function(u, chan, m, catch)
-            if db.check_auth(u, "user") then
-                local arg = m:match(catch .. "%s+(.*)")
-                if not arg then
-                    send(chan, u.nick .. ": Version who?")
-                else
-                    if not check_user(arg) then return nil end
-                    ctcp.version(arg)
-                    vchan = chan
-                    table.insert(ctcp.active.version, arg)
-                end
-            else
+            if not db.check_auth(u, "user") then
                 log("Received unauthorised version command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            local arg = m:match(catch .. "%s+(.*)")
+            if not arg then
+                send(chan, u.nick .. ": Version who?")
+            else
+                if not check_user(arg) then return nil end
+                ctcp.version(arg)
+                vchan = chan
+                table.insert(ctcp.active.version, arg)
             end
         end
     },
@@ -968,61 +968,35 @@ cmdlist = {
             "type nick, user or host. Patterns are Lua-style. Remember to " ..
             "escape special characters like [] etc.",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                m = getarg(m)
-                m = m:lower()
-                local class
-                if m:match("%s+user%s+") or m:match("username") then
-                    class = "user"
-                elseif m:match("%s+host[maskne]-") or m:match("%%%.") then
-                    class = "host"
-                else
-                    class = "nick"
-                    m = m:gsub("^%s-the%s+", "")
-                    m = m:gsub("^%s-person%s+", "")
-                    m = m:gsub("^with", "")
-                    m = m:gsub("^%s-the", "")
-                    m = m:gsub("^.*%sname%s+", "")
-                end
-                m = m:gsub("^.*%s-" .. class .. "%w-%s+", "")
-                -- Ignore quotes when catching the pattern
-                local pattern = m:match("^['\"«»]-([^%s'\"«»]+)")
-                if not pattern then
-                    send(chan, "Uhm, who did you say?")
-                    log("Could not find pattern in ignore command", "debug")
-                    return nil
-                else
-                    m = m:gsub(pattern .. "%s*", "", 1)
-                    local channel
-                    if m:match("global") or m:match("%Lnet") then
-                    -- This is a global ignore
-                        channel = "_" .. net.name
-                    else
-                        channel = m:match("(" ..cprefix..cname_patt.. ")")
-                    end
-                    if not channel then channel = chan end
-                    log("Pattern found by ignore function: " .. pattern,
-                        "internal")
-                    if not bot.ignore[channel] then bot.ignore[channel] = {} end
-                    table.insert(bot.ignore[channel], class .. "/" .. pattern)
-                    log("Commencing ignoring of " .. class .. " '" ..
-                        pattern .. "'", "info")
-                    send(chan, "Okay, ignoring messages matching that.")
-                end
-            else
+            if not db.check_auth(u, "oper") then
                 log("Received unauthorised ignore command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
             end
-        end
-    },
-    -- unignore: unignore a user
-    unignore = {
-        help = "Make me unignore someone; specify numeric index or pattern.",
-        func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                m = getarg(m)
-                m = m:lower()
-                local pattern = m:match("^(%S+)")
+            m = getarg(m)
+            m = m:lower()
+            local class
+            if m:match("%s+user%s+") or m:match("username") then
+                class = "user"
+            elseif m:match("%s+host[maskne]-") or m:match("%%%.") then
+                class = "host"
+            else
+                class = "nick"
+                m = m:gsub("^%s-the%s+", "")
+                m = m:gsub("^%s-person%s+", "")
+                m = m:gsub("^with", "")
+                m = m:gsub("^%s-the", "")
+                m = m:gsub("^.*%sname%s+", "")
+            end
+            m = m:gsub("^.*%s-" .. class .. "%w-%s+", "")
+            -- Ignore quotes when catching the pattern
+            local pattern = m:match("^['\"«»]-([^%s'\"«»]+)")
+            if not pattern then
+                send(chan, "Uhm, who did you say?")
+                log("Could not find pattern in ignore command", "debug")
+                return nil
+            else
+                m = m:gsub(pattern .. "%s*", "", 1)
                 local channel
                 if m:match("global") or m:match("%Lnet") then
                 -- This is a global ignore
@@ -1031,93 +1005,119 @@ cmdlist = {
                     channel = m:match("(" ..cprefix..cname_patt.. ")")
                 end
                 if not channel then channel = chan end
-                if not bot.ignore[channel] then
-                    -- We don't have any ignores active here
-                    send(chan, "Sorry, but there are no ignores for this " ..
-                        "channel yet.")
-                    log("Attempted to unignore in channel " .. channel ..
-                        " without active ignore table", u, "debug")
-                    return nil
-                end
-                if not pattern then
-                    send(chan, "Unignore who?")
-                    log("Could not find target in unignore command", "debug")
+                log("Pattern found by ignore function: " .. pattern,
+                    "internal")
+                if not bot.ignore[channel] then bot.ignore[channel] = {} end
+                table.insert(bot.ignore[channel], class .. "/" .. pattern)
+                log("Commencing ignoring of " .. class .. " '" ..
+                    pattern .. "'", "info")
+                send(chan, "Okay, ignoring messages matching that.")
+            end
+        end
+    },
+    -- unignore: unignore a user
+    unignore = {
+        help = "Make me unignore someone; specify numeric index or pattern.",
+        func = function(u, chan, m)
+            if not db.check_auth(u, "oper") then
+                log("Received unauthorised unignore command", u, "warn")
+                send(u.nick, msg.notauth)
+                return nil
+            end
+            m = getarg(m)
+            m = m:lower()
+            local pattern = m:match("^(%S+)")
+            local channel
+            if m:match("global") or m:match("%Lnet") then
+            -- This is a global ignore
+                channel = "_" .. net.name
+            else
+                channel = m:match("(" ..cprefix..cname_patt.. ")")
+            end
+            if not channel then channel = chan end
+            if not bot.ignore[channel] then
+                -- We don't have any ignores active here
+                send(chan, "Sorry, but there are no ignores for this " ..
+                    "channel yet.")
+                log("Attempted to unignore in channel " .. channel ..
+                    " without active ignore table", u, "debug")
+                return nil
+            end
+            if not pattern then
+                send(chan, "Unignore who?")
+                log("Could not find target in unignore command", "debug")
+            else
+                if pattern:match("^%d+$") then
+                -- pattern is a numeric, thus gives a pattern id
+                    local id = tonumber(pattern)
+                    if not bot.ignore[channel][id] then
+                        send(chan, "Sorry, that id is nonexisting.")
+                        log("Caught out-of-bounds id for unignore",
+                            "debug")
+                        return nil
+                    end
+                    local remd = table.remove(bot.ignore[channel], id)
+                    log("Unignored pattern '" .. remd .. "' with id " .. id,
+                        u, "info")
+                    send(chan, "Okay, not ignoring the user " ..
+                        "any more.")
                 else
-                    if pattern:match("^%d+$") then
-                    -- pattern is a numeric, thus gives a pattern id
-                        local id = tonumber(pattern)
-                        if not bot.ignore[channel][id] then
-                            send(chan, "Sorry, that id is nonexisting.")
-                            log("Caught out-of-bounds id for unignore",
-                                "debug")
-                            return nil
-                        end
-                        local remd = table.remove(bot.ignore[channel], id)
-                        log("Unignored pattern '" .. remd .. "' with id " .. id,
-                            u, "info")
-                        send(chan, "Okay, not ignoring the user " ..
-                            "any more.")
-                    else
-                        for i, entry in ipairs(bot.ignore[channel]) do
-                            if entry:gsub("^%w+/", "", 1) == pattern then
-                                log("Found match for pattern '" .. pattern ..
-                                    "' in table; id = " .. i, "debug")
-                                remd = table.remove(bot.ignore[channel], i)
-                                log("Unignored pattern '" .. remd .. "' with"..
-                                    " id " .. i, u, "info")
-                                send(chan, "Okay, not ignoring the user " ..
-                                    "any more.")
-                                break
-                            end
+                    for i, entry in ipairs(bot.ignore[channel]) do
+                        if entry:gsub("^%w+/", "", 1) == pattern then
+                            log("Found match for pattern '" .. pattern ..
+                                "' in table; id = " .. i, "debug")
+                            remd = table.remove(bot.ignore[channel], i)
+                            log("Unignored pattern '" .. remd .. "' with"..
+                                " id " .. i, u, "info")
+                            send(chan, "Okay, not ignoring the user " ..
+                                "any more.")
+                            break
                         end
                     end
                 end
-            else
-                log("Received unauthorised unignore command", u, "warn")
-                send(u.nick, msg.notauth)
             end
         end
     },
     lignore = {
         help = "What, you don't remember who you told me to disregard?",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                -- Channel is either specified or current chan, or current net
-                local channel
-                if m:match("global") or m:match("%Lnet") then
-                    channel = "_" .. net.name
-                else
-                    channel = m:match("(" ..cprefix..cname_patt.. ")") or chan
-                end
-                if bot.ignore[channel] and #bot.ignore[channel] > 0 then
-                    log("Listing ignores for channel " .. channel, u, "info")
-                    send(u.nick, "Ignores for channel " .. channel .. ":")
-                    socket.sleep(0.2)
-                    -- Output style: id (type) pattern
-                    local fmtstr = "%d (%s) %s"
-                    -- Iterate over every ignore, sending one per line
-                    for i, entry in ipairs(bot.ignore[channel]) do
-                        local type = entry:match("^(%l+)/")
-                        local patt = entry:match(type .. "/(%S+)")
-                        if not ( type and patt ) then
-                            log("Failed to extract class and pattern from " ..
-                                "ignore list for 'lignore'", "error")
-                        end
-                        -- Output via query to avoid channel spam
-                        send(u.nick, fmtstr:format(i, type, patt))
-                        -- Minor pause per 5th message
-                        if i / 5 == math.floor(i / 5) then
-                            socket.sleep(1)
-                        end
-                    end
-                else
-                    log("No users ignored for channel " .. channel ..
-                        "; reporting empty list", u, "debug")
-                    send(chan, u.nick .. ": There are no ignored users.")
-                end
-            else
+            if not db.check_auth(u, "oper") then
                 log("Received unauthorised request to list ignores", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
+            end
+            -- Channel is either specified or current chan, or current net
+            local channel
+            if m:match("global") or m:match("%Lnet") then
+                channel = "_" .. net.name
+            else
+                channel = m:match("(" ..cprefix..cname_patt.. ")") or chan
+            end
+            if bot.ignore[channel] and #bot.ignore[channel] > 0 then
+                log("Listing ignores for channel " .. channel, u, "info")
+                send(u.nick, "Ignores for channel " .. channel .. ":")
+                socket.sleep(0.2)
+                -- Output style: id (type) pattern
+                local fmtstr = "%d (%s) %s"
+                -- Iterate over every ignore, sending one per line
+                for i, entry in ipairs(bot.ignore[channel]) do
+                    local type = entry:match("^(%l+)/")
+                    local patt = entry:match(type .. "/(%S+)")
+                    if not ( type and patt ) then
+                        log("Failed to extract class and pattern from " ..
+                            "ignore list for 'lignore'", "error")
+                    end
+                    -- Output via query to avoid channel spam
+                    send(u.nick, fmtstr:format(i, type, patt))
+                    -- Minor pause per 5th message
+                    if i / 5 == math.floor(i / 5) then
+                        socket.sleep(1)
+                    end
+                end
+            else
+                log("No users ignored for channel " .. channel ..
+                    "; reporting empty list", u, "debug")
+                send(chan, u.nick .. ": There are no ignored users.")
             end
         end
     },
@@ -1125,152 +1125,152 @@ cmdlist = {
     enfunc = {
         help = "",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                m = getarg(m)
-                m = m:gsub("^your%s+", "")
-                m = m:gsub("function%w*", "")
-                local target = m:match("['\"«»]([%l_]+)")
-                if not target then
-                    target = m:match("^([%l_]+)")
-                end
-                if not target then
-                    log("Could not catch function to enable", "debug")
-                    send(chan, "Enable what, you say?")
-                    return nil
-                end
-                m = m:gsub(target .. "%s*", "", 1)
-                local channel
-                if m:match("global") or m:match("%Lnet") then
-                    channel = "_" .. net.name
-                else
-                    channel = m:match("(" ..cprefix..cname_patt.. ")")
-                        or chan
-                end
-                if not bot.disfuncs[channel] or #bot.disfuncs[channel] < 1 then
-                -- List is either nonexistent or empty
-                    log("Received request to enable function '" .. target ..
-                        "' in channel " .. channel .. ", but no functions " ..
-                        "disabled", u, "debug")
-                    send(chan, "Eh, say what? There's nothing currently " ..
-                        "disabled.")
-                    return nil
-                end
-                local index = nil
-                for i, entry in ipairs(bot.disfuncs[channel]) do
-                    if entry == target then
-                        index = i
-                        break
-                    end
-                end
-                if not index then -- Didn't find target in the list
-                    log("Received request to enable un-disabled function",
-                        "debug")
-                    send(chan, "You know.. that wasn't even disabled in " ..
-                        "the first place.")
-                    return nil
-                end
-                log("Enabling function '" .. target .. "' in " .. channel, u,
-                    "info")
-                table.remove(bot.disfuncs[channel], index)
-                send(chan, u.nick .. ": Okay, I'll consider doing that. " ..
-                    "If they're nice.")
-            else
+            if not db.check_auth(u, "oper") then
                 log("Received unauthorised request to enable a function",
                     "warn")
                 send(u.nick, msg.notauth)
+                return nil
             end
+            m = getarg(m)
+            m = m:gsub("^your%s+", "")
+            m = m:gsub("function%w*", "")
+            local target = m:match("['\"«»]([%l_]+)")
+            if not target then
+                target = m:match("^([%l_]+)")
+            end
+            if not target then
+                log("Could not catch function to enable", "debug")
+                send(chan, "Enable what, you say?")
+                return nil
+            end
+            m = m:gsub(target .. "%s*", "", 1)
+            local channel
+            if m:match("global") or m:match("%Lnet") then
+                channel = "_" .. net.name
+            else
+                channel = m:match("(" ..cprefix..cname_patt.. ")")
+                    or chan
+            end
+            if not bot.disfuncs[channel] or #bot.disfuncs[channel] < 1 then
+            -- List is either nonexistent or empty
+                log("Received request to enable function '" .. target ..
+                    "' in channel " .. channel .. ", but no functions " ..
+                    "disabled", u, "debug")
+                send(chan, "Eh, say what? There's nothing currently " ..
+                    "disabled.")
+                return nil
+            end
+            local index = nil
+            for i, entry in ipairs(bot.disfuncs[channel]) do
+                if entry == target then
+                    index = i
+                    break
+                end
+            end
+            if not index then -- Didn't find target in the list
+                log("Received request to enable un-disabled function",
+                    "debug")
+                send(chan, "You know.. that wasn't even disabled in " ..
+                    "the first place.")
+                return nil
+            end
+            log("Enabling function '" .. target .. "' in " .. channel, u,
+                "info")
+            table.remove(bot.disfuncs[channel], index)
+            send(chan, u.nick .. ": Okay, I'll consider doing that. " ..
+                "If they're nice.")
         end
     },
     -- disfunc: disable a given function
     disfunc = {
         help = "Want me to quit doing that one thing?",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                m = getarg(m)
-                m = m:gsub("^your%s+", "")
-                m = m:gsub("^the%s+", "")
-                m = m:gsub("function%w*", "")
-                local target = m:match("['\"«»]([%l_]+)")
-                if not target then
-                    target = m:match("^([%l_]+)")
-                end
-                if not target then
-                    log("Could not catch function to disable", "debug")
-                    send(chan, "Disable what, you say?")
-                    return nil
-                end
-                m = m:gsub(target .. "%s*", "", 1)
-                if m:match("global") or m:match("%Lnet") then
-                    channel = "_" .. net.name
-                else
-                    channel = m:match("(" ..cprefix..cname_patt.. ")")
-                        or chan
-                end
-                log("Disabling function '" .. target .. "' in " .. channel, u,
-                    "info")
-                if not bot.disfuncs[channel] then bot.disfuncs[channel] ={} end
-                table.insert(bot.disfuncs[channel], target)
-                send(chan, u.nick .. ": Fine, I'll quit doing that..")
-            else
+            if not db.check_auth(u, "oper") then
                 log("Received unauthorised request to disable a function", u,
                     "warn")
                 send(u.nick, msg.notauth)
+                return nil
             end
+            m = getarg(m)
+            m = m:gsub("^your%s+", "")
+            m = m:gsub("^the%s+", "")
+            m = m:gsub("function%w*", "")
+            local target = m:match("['\"«»]([%l_]+)")
+            if not target then
+                target = m:match("^([%l_]+)")
+            end
+            if not target then
+                log("Could not catch function to disable", "debug")
+                send(chan, "Disable what, you say?")
+                return nil
+            end
+            m = m:gsub(target .. "%s*", "", 1)
+            if m:match("global") or m:match("%Lnet") then
+                channel = "_" .. net.name
+            else
+                channel = m:match("(" ..cprefix..cname_patt.. ")")
+                    or chan
+            end
+            log("Disabling function '" .. target .. "' in " .. channel, u,
+                "info")
+            if not bot.disfuncs[channel] then bot.disfuncs[channel] ={} end
+            table.insert(bot.disfuncs[channel], target)
+            send(chan, u.nick .. ": Fine, I'll quit doing that..")
         end
     },
     -- disable: do not react to anything
     disable = {
         help = "Make me shut up.",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                local silchan = m:match("(" ..cprefix..cname_patt.. ")")
-                if not silchan then silchan = chan end
-                log("Entering response freeze for channel " .. silchan, u,
-                    "info")
-                bot.disabled[chan] = true
-                send(chan, msg.shutup)
-            else
+            if not db.check_auth(u, "oper") then
                 log("Received unauthorised disabling command", u, "warn")
                 send(u.nick, msg.nothauth)
+                return nil
             end
+            local silchan = m:match("(" ..cprefix..cname_patt.. ")")
+            if not silchan then silchan = chan end
+            log("Entering response freeze for channel " .. silchan, u,
+                "info")
+            bot.disabled[chan] = true
+            send(chan, msg.shutup)
         end
     },
     -- enable: commence responding again
     enable = {
         help = "Make me respond again.",
         func = function(u, chan, m)
-            if db.check_auth(u, "oper") then
-                log("Unfreezing channel " .. chan, u, "info")
-                bot.disabled[chan] = false
-                send(chan, msg.talk)
-            else
+            if not db.check_auth(u, "oper") then
                 log("Received unauthorised enabling command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
             end
+            log("Unfreezing channel " .. chan, u, "info")
+            bot.disabled[chan] = false
+            send(chan, msg.talk)
         end
     },
     -- quit: disconnect from the network
     quit = {
         help = "Disconnect me from the network.",
         func = function(u, chan, m)
-            if db.check_auth(u, "owner") then
-                if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then
-                    db.error(u, "Could not close database: " .. udb:errcode() ..
-                        " - " .. udb:errmsg())
-                end
-                send(chan, msg.bye)
-                for i, f in pairs(logs) do
-                    f:write("-- Log closed at ", os.date("%F/%T"), "\n")
-                    f:close()
-                end
-                log("", "info")
-                log("Received quit command", u, "info")
-                log("", "info")
-                conn:disconnect(msg.quitting)
-            else
+            if not db.check_auth(u, "owner") then
                 log("Received unauthorised quit command", u, "warn")
                 send(u.nick, msg.notauth)
+                return nil
             end
+            if udb:isopen() and ( udb:close() ~= sqlite3.OK ) then
+                db.error(u, "Could not close database: " .. udb:errcode() ..
+                    " - " .. udb:errmsg())
+            end
+            send(chan, msg.bye)
+            for i, f in pairs(logs) do
+                f:write("-- Log closed at ", os.date("%F/%T"), "\n")
+                f:close()
+            end
+            log("", "info")
+            log("Received quit command", u, "info")
+            log("", "info")
+            conn:disconnect(msg.quitting)
         end
     },
 }
