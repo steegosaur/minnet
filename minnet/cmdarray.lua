@@ -12,7 +12,9 @@ cmdlist = {
     -- reidentify: (re-)identify with nickserv (must be configured)
     reidentify = {
         help = "Have me re-identify with that NickServ guy",
-        func = function(u, chan, m, startup)
+        func = function(u, chan, m, _, startup)
+            -- The extra 'startup' argument is for identifying with nickserv
+            --+ at startup, so we don't disallow it
             if not startup and not db.check_auth(u, "oper") then
                 send(u.nick, msg.notauth)
                 return nil
@@ -238,14 +240,19 @@ cmdlist = {
     belong = {
         help = "Want to own me?",
         func = function(u, chan)
+            -- Get information about the real owner
+            local owner = db.get_owner()
+            -- Fix first letter of owner's nick
+            local first_letter = owner:sub(1, 1)
+            owner = owner:gsub("^%l", first_letter:upper())
+            -- Reply based on user's status
             if db.check_auth(u, "owner") then
                 send(chan, "You already own me, silly.")
+            elseif db.check_auth(u, "admin") then
+                send(chan, "Well, as long as " .. owner ..
+                    " doesn't object..")
             elseif db.check_auth(u, "oper") then
-                local owner = db.get_owner()
-                local first_letter = owner:sub(1, 1)
-                owner = owner:gsub("^%l", first_letter:upper())
-                send(chan, u.nick .. ": Sorry, you'll have to ask " .. owner ..
-                    ".")
+                send(chan, u.nick .. ": You'll have to ask " .. owner .. ".")
             else
                 send(chan, "Who do you think you are?")
             end
@@ -254,10 +261,10 @@ cmdlist = {
     owner = {
         help = "Want to know who's my owner?",
         func = function(u, chan, m)
-            local owner = tostring(db.get_owner())
-            if owner:lower() == u.nick:lower() then
+            if db.check_auth(u, "owner") then
                 send(chan, "You are my bloody owner.")
             else
+                local owner = db.get_owner()
                 local first_letter = owner:sub(1, 1)
                 owner = owner:gsub("^%l", first_letter:upper())
                 send(chan, u.nick .. ": My owner is " .. owner .. ".")
@@ -265,7 +272,7 @@ cmdlist = {
         end
     },
     greet = {
-        help = "Want to have me greet you?",
+        help = "Want to have me greet you - or some other guy?",
         func = function(u, chan, m, catch)
             m = m:lower()
             local g = { -- Array of known greetings
@@ -377,27 +384,32 @@ cmdlist = {
                 local arg = m:match(catch .. "%s+(.*)")
                 if not arg then
                     send(chan, u.nick .. ": Go to what channel?")
+                    return nil
+                end
+                local cn = arg:match("(" ..cprefix..cname_patt.. ")")
+                if not cn then
+                    send(chan,
+                        u.nick .. ": I don't see a channel name in there.")
+                    return nil
+                end
+                arg = arg:gsub("^.*channel%s+", "")
+                arg = arg:gsub("" ..cprefix..cname_patt.. "%s+", "")
+                --arg = arg:gsub("^with%s+", "")
+                local k
+                if arg:match("key%s+%S+") then
+                    k = arg:match("key%s+(%S+)")
+                elseif arg:match("word%s+%S+") then
+                    k = arg:match("word%s+(%S+)")
+                end
+                if check_joined(cn) then
+                    send(chan, "I'm already there!")
                 else
-                    local cn = arg:match("(" ..cprefix..cname_patt.. ")")
-                    arg = arg:gsub("^.*channel%s+", "")
-                    arg = arg:gsub("" ..cprefix..cname_patt.. "%s+", "")
-                    --arg = arg:gsub("^with%s+", "")
-                    local k
-                    if arg:match("key%s+%S+") then
-                        k = arg:match("key%s+(%S+)")
-                    elseif arg:match("word%s+%S+") then
-                        k = arg:match("word%s+(%S+)")
-                    end
-                    if check_joined(cn) then
-                        send(chan, "I'm already there!")
+                    channel_add(cn)
+                    ctcp.action(u, chan, msg.joining .. cn)
+                    if k then
+                        conn:join(cn, k)
                     else
-                        channel_add(cn)
-                        ctcp.action(u, chan, msg.joining .. cn)
-                        if k then
-                            conn:join(cn, k)
-                        else
-                            conn:join(cn)
-                        end
+                        conn:join(cn)
                     end
                 end
             else
@@ -1081,7 +1093,7 @@ cmdlist = {
                     log("Listing ignores for channel " .. channel, u, "info")
                     send(u.nick, "Ignores for channel " .. channel .. ":")
                     socket.sleep(0.2)
-                    -- Output style: 1 (nick) someperson
+                    -- Output style: id (type) pattern
                     local fmtstr = "%d (%s) %s"
                     -- Iterate over every ignore, sending one per line
                     for i, entry in ipairs(bot.ignore[channel]) do
@@ -1093,7 +1105,7 @@ cmdlist = {
                         end
                         -- Output via query to avoid channel spam
                         send(u.nick, fmtstr:format(i, type, patt))
-                        -- Minor pause per 5th sending
+                        -- Minor pause per 5th message
                         if i / 5 == math.floor(i / 5) then
                             socket.sleep(1)
                         end
@@ -1101,8 +1113,7 @@ cmdlist = {
                 else
                     log("No users ignored for channel " .. channel ..
                         "; reporting empty list", u, "debug")
-                    send(chan, u.nick .. ": There are no ignored users " ..
-                        "in the list.")
+                    send(chan, u.nick .. ": There are no ignored users.")
                 end
             else
                 log("Received unauthorised request to list ignores", u, "warn")

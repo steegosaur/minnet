@@ -11,17 +11,19 @@
 -- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command" }
 
 bot.commands = {
-    say     = { "say" },
+    say     = { "say%s+[^h]" }, -- Don't match "say hi"
     help    = { "help" },
-    set     = { "set%s+[^mywch]+" },
-    areyou  = { "are%s+you%s-(.*)" },
+    set     = { "set%s+[^mwch]" },
+    areyou  = { "are%s+you%s+(.*)" },
     load    = { "load", "reload%s.*hook" },
+    unload  = { "unload", "remove" },
     reload  = { "reload" },
     db      = { "db", "database" },
     join    = { "join", "go%s+to" },
-    unload  = { "unload", "remove" },
-    part    = { "part", "get%s+out" },
+    part    = { "part", "get%s+out", "go%s+away" },
     ignore  = { "ignore", "disregard" },
+    unignore= { "unignore", "listen%s+to" },
+    lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
     --[[ These aren't implemented yet
     remember= {
         "remind%s+me%s+to%s+([^,%.]+)", "remind%s+me%s+that%s+([^,%.]+)",
@@ -36,8 +38,6 @@ bot.commands = {
         "delete%s.-todo.-(%d+)", "forget%s.-(%d+)", "todo%s+delete%s.-(%d+)",
         "todo%s+forget%s.-(%d+)"
     }, --]]
-    unignore= { "unignore", "listen%s+to" },
-    lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
     identify= { "identify", "i'?%s-a?m" },
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
@@ -75,12 +75,17 @@ bot.commands = {
     },
     disable = {
         "shut%s-up", "shaddap", "keep%s+quiet", "be%s+quiet", "stay%s+quiet",
-        "silence", "stay%s+off", "disable%s+[^c]+$" -- Ignore disfunc calls
+        "silence", "stay%s+off", "disable%s+[^fc]", -- Ignore disfunc calls
+        "quiet", "s+h+"
     },
     be      = { "be%s+" },
     enable  = {
         "y[oua]+'?re?%s+free", "speak", "r?e?%-?enable", "unsilence",
         "live", "go%s+on"
+    },
+    reidentify = {
+        "talk%s+[towih]+%s+nickserv", "go%s+identify", "nickserv",
+        "re%-?identify"
     },
     timezones = {
         "what.*timezones", "list.*timezones", "timezone%s+list",

@@ -174,7 +174,7 @@ else
 
     -- Call the 'reidentify' command as a special case, with 'startup' as true,
     --+ for identifying with NickServ if configured
-    cmdlist.reidentify.func(nil, nil, nil, true)
+    cmdlist.reidentify.func(nil, nil, nil, nil, true)
 
     for _, channel in ipairs(net.c) do
         log("Joining channel " .. channel .. " on " .. net.name, "info")
