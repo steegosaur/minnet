@@ -26,9 +26,10 @@ bot.commands = {
     lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
     --[[ These aren't implemented yet
     remember= {
-        "remind%s+me%s+to%s+([^,%.]+)", "remind%s+me%s+that%s+([^,%.]+)",
-        "remember%s+that%s+([^,%.]+)", "todo%s+add:?%s+(.+)$", "add%s+todo:?%s+(.+)$",
-        "add%s+(.-)%s+to%s+my%s+todo", "todo%s+new:?%s+(.+)$"
+        "remind%s+me%s+to%s+([^,%.!%?]+)", "remind%s+me%s+that%s+([^,%.!%?]+)",
+        "remember%s+that%s+([^,%.!%?]+)", "todo%s+add:?%s+(.+)$",
+        "add%s+todo:?%s+(.-)%p?$", "todo%s+new:?%s+(.-)%p$",
+        "add%s+(.+)%s+to%s+my%s+todo"
     },
     remind  = {
         "what.+%smy%s+todo.*(%d*)", "remind%s+me.*(%d*)", "todo%s+(%d*)",

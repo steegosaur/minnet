@@ -216,3 +216,35 @@ function idb.set_field(nick_id, field, value)
         return false
     end
 end
+
+-- Todo list functionality
+
+-- idb.set_todo(): save an item to the todo list
+function idb.set_todo(u, chan, note)
+    -- Fetch the registered nick for the user
+    local nick = db.get_user(u.nick).nick
+    -- Find out how many notes the user has, and increment by one for new id
+    local id_query = infodb:prepare("SELECT * FROM todo " ..
+        "WHERE nick = $nick AND net = $net")
+    id_query:bind_names({ nick = nick, net = netid })
+    local id = id_query:numrows() -- This needs to be fixed, not correct
+    id = id + 1
+    -- Prepare the insertion of the new note
+    local query = infodb:prepare("INSERT INTO todo " ..
+        "(nick, net, todo_id, entry) VALUES ($nick, $net, $id, $entry)"
+    query:bind_names({ nick = nick, net = netid, id = id, entry = note })
+    if query:step() ~= sqlite3.DONE then
+        db.error(u, "Could not add item to todo list: " ..
+            infodb:errcode() .. " - " .. infodb:errmsg())
+    else
+        send(chan, u.nick .. ": Well, since *you* obviously can't remember..")
+    end
+end
+-- idb.get_todo(): retrieve item from todo list
+function idb.get_todo(u, chan, id)
+    
+end
+-- idb.del_todo(): delete item from todo list
+function idb.del_todo(u, chan, id)
+    
+end
