@@ -98,69 +98,79 @@ function time.get_current(m)
     return now, tz
 end
 
--- time.calculate(): Calculate the amount of weeks, days, hours and minutes
---+ a given timediff contains; this expects Unix behaviour
-function time.calculate(t, utc)
-    local length
-    if utc then
-        length = os.date("!*t", t)
-    else
-        length = os.date("*t", t)
+-- time.calculate(): New time calculation algorithm, trying to fix what just
+--+ doesn't work with the previous one, in a simpler way (hopefully)
+function time.calculate(t)
+    -- t is a time difference as returned by os.difftime();
+    --+ on POSIX and Windows systems, this amounts to a seconds count. We take
+    --+ advantage of this, and simply count how many weeks, days etc. are in
+    --+ that count.
+    local d = { seconds = t, weeks = 0, day = 0, hour = 0, min = 0 }
+    while d.seconds >= 604800 do -- This is the amount of seconds in a week
+        d.weeks = d.weeks + 1
+        d.seconds = d.seconds - 604800
     end
-    length.weeks = 0
-    -- Subtract Unix epoch values
-    length.day, length.hour = length.day - 1, length.hour - 1
-    length.month, length.year = length.month - 1, length.year - 1970
-    -- Calculate weeks
-    while length.day > 6 do
-        length.day = length.day - 7
-        length.weeks = length.weeks + 1
+    -- Now we've subtracted all the weeks contained; next up: the days
+    while d.seconds >= 86400 do
+        d.day = d.day + 1
+        d.seconds = d.seconds - 86400
+    end
+    -- Hours:
+    while d.seconds >= 3600 do
+        d.hour = d.hour + 1
+        d.seconds = d.seconds - 3600
+    end
+    -- Aaaand minutes:
+    while d.seconds >= 60 do
+        d.min = d.min + 1
+        d.seconds = d.seconds - 60
     end
     local ending = { weeks = "", day = "", hour = "", min = "" }
-    if length.weeks ~= 1 then ending.weeks = "s" end
-    if length.day   ~= 1 then ending.day   = "s" end
-    if length.hour  ~= 1 then ending.hour  = "s" end
-    if length.min   ~= 1 then ending.min   = "s" end
+    for _, unit in ipairs({ "weeks", "day", "hour", "min" }) do
+        if d[unit] > 1 then
+            ending[unit] = "s"
+        end
+    end
     local weeks, days, hours, mins
     local pre = ""
     local prev = 0
-    if length.weeks > 0 then
-        weeks = length.weeks .. " week" .. ending.weeks
-        prev = length.weeks
+    if d.weeks > 0 then
+        weeks = d.weeks .. " week" .. ending.weeks
+        prev = d.weeks
     else
         weeks = ""
     end
-    if length.day > 0 then
-        if weeks ~= "" and ( length.hour > 0 or length.min > 0 ) then
+    if d.day > 0 then
+        if weeks ~= "" and ( d.hour > 0 or d.min > 0 ) then
             pre = ", "
-        elseif days ~= "" and ( length.hour <= 0 or length.min <= 0 ) then
+        elseif days ~= "" and ( d.hour <= 0 or d.min <= 0 ) then
             pre = " and "
         else
             pre = ""
         end
-        days = pre .. length.day .. " day" .. ending.day
-        prev = length.day
+        days = pre .. d.day .. " day" .. ending.day
+        prev = d.day
     else
         days = ""
     end
-    if length.hour > 0 then
-        if days ~= "" and length.min > 0 then
+    if d.hour > 0 then
+        if days ~= "" and d.min > 0 then
             pre = ", "
-        elseif days ~= "" and length.min <= 0 then
+        elseif days ~= "" and d.min <= 0 then
             pre = " and "
         end
-        hours = pre .. length.hour .. " hour" .. ending.hour
-        prev = length.hour
+        hours = pre .. d.hour .. " hour" .. ending.hour
+        prev = d.hour
     else
         hours = ""
     end
-    if length.min > 0 then
+    if d.min > 0 then
         if weeks ~= "" or days ~= "" or hours ~= "" then
             pre = " and "
         else
             pre = ""
         end
-        mins = pre .. length.min .. " minute" .. ending.min
+        mins = pre .. d.min .. " minute" .. ending.min
     else
         mins = ""
     end

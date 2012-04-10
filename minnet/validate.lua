@@ -11,7 +11,7 @@ if ( not logdir ) or logdir == "" then
 elseif not ( bot and msg ) then
     err("What did you do to the config? Please copy the sample " ..
         "configuration and edit that. (File 'config.lua.sample')")
-elseif not ( bot.nets and not bot.nets[1] ) then
+elseif not ( bot.nets and bot.nets[1] ) then
     err("There are no configured networks. Please fix this by copying " ..
         "the sample configuration and substituting with your own data. " ..
         "(File 'config.lua.sample')")
@@ -22,7 +22,7 @@ elseif not ( net.name and net.name:match("%a") ) then
     err("This network doesn't seem to have a valid name")
 elseif not ( net.addr and net.addr ~= "" ) then
     err("This network doesn't seem to have a valid address")
-elseif net.port and net.port ~= "" and not net.port:match("^%d+$") ) then
+elseif net.port and net.port ~= "" and not net.port:match("^%d+$") then
     -- Remember that the port setting is optional, but it should only contain
     --+ digits if it is actually set
     err("This network doesn't seem to have a valid port")
@@ -31,7 +31,7 @@ elseif net.secure and net.secure ~= true then
     net.secure = true
     log("The 'secure' option should be either true or false. Assuming that " ..
         net.secure .. " means true. (Option 'net.secure')", "warn")
-elseif net.modes and not ( type(net.modes) == "string" and net.modes:match("^%l+$") ) then
+elseif net.modes and not ( type(net.modes) == "string" and net.modes:match("^%a+$") ) then
     err("This network doesn't seem to have a valid set of modes configured." ..
         " (Option 'net.modes')")
 

@@ -231,7 +231,7 @@ function idb.set_todo(u, chan, note)
     id = id + 1
     -- Prepare the insertion of the new note
     local query = infodb:prepare("INSERT INTO todo " ..
-        "(nick, net, todo_id, entry) VALUES ($nick, $net, $id, $entry)"
+        "(nick, net, todo_id, entry) VALUES ($nick, $net, $id, $entry)")
     query:bind_names({ nick = nick, net = netid, id = id, entry = note })
     if query:step() ~= sqlite3.DONE then
         db.error(u, "Could not add item to todo list: " ..

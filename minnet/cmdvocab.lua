@@ -11,7 +11,7 @@
 -- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command" }
 
 bot.commands = {
-    say     = { "say%s+[^h]" }, -- Don't match "say hi"
+    say     = { "say" },
     help    = { "help" },
     set     = { "set%s+[^mwch]" },
     areyou  = { "are%s+you%s+(.*)" },
@@ -102,9 +102,9 @@ bot.commands = {
         "bye", "see%s-y[aou]+", "cya", "sal", "saluton", "g[od%s']+day",
         "g?[od%s']-mor[rownig']+", "eve[nig]-", "afternoon", "'?noon",
         "g[od%s]+[ou]n[e']?", "wi?bs?", "welc[aou]me?%s-back", "greetings",
-        "how[s's%-are]-y?[aou]-",
+        "how['s%sare]+y[aou]+",
         -- Special catches for greeting as a command:
-        "greet%s+([^%s%.%?!,]+)", "say%s+hi%s+to%s+([^%s!%?%.,]+)"
+        "greet%s+([^%s%.%?!,]+)", -- "say%s+hi%s+to%s+([^%s!%?%.,]+)"
     },
 }
 -- EOF
