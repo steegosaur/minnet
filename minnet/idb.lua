@@ -21,7 +21,13 @@ function idb.check()
         nickid      INTEGER     PRIMARY KEY,
         nick        TEXT,
         chanid      INTEGER,
-        todo        TEXT
+        );]])
+    infodb:exec([[CREATE TABLE IF NOT EXISTS todo (
+        id          INTEGER     PRIMARY KEY,
+        nick        TEXT,
+        net         INTEGER,
+        entry       TEXT,
+        entry_id    INTEGER
         );]])
 
     -- Check if net exists in the tables; TODO: Tidy this code
@@ -226,25 +232,59 @@ function idb.set_todo(u, chan, note)
     -- Find out how many notes the user has, and increment by one for new id
     local id_query = infodb:prepare("SELECT * FROM todo " ..
         "WHERE nick = $nick AND net = $net")
-    id_query:bind_names({ nick = nick, net = netid })
+    id_query:bind_names({ nick = nick, net = netid }) -- Use current netid
     local id = id_query:numrows() -- This needs to be fixed, not correct
     id = id + 1
+
     -- Prepare the insertion of the new note
     local query = infodb:prepare("INSERT INTO todo " ..
-        "(nick, net, todo_id, entry) VALUES ($nick, $net, $id, $entry)"
+        "(nick, net, entry_id, entry) VALUES ($nick, $net, $id, $entry)")
     query:bind_names({ nick = nick, net = netid, id = id, entry = note })
     if query:step() ~= sqlite3.DONE then
         db.error(u, "Could not add item to todo list: " ..
             infodb:errcode() .. " - " .. infodb:errmsg())
     else
         send(chan, u.nick .. ": Well, since *you* obviously can't remember..")
+        log("Added entry " .. id .. " to todo list", u, "trivial")
     end
+    query:reset()
 end
 -- idb.get_todo(): retrieve item from todo list
 function idb.get_todo(u, chan, id)
-    
+    -- Fetch the registered nick for the user
+    local nick = db.get_user(u.nick).nick
+    local get_stmt = infodb:prepare("SELECT entry FROM todo WHERE " ..
+        "nick = $nick AND net = $net AND entry_id = $id LIMIT 1")
+    get_stmt:bind_names({ nick = nick, net = netid, id = id })
+    -- FIXME: This weird way of handling stuff really should be unnecessary
+    for result in get_stmt:nrows() do
+        if result and result.entry then
+            -- TODO: Check if the entry is actually located in 'result.entry'
+            log("Was asked for todo entry " .. id, u, "debug")
+            local sendstring = '%s: Entry no. %d: "%s"'
+            send(chan, sendstring:format(u.nick, id, result.entry))
+        end
+    end
+    get_stmt:reset()
+    -- If we're here, something went wrong, or nothing was found
+    log("Received query for nonexisting todo entry", u, "trivial")
+    send(chan, u.nick .. ": How about you actually make a todo list that's " ..
+        "that long, before you ask me to read from it?")
+    return nil
 end
 -- idb.del_todo(): delete item from todo list
 function idb.del_todo(u, chan, id)
-    
+    -- Fetch the registered nick for the user
+    local nick = db.get_user(u.nick).nick
+    local del_stmt = infodb:prepare("DELETE FROM todo WHERE " ..
+        "nick = $nick AND net = $net AND entry_id = $id")
+    del_stmt:bind_names({ nick = nick, net = netid, id = id })
+    if del_stmt:step() ~= sqlite3.DONE then
+        db.error(u, "Couldn't delete that todo entry: " .. infodb:errcode() ..
+            " - " .. infodb:errmsg())
+    else
+        log("Deleted todo entry " .. id, u, "trivial")
+        send(chan, "By time you got that sorted out anyway.")
+    end
+    del_stmt:reset()
 end
