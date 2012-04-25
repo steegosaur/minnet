@@ -124,11 +124,11 @@ cmdlist = {
                     day = when.day, hour = when[inc_var].hour,
                     min = when[inc_var].min })
                 local diff = os.difftime(now, incident_time)
-                local days, hours, mins = time.calculate(diff)
-                local re_pattern = "%s: It has been %s%s%s since the %s " ..
+                local weeks, days, hours, mins = time.calculate(diff)
+                local re_pattern = "%s: It has been %s%s%s%s since the %s " ..
                     "incident, which occured at %.4d-%.2d-%.2d, %.2d:%.2d UTC."
-                local response = re_pattern:format(u.nick, days, hours, mins,
-                    incident, when.year, when.month, when.day,
+                local response = re_pattern:format(u.nick, weeks, days, hours,
+                    mins, incident, when.year, when.month, when.day,
                     when[inc_var].hour, when[inc_var].min)
                 send(chan, response)
             else
@@ -274,7 +274,6 @@ cmdlist = {
     greet = {
         help = "Want to have me greet you - or some other guy?",
         func = function(u, chan, m, catch)
-            m = m:lower()
             local g = { -- Array of known greetings
                 hei = { "heia?", "[h']?allo" },
                 hi  = { "[h']?ello", "o?h[ae]?[iy][2%a]-", "yo",
@@ -310,6 +309,7 @@ cmdlist = {
             }
             if catch then   -- We've been told to greet someone
                 local target = m:match(catch)
+                log("greet: got catch " .. catch .. ", matching target " .. target, "internal")
                 local word = r.hi[math.random(1, #r.hi)]
                 if math.random(1, 8) < 3 then
                     word = word .. " there"
@@ -318,6 +318,7 @@ cmdlist = {
                 log("Greeted " .. target .. " in " .. chan, "debug")
                 return nil
             end
+            m = m:lower()
             for name, t in pairs(g) do
             for i, pattern in ipairs(t) do
                 if m:match(pattern) then
@@ -337,26 +338,26 @@ cmdlist = {
                                 tostring(hour), "warn")
                             word = "Hello" -- Safe fallback in case of fuckup
                         end
-                    elseif name = "how" then -- Asked how we are
+                    elseif name == "how" then -- Asked how we are
                         local now = os.time()
                         local diff = os.difftime(now, howdoTime[chan]) or 200
                         if diff < 60 then
                             log("Was asked for feelings <60s ago, grumbling..",
                                 u, "debug")
                             local grbl = { "I just said", "You must be deaf",
-                                "You oughta have heard the first time" },
+                                "You oughta have heard the first time" }
                             word = grbl[math.random(1, #grbl)]
-                        elseif diff < 120
+                        elseif diff < 120 then
                             log("Was asked for feelings <12s ago, repeating..",
                                 u, "debug")
-                            word = "I said like a minute ago. " .. r[name[wordNum]
+                            word = "I said like a minute ago. " .. r[name][wordNum]
                         else
                             howdoTime[chan] = os.time()
                             wordNum = math.random(1, #r[name])
                             word = r[name][wordNum]
                         end
                     else
-                        word = r[name[math.random(1, #r[name])
+                        word = r[name][math.random(1, #r[name])]
                         if name == "hei" then
                             if math.random(1, 8) < 3 then
                                 word = word .. " der"

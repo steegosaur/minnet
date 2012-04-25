@@ -158,8 +158,8 @@ else
     net.joined = {}
     howdoTime = {}
 
-    conn.port   = net.port or "6667"    -- TODO: check if this is necessary
-    conn.secure = net.secure or false
+    net.port   = net.port or "6667"    -- TODO: check if this is necessary
+    net.secure = net.secure or false
     if net.secure then require("ssl") else net.secure = false end
     log("Connecting to " .. net.name .. " server at " .. net.addr, "info")
     conn:connect({ host = net.addr, port = net.port, secure = net.secure})
