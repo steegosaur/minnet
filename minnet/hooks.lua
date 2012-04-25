@@ -102,7 +102,7 @@ hooks = {
             --+ query, nick prepended or nick appended
             if ismsg == true
               -- TODO: Sync these patterns with the one used in funcs.lua for wit()
-              or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:]%s+")
+              or m:lower():match("^" .. conn.nick:lower() .. "%s-[,:;%-]%s+")
               or m:lower():match("[,]+%s-" .. conn.nick:lower() .. "[%.%?!%s]*$") then
                 wit(u, chan, m)
             end

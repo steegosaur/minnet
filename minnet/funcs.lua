@@ -261,13 +261,22 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
         return nil
     end
     -- Check if bot's name is mentioned in one of two recognised ways
-    local nickmatch = "^" .. conn.nick .. "%s-[,:;%-]+%s+"
-    if m:match(nickmatch) then
-        m = m:gsub(nickmatch, "")
+    --+ TODO: make this use string.sub() to find the location and what's actually said, and then gsub() that away
+    local nickmatch = "^" .. conn.nick:lower() .. "%s-[,:;%-]+%s+"
+    if m:lower():match(nickmatch) then
+        -- Locate where the name is
+        local start, fin = m:lower():find(nickmatch)
+        -- Get the actual contents
+        local remove = m:sub(start, fin)
+        m = m:gsub(remove, "")
     else
-        nickmatch = "[,]+%s+" .. conn.nick .. "[%s%.!%?]*$"
-        if m:match(nickmatch) then
-            m = m:gsub(nickmatch, "")
+        nickmatch = "[,]+%s-" .. conn.nick:lower() .. "[%s%.!%?]*$"
+        if m:lower():match(nickmatch) then
+            -- Locate where the name is
+            local start, fin = m:lower():find(nickmatch)
+            -- Get the actual contents
+            local remove = m:sub(start, fin)
+            m = m:gsub(remove, "")
         end
     end
 
