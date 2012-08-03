@@ -40,6 +40,7 @@ Rough feature changelog:
         Supports fully (single-)coloured lines (commands and logging)
         Has help functionality
         Provides the time when asked
+        Supports multiple RSS feeds with update frequency and customised output
         Has documented internal debug info enabled by output level "internal", 
          and more widely used "debug" level output
 

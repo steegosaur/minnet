@@ -39,10 +39,13 @@ See COPYING for the full licence.
 
 # 2 REQUIREMENTS
 
-Minnet requires Lua 5.1, and the packages lua-irc, luasocket, lsqlite3, luasec 
+Minnet requires Lua 5.1 and the packages lua-irc, luasocket, lsqlite3, luasec 
 and crypto. lsqlite3 requires a working sqlite library to be installed, crypto 
 and luasec require openssl. Luasec is optional, and only required if you want 
 to make ssl-encrypted connections. 
+
+Optional dependencies for the RSS module include luaexpat, lua-feedparser and 
+wget or some other downloader (see minnet/rss.lua for using something else). 
 
 Minnet as of currently has only been tested on GNU/Linux, but depending on how 
 other systems handle certain things, it could work with little or no changes 
@@ -79,7 +82,7 @@ hand.
 
 If you want the bleeding edge (and most frequently updated) code, you should 
 rather clone the development branch instead of the master branch. This branch 
-is called `dev`.
+is called `dev` (or some variation, like `serv-dev`, refer to Github[2]).
 
 As of currently, Minnet looks for the libraries it needs (including its own 
 configuration and function files) through the standard Lua paths library paths 
@@ -90,7 +93,7 @@ directory (eg. `cd ~/bin/minnet/ && ./minnet.lua --run`).
 For installing the required modules, please refer to the documentation of your 
 OS. luasocket, luasec, luacrypto, and lsqlite3 should all be available through 
 luarocks; lua-irc is not (2011-06-10). In Arch Linux, you may also use the AUR, 
-where you will also find lua-irc.
+where you will also find lua-irc and lua-feedparser.
 
 
 # 4 USAGE
@@ -102,6 +105,9 @@ Minnet comes with a sample configuration file, located at
 all relevant information about servers and more. It also allows for tweaking 
 and modifying of some aspects of Minnet's behaviour, such as output messages 
 and user access levels.
+
+For RSS feeds, the configuration is located at the top of `minnet/rss.lua`, 
+with examples ready to be replaced with your own feeds.
 
 
 ## 4.2 CONNECTING
@@ -143,8 +149,8 @@ say 'help commands'. For a description of each command, say
 `help <command_name>`, where the command name is the internal name of the 
 command, as found in the command list or in `cmdvocab.lua` and `cmdarray.lua`.
 
-The following is an approximate list, but it is not necessarily completely up 
-to date.
+The following is an approximate list, but is not necessarily completely up to
+date.
 
 ```
 ----------------|------------------------|-------------------------------------

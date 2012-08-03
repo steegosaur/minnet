@@ -1,11 +1,7 @@
 TODO file for Minnet
 
 Todo atm:
-    [x] Support both '^Minnet:' and ', Minnet$' for command recognition
-    [x] Move current hooks into normal command hierarchy
-    [x] Make 'say' inherit final punctuation from command ("Say hi to...!")
-    [x] Fix erroneous recognition for greet hook ("you are" triggers some)
-
+    [/] IDB karma function
     [/] NickServ integration: identify to services if present and configured
         Drafted, needs testing
             TODO: Handle replies from NickServ et al. (avoid looping output)
@@ -13,6 +9,8 @@ Todo atm:
         Move startup code into cmdarray and call from there upon startup
     [/] Make test suite for config validation, and call at startup/config load
         Pretty much done; needs testing
+    
+    [_] Commands to list RSS feeds and read last entry in a feed
     
     [_] Split config.lua into config.lua and networks.lua
     [_] Todo list functionality in IDB
@@ -41,7 +39,6 @@ General stuff:
 
 
 Command ideas:
-    [_] IDB karma function
     [_] Watch dog for admin (notify on channel joins, etc.)
 
     New purpose: NickServ replacement on own network.
@@ -70,6 +67,7 @@ Command ideas:
     YouTube, etc:   Report what is in a given link
     (Last|Libre).fm Say what people are listening to
     Google/Wiki/etc Look up stuff
+    Bit.ly/etc      Link shortening and title resolution
 
 Wishlist:
     Provide documentation of what the hell the bloody commands actually do
@@ -82,4 +80,3 @@ Known bugs:
 
 Known irc.lua bugs (these really should be fixed, but I don't maintain it):
     Quitting always results in a crash.                             WONTFIX
-
