@@ -54,6 +54,56 @@ cmdlist = {
             end
         end
     },
+    karma_up = {
+        help = "Say, what do you like anyway?",
+        func = function(u, chan, m, catch)
+            local subject = m:match(catch)
+            local karma = karma.up(subject)
+            if not subject then
+                send(chan, u.nick .. ": Say what?")
+                return nil
+            end
+            send(chan, "Whatever, if you think so. By the way, the total " ..
+                "karma for " .. subject .. " is now " .. karma .. ".")
+        end
+    },
+    karma_down = {
+        help = "So tell me, what don't you like?",
+        func = function(u, chan, m, catch)
+            local subject = m:match(catch)
+            if not subject then
+                send(chan, u.nick .. ": Say what?")
+                return nil
+            end
+            local karma = karma.down(subject)
+            send(chan, "Sure. Total karma is " .. karma .. ", though.")
+        end
+    },
+    karma_get = {
+        help = "What do the others think of it, you say?",
+        func = function(u, chan, m, catch)
+            local subject = m:match(catch)
+            if not subject then
+                send(chan, u.nick .. ": Say what?")
+                return nil
+            end
+            local karma = karma.get(subject)
+            local reply = "%s: Karma for %s is %d."
+            send(chan, reply:format(u.nick, subject, karma))
+        end
+    },
+    karma_reset = {
+        help = "Reset an item's karma value.",
+        func = function(u, chan, m, catch)
+            local subject = m:match(catch)
+            if not subject then
+                send(chan, u.nick .. ": You what?")
+                return nil
+            end
+            karma.reset(subject)
+            send(chan, "Sure, whatever you say.")
+        end
+    },
     -- time: report the current time (optionally, in a given numerical tz)
     time = {
         help = "Want to know what the time is?",
@@ -276,7 +326,7 @@ cmdlist = {
         func = function(u, chan, m, catch)
             local g = { -- Array of known greetings
                 hei = { "heia?", "[h']?allo" },
-                hi  = { "[h']?ello", "o?h[ae]?[iy][2%a]-", "yo",
+                hi  = { "[h']?ello", "o?h[ae]?[iy][2%a]-", "yo[^u]",
                     "r[ao]wr2?[you]-", "[h']?errow?", "greetings"
                 },
                 bye = { "bye%s?", "see%s-y[aou]+", "cya" },
@@ -307,8 +357,9 @@ cmdlist = {
                     "Sorry, I don't have feelings yet"
                 }
             }
-            if catch then   -- We've been told to greet someone
-                local target = m:match(catch)
+            local target
+            _, _, target = m:find(catch)
+            if target then   -- We've been told to greet someone
                 log("greet: got catch " .. catch .. ", matching target " .. target, "internal")
                 local word = r.hi[math.random(1, #r.hi)]
                 if math.random(1, 8) < 3 then
@@ -621,13 +672,16 @@ cmdlist = {
             if predic and predic:match("^.+ing%s") then
                 send(chan, "No, I'm not.")
             else
-                local resp = { "Nope", "Nah", "Nay", "No", "Pff", "Duh", "Don't ask" }
+                local resp = { "Nope", "Nah", "Nay", "No", "Pff", "Duh",
+                    "Don't ask", "Meh", "Uh.. how about no", "Don't bother me",
+                    "Go figure yourself", "Go away", "Sheesh",
+                    "There are no stupid questions, they said.." }
                 send(chan, resp[math.random(1, #resp)] .. ".")
             end
         end
     },
     -- say: output message to channel
-    say = {    -- Validate info related to NickServ
+    say = {
         help = "Make me say something.",
         func = function(u, chan, m)
             if not db.check_auth(u, "oper") then
@@ -641,12 +695,14 @@ cmdlist = {
             else
                 local inchan = false
                 local nick
+                local punct
                 local say = ""
+                log("Message to process for 'say' command: " .. m, "debug")
                 -- Channel to output to?
                 local t = arg:match("^%s-(" ..cprefix..cname_patt.. ")%s+%S+")
                 -- Telling someone something?
                 if arg:match("%s+to%s+[^%s!%?%.,]+") then
-                    nick = arg:match("([^%s%.,!%?]+)%s-[%.,!%?]-$")
+                    nick = arg:match("(" .. nick_patt .. ")%s-%p-$")
                     local q = conn:whois(nick)
                     if q.channels then
                         for w in q.channels[3]:gmatch("(" ..cprefix..cname_patt.. ")") do
@@ -668,10 +724,16 @@ cmdlist = {
                     -- No channel specified, use the one we received the command in
                     t = chan
                     say = arg:match("^(.*)$")
+                    punct = arg:match("(%p)$")
+                end
+                if punct then
+                    say = say:gsub("%p$", punct)
+                else
+                    say = say .. "."
                 end
 
                 if inchan then -- It's to a user, who has been found to be in the channel
-                    say = say:gsub("%s+%S+%s+%S+%s-%p-$", "")
+                    say = say:gsub("%s+to+%s+" .. nick_patt, "")
                     say = nick .. ": " .. say
                     log("Saying " .. say .. " to " .. nick .. " on channel " .. chan, u, "debug")
                 end

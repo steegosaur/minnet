@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.7.4 - the unuseful lua irc bot
+-- minnet.lua 0.7.6 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 --
 -- This file is part of Minnet
@@ -32,6 +32,7 @@ require("minnet.idb")
 require("minnet.ctcp")
 require("minnet.hooks")
 require("minnet.logging")
+require("minnet.rss")
 require("minnet.time")     -- Time functionality
 require("minnet.cmdarray") -- The command functions
 require("minnet.cmdvocab") -- The command recognition vocabulary
@@ -105,7 +106,7 @@ end
 
 -- {{{ Run
 if runmode == "dry" then
-    if not arg[-1] == "-i" then
+    if not ( arg[-1] and arg[-1] == "-i" ) then
         print("Attempting to re-run self in interactive mode..")
         print("If this doesn't work, please run Minnet manually, " ..
             "using `lua -i ./minnet.lua --dry' from within the installation directory.")
@@ -192,13 +193,22 @@ else
     log("Successfully connected to network, awaiting commands.", "info")
     log("", "info")
 
+    rss.init()        -- Ready the rss functionality
     local randCounter = 0
+    local rssCounter  = 0
     while true do
         -- Make sure to change seed for math.random now and then
         randCounter = randCounter + 1
-        if randCounter > 240 then
+        if randCounter > 2400 then
             randCounter = 0
             math.randomseed(os.time())
+        end
+        if rss and rss.feeds[net.name:lower()] then
+            rssCounter = rssCounter + 1
+            if rssCounter > 100 then -- Only refresh every n-th cycle (roughly ½s)
+                rssCounter = 0
+                rss.update_feeds()
+            end
         end
         conn:think()        -- The black magic stuff
         socket.sleep(0.5)   -- Take 0.5-second breaks

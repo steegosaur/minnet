@@ -14,7 +14,7 @@ bot.commands = {
     say     = { "say" },
     help    = { "help" },
     set     = { "set%s+[^mwch]" },
-    areyou  = { "are%s+you%s+(.*)" },
+    areyou  = { "are%s+you%s+(.*)", "do", "does", "will" },
     load    = { "load", "reload%s.*hook" },
     unload  = { "unload", "remove" },
     reload  = { "reload" },
@@ -98,7 +98,7 @@ bot.commands = {
     },
     greet  = {  -- FIXME: This is a very suboptimal solution;
                 --+ These patterns are now duplicated in cmdvocab and cmdarray
-        "o?he?[iy]+a?", "[h']?[ae]llo", "yo", "r[ao]wr2?[you]-", "[h']?errow?",
+        "o?he?[iy]+a?", "[h']?[ae]llo", "yo[^u]", "r[ao]wr2?[you]-", "[h']?errow?",
         "bye", "see%s-y[aou]+", "cya", "sal", "saluton", "g[od%s']+day",
         "g?[od%s']-mor[rownig']+", "eve[nig]-", "afternoon", "'?noon",
         "g[od%s]+[ou]n[e']?", "wi?bs?", "welc[aou]me?%s-back", "greetings",

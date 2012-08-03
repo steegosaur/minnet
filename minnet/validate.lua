@@ -4,6 +4,12 @@
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
+-- Bot name and such
+if not ( bot.nick and bot.uname and bot.rname and
+  bot.nick ~= "" and bot.uname ~= "" and bot.rname ~= "" ) then
+    err("Bot's names must be specified. Please fix the config (Options " ..
+        "'bot.nick', 'bot.uname' and 'bot.rname')")
+end
 -- Basic settings
 
 if ( not logdir ) or logdir == "" then

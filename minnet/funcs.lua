@@ -82,16 +82,17 @@ function reload(u, chan, file)
     if not file then
         return nil
     end
-    if file == "functions"         then file = "funcs"
-    elseif file == "configuration" then file = "config"
-    elseif file == "infodb"        then file = "idb"
-    elseif file == "database"      then file = "db"
-    elseif file == "log"           then file = "logging"
+    if file == "functions"          then file = "funcs"
+    elseif file == "configuration"  then file = "config"
+    elseif file == "infodb"         then file = "idb"
+    elseif file == "database"       then file = "db"
+    elseif file == "log"            then file = "logging"
+    elseif file == "feeds"          then file = "rss"
     end
     if file == "funcs" or file == "ctcp" or file == "db" or file == "idb" or
       file == "hooks" or file == "config" or file == "cmdvocab" or
       file == "cmdarray" or file == "time" or file == "logging" or
-      file == "hacks" then
+      file == "hacks" or file == "rss" then
         if assert(io.open("minnet/" .. file .. ".lua", "r")) then
             dofile("minnet/" .. file .. ".lua")
         else
@@ -270,13 +271,20 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
         local remove = m:sub(start, fin)
         m = m:gsub(remove, "")
     else
-        nickmatch = "[,]+%s-" .. conn.nick:lower() .. "[%s%.!%?]*$"
+        nickmatch = "([,]+%s-" .. conn.nick:lower() .. "%s-)[%.!%?]*$"
         if m:lower():match(nickmatch) then
+            local remove = m:lower():match(nickmatch)
+            local start, fin = m:lower():find(remove)
+            remove = m:sub(start, fin)
+            m = m:gsub(remove, "")
+            
+            --[[ Old code
             -- Locate where the name is
             local start, fin = m:lower():find(nickmatch)
             -- Get the actual contents
             local remove = m:sub(start, fin)
             m = m:gsub(remove, "")
+            --]]
         end
     end
 
