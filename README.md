@@ -71,7 +71,7 @@ including the directory they reside in, to the place where you have your
 global lua libraries (typically `/usr/share/lua/5.1/`).
 
 To get the code, you can clone the git repo, which is located at 
-[github][2]. This repo, even its master branch, is under heavy development, 
+[Github][2]. This repo, even its master branch, is under heavy development, 
 and there are no guarantees that the code will at any given time be stable or 
 usable. Code in the master branch should generally not contain too many fatal 
 bugs or inconsistencies, but it might have some. If you find anything and 
@@ -82,7 +82,7 @@ hand.
 
 If you want the bleeding edge (and most frequently updated) code, you should 
 rather clone the development branch instead of the master branch. This branch 
-is called `dev` (or some variation, like `serv-dev`, refer to Github[2]).
+is called `dev` (or some variation, like `serv-dev`, refer to [Github][2]).
 
 As of currently, Minnet looks for the libraries it needs (including its own 
 configuration and function files) through the standard Lua paths library paths 

@@ -37,7 +37,7 @@ rss = {
 fp = require("feedparser")
 -- Check for the needed fetching helper
 do
-    local fetch_helper = fetch_cmd:match("^(%S+)")
+    local fetch_helper = rss.fetch_cmd:match("^(%S+)")
     if io.popen("which " .. fetch_helper):read("*a") == "" then
         log(fetch_helper .. " not found", "error")
     end
