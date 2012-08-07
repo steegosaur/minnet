@@ -104,6 +104,19 @@ cmdlist = {
             send(chan, "Sure, whatever you say.")
         end
     },
+    rss = {
+        help = "Read the last entry from a newsfeed",
+        func = function(u, chan, m, catch)
+            local name = m:match(catch)
+            local has, alt = rss.has_feed(name)
+            if not has then
+                send(chan, "Sorry, I don't have that cached.")
+                return
+            end
+            name = alt or name  -- If we got an alternate, use it
+            rss.read_last(name)
+        end
+    },
     -- time: report the current time (optionally, in a given numerical tz)
     time = {
         help = "Want to know what the time is?",
