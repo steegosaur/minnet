@@ -40,7 +40,6 @@ Rough feature changelog:
         Supports fully (single-)coloured lines (commands and logging)
         Has help functionality
         Provides the time when asked
-        Supports multiple RSS feeds with update frequency and customised output
         Has documented internal debug info enabled by output level "internal", 
          and more widely used "debug" level output
 
@@ -49,6 +48,8 @@ Future roadmap:
         Has a user-info database, separate from the auth db
         Has user-ignore functionality
         Can disable single functions per-channel or per-net
+        Supports multiple RSS feeds with update frequency and customised output
+        Has a karma database
     0.9.0
         Is compatible with the CTCP specs for USERINFO, FINGER, CLIENTINFO etc.
         Can read, write and rewrite config file for ignores, disabling, etc.

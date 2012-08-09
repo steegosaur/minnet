@@ -100,8 +100,7 @@ end
 
 -- db.check_column(): check whether a given column exists
 function db.check_column(database, tab, col)
-    if database:exec("SELECT " .. col .. " FROM " .. tab ..
-      ";") ~= sqlite3.OK then
+    if database:exec("SELECT ".. col .." FROM ".. tab ..";") ~= sqlite3.OK then
         return false
     else
         return true

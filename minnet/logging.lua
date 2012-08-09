@@ -57,16 +57,20 @@ function log(m, u, l) -- Log function, takes message, user table and loglevel
         l = l:lower()   -- Make sure it's all lowercase
     end
 
+    --[[ Don't do this, it creates fucktonnes of logs
     -- Log to syslog before filtering for verbosity
     if logs[syslog] then
         logwrite(m, u, l, syslog)
     end
+    --]]
 
     if levels[l] > verbosity then -- Lower value == higher prio
         return nil      -- We don't want this level; shut up
     end
 
-    -- Log to stdout
+    -- Log to syslog
+    if logs[syslog] then logwrite(m, u, l, syslog) end
+    -- Also, log to stdout
     logwrite(m, u, l)
 end
 

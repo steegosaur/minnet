@@ -23,6 +23,30 @@ hooks = {
         end
     },
     {
+        -- Karma hook, for catching !item++ etc.
+        event   = "OnChat",
+        name    = "karma",
+        action  = function(u, chan, m)
+            if is_ignored(u, chan, true)
+              -- We're presuming that if karma_up is disabled, all of them are
+              or check_disabled(chan, "karma_up") == true then
+                return nil
+            end
+            if chan == conn.nick then chan = u.nick end
+            m = desat(m):lower()    -- The usual sanitising
+            local pos_match = "^!(%S+)%+%+$"
+            local neg_match = "^!(%S+)%-%-$"
+            local get_match = "^!([^%s%?]+)%?%??$"
+            if m:match(pos_match) then
+                cmdlist.karma_up.func(u, chan, m, pos_match)
+            elseif m:match(neg_match) then
+                cmdlist.karma_down.func(u, chan, m, neg_match)
+            elseif m:match(get_match) then
+                cmdlist.karma_get.func(u, chan, m, get_match)
+            end
+        end
+    },
+    {
         -- Ownership hook, for imitating common ownership scripts
         event   = "OnChat",
         name    = "own",

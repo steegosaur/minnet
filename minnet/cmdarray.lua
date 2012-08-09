@@ -57,51 +57,78 @@ cmdlist = {
     karma_up = {
         help = "Say, what do you like anyway?",
         func = function(u, chan, m, catch)
-            local subject = m:match(catch)
-            local karma = karma.up(subject)
+            local subject = m:match(catch):lower()
             if not subject then
                 send(chan, u.nick .. ": Say what?")
                 return nil
             end
-            send(chan, "Whatever, if you think so. By the way, the total " ..
-                "karma for " .. subject .. " is now " .. karma .. ".")
+            local k = karma.mod(subject, chan, 1)
+            send(chan, "Total karma is now ".. k ..". Weirdos.")
         end
     },
     karma_down = {
         help = "So tell me, what don't you like?",
         func = function(u, chan, m, catch)
-            local subject = m:match(catch)
+            local subject = m:match(catch):lower()
             if not subject then
                 send(chan, u.nick .. ": Say what?")
                 return nil
             end
-            local karma = karma.down(subject)
-            send(chan, "Sure. Total karma is " .. karma .. ", though.")
+            local k = karma.mod(subject, chan, -1)
+            send(chan, "Sure. Total karma is ".. k ..", though.")
         end
     },
     karma_get = {
         help = "What do the others think of it, you say?",
         func = function(u, chan, m, catch)
-            local subject = m:match(catch)
+            local subject = m:match(catch):lower()
             if not subject then
                 send(chan, u.nick .. ": Say what?")
                 return nil
             end
-            local karma = karma.get(subject)
+            local k = karma.get(subject, chan)
+            if not k then
+                send(chan, u.nick .. ": That has no karma yet.")
+                return
+            end
             local reply = "%s: Karma for %s is %d."
-            send(chan, reply:format(u.nick, subject, karma))
+            send(chan, reply:format(u.nick, subject, k))
         end
     },
     karma_reset = {
         help = "Reset an item's karma value.",
         func = function(u, chan, m, catch)
-            local subject = m:match(catch)
+            local subject = m:match(catch):lower()
             if not subject then
                 send(chan, u.nick .. ": You what?")
                 return nil
             end
-            karma.reset(subject)
-            send(chan, "Sure, whatever you say.")
+            if db.check_auth(u, "oper") then
+                karma.reset(item, chan)
+                send(chan, u.nick ..": Fix'd.")
+            else
+                send(chan, "No cheating!")
+            end
+        end
+    },
+    karma_del = {
+        help = "Delete an item from the karma database.",
+        func = function(u, chan, m, catch)
+            local subject = m:match(catch):lower()
+            if not subject then
+                send(chan, "Uh?")
+                return nil
+            end
+            if db.check_auth(u, "oper") then
+                local cake = karma.del(subject, chan)
+                if cake == false then
+                    send(chan, u.nick ..": There is no such item to delete.")
+                else
+                    send(chan, u.nick ..": Sure.")
+                end
+            else
+                send(chan, "Sorry, no cheating.")
+            end
         end
     },
     rss = {

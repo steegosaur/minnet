@@ -177,6 +177,7 @@ date.
  timezones      | List known timezones   | "list.* timezones", "what timezones"
  disable        | Disable for channel    | "disable", "shut up", "be quiet"
  enable         | Re-enable Minnet       | "re-enable", "unsilence", "speak"
+ karma_*        | Up/down karma of stuff | "!<item>++", "!<item>--", "!<item>?"
  be             | CTCP ACTION            | "be"
  twentytwo_seven| How long since #Utøya? | ".* utøya", ".* oslo", "2011-07-22"
 ----------------|------------------------|-------------------------------------

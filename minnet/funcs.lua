@@ -277,18 +277,12 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
             local start, fin = m:lower():find(remove)
             remove = m:sub(start, fin)
             m = m:gsub(remove, "")
-            
-            --[[ Old code
-            -- Locate where the name is
-            local start, fin = m:lower():find(nickmatch)
-            -- Get the actual contents
-            local remove = m:sub(start, fin)
-            m = m:gsub(remove, "")
-            --]]
         end
     end
-
-    if m == "" or m:match("^%s+") or m:match("%\001") then return nil end
+    -- Skip a few non-normal commands
+    if m == "" or m:match("^!") or m:match("^%s+") or m:match("%\001") then
+        return nil
+    end
     m = m:gsub("%s+$", "")  -- Just a simple clean-up
     cmdFound = false
     local cmdfunc, catch

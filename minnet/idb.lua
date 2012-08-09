@@ -29,7 +29,12 @@ function idb.check()
         entry       TEXT,
         entry_id    INTEGER
         );]])
-
+    infodb:exec([[CREATE TABLE IF NOT EXISTS karma (
+        id          INTEGER     PRIMARY KEY,
+        item        TEXT,
+        chan        INTEGER,
+        karma       INTEGER
+        );]])
     -- Check if net exists in the tables; TODO: Tidy this code
     if not idb.get_netid() then
         -- Net does not yet exist; check how many do
@@ -100,14 +105,28 @@ end
 -- idb.chanid(): get or create chanid for given channel (locked to current net)
 function idb.get_chanid(chan)
     local get_stmt = infodb:prepare("SELECT * FROM chans WHERE " ..
-        "channame=$chan AND netid=$netid")
+        "channame = $chan AND netid = $netid")
     get_stmt:bind_names({ chan = chan, netid = net.id })
     for result in get_stmt:nrows() do
         get_stmt:reset()
         return result.chanid
     end
-    -- If we're here, there was no id. Return nil.
-    return nil
+    -- If we're here, there was no id. Make one and return it.
+    return idb.new_chanid(chan)
+end
+
+-- idb.new_chanid(): create a new chanid
+function idb.new_chanid(chan, u)
+    local set_stmt = infodb:prepare("INSERT INTO chans (channame, netid) VALUES ($c, $ni)")
+    set_stmt:bind_names({ c = chan, ni = net.id })
+    if set_stmt:step() ~= sqlite3.DONE then
+        local errmsg = "Could not add " .. chan .. " to the chans list: " ..
+            infodb:errcode() .."-".. infodb:errmsg()
+        if u then db.error(u, errmsg) else log(errmsg, "error") end
+    else
+        log("Added channel ".. chan .." to chans list in IDB", "info")
+        return idb.get_chanid(chan)
+    end
 end
 
 -- idb.get_nickid(): get the nickid of specified nick using unique chanid
@@ -135,8 +154,7 @@ function idb.get_field(nickid, field)
     for result in infodb:nrows("SELECT * FROM nicks where nickid = " .. nickid) do
         return result[field]
     end
-    -- If nothing found, return nil
-    return nil
+    return nil -- If nothing found, return nil
 end
 
 -- idb.set_data(): main function for saving data to the idb
@@ -144,24 +162,11 @@ function idb.set_data(u, chan, nick, field, value)
     local chan_id   -- Make sure it's defined in a broad enough scope
     chan = chan:lower()
     chan_id = idb.get_chanid(chan)
+    --[[ Obsolete
     if not chan_id then
         -- If we're here, there is no chanid for this channel yet; fix that!
-        local chan_count = db.countrows(infodb, "chans")
-        chan_id = chan_count + 1
-        -- Add channel and check for success
-        local set_stmt = infodb:prepare("INSERT INTO chans VALUES ( " ..
-            "$chan_id, $chan, $net_id )")
-        set_stmt:bind_names({ chan_id = chan_id, chan = chan, net_id = net.id})
-
-        if set_stmt:step() ~= sqlite3.DONE then
-            db.error(u, "Could not add " .. chan .. " to the chans list: " ..
-                infodb:errcode() .. " - " .. infodb:errmsg())
-            return nil
-        else
-            log("Added channel " .. chan .. " to chans list in the IDB as " ..
-                "no. " .. chan_id, "info")
-        end
-    end
+        chan_id = idb.new_chanid(chan, u)
+    end --]]
     -- So we definitely have a chan_id. Now we need a nick_id
     local nick_id
     nick_id = idb.get_nickid(chan_id, nick)
@@ -287,4 +292,69 @@ function idb.del_todo(u, chan, id)
         send(chan, "By time you got that sorted out anyway.")
     end
     del_stmt:reset()
+end
+
+karma = {}
+function karma.get_id(item, chan)
+    log("Getting id for '".. item .."' in ".. chan, "internal")
+    local ci = idb.get_chanid(chan) -- or idb.new_chanid(chan) Obsolete
+    log("Channel id is ".. ci, "internal")
+    local get_stmt = infodb:prepare("SELECT id FROM karma WHERE item = $i AND chan = $ci")
+    get_stmt:bind_names({ i = item, ci = ci })
+    for result in get_stmt:nrows() do
+        log("Returned id: " .. result.id, "internal")
+        return result.id
+    end
+end
+function karma.get(id, chan)
+    if chan then    -- Was given item + chan, not id; used in cmdarray.lua
+        id = karma.get_id(id, chan)
+    end
+    local get_stmt = infodb:prepare("SELECT karma FROM karma WHERE id = $id")
+    get_stmt:bind_names({ id = id })
+    for result in get_stmt:nrows() do
+        get_stmt:reset()
+        return tonumber(result.karma)
+    end
+end
+function karma.mod(item, chan, int)
+    local id = karma.get_id(item, chan)
+    if not id then
+        id = karma.add(item, chan)
+    end
+    log("Modifying karma item with id ".. id, "internal")
+    local cur_karma = karma.get(id) or 0
+    local new_karma = cur_karma + int   -- To lower, use int = -1
+    karma.set(id, new_karma)
+    return new_karma
+end
+function karma.add(item, chan)
+    local ci = idb.get_chanid(chan) -- or idb.new_chanid(chan)
+    local ins_stmt = infodb:prepare("INSERT INTO karma (item, chan, karma) " ..
+        "VALUES ($i, $ci, 0)")
+    ins_stmt:bind_names({ i = item, ci = ci })
+    if ins_stmt:step() ~= sqlite3.DONE then
+        log("Could not insert item into karma database", "error")
+    end
+    log("Added item '".. item .."' to karma database in ".. chan, "trivial")
+    return karma.get_id(item, chan)
+end
+function karma.set(id, value)   -- Call this in hacks.lua for "rigging"/fixing
+    local set_stmt = infodb:prepare("UPDATE karma SET karma=$k WHERE id = $id")
+    set_stmt:bind_names({ k = value, id = id})
+    set_stmt:step()
+end
+function karma.del(item, chan)
+    local id = karma.get_id(item, chan)
+    if not id then return false end
+    local del_stmt = infodb:prepare("DELETE FROM karma WHERE id = $id")
+    del_stmt:bind_names({ id = id })
+    del_stmt:step()
+    log("Deleted karma item with id " .. id, "trivial")
+    return true
+end
+function karma.reset(item, chan)    -- Just pretty, syntactical sugar
+    local id = karma.get_id(item, chan)
+    karma.set(id, 0)
+    log("Reset karma for '".. item .."' in ".. chan, "trivial")
 end

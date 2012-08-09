@@ -1,7 +1,7 @@
 TODO file for Minnet
 
 Todo atm:
-    [/] IDB karma function
+    [x] IDB karma function
     [/] NickServ integration: identify to services if present and configured
         Drafted, needs testing
             TODO: Handle replies from NickServ et al. (avoid looping output)
@@ -10,10 +10,11 @@ Todo atm:
     [/] Make test suite for config validation, and call at startup/config load
         Pretty much done; needs testing
     
-    [_] Commands to list RSS feeds and read last entry in a feed
+    [/] Commands to list RSS feeds and read last entry in a feed
+        Second part done; needs listing
     
-    [_] Split config.lua into config.lua and networks.lua
-    [_] Todo list functionality in IDB
+    [ ] Split config.lua into config.lua and networks.lua
+    [ ] Todo list functionality in IDB
 
 
 General stuff:
@@ -36,10 +37,11 @@ General stuff:
 
     Check if the WHERE nick OR cur_nick sql might be abused by nickchanging
     Check vulnerabilities for more than one user with the same nick
+    Consider using md5 hashes (or similar) for sql entries (nick, karma, etc.)
 
 
 Command ideas:
-    [_] Watch dog for admin (notify on channel joins, etc.)
+    [ ] Watch dog for admin (notify on channel joins, etc.)
 
     New purpose: NickServ replacement on own network.
         Ideas:

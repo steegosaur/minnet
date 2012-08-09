@@ -11,7 +11,7 @@
 -- Syntax: funcname = { "pattern%s+matching%s+the%s+said%s+command" }
 
 bot.commands = {
-    say     = { "say" },
+    say     = { "say"  },
     help    = { "help" },
     set     = { "set%s+[^mwch]" },
     areyou  = { "are%s+you%s+(.*)", "do", "does", "will" },
@@ -19,12 +19,25 @@ bot.commands = {
     unload  = { "unload", "remove" },
     reload  = { "reload" },
     rss     = { ".*latest%s+%S-%s-from%s+(%S+)", "read%s+(%S+)", },
-    db      = { "db", "database" },
+    db      = { "db", "database"  },
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out", "go%s+away" },
     ignore  = { "ignore", "disregard" },
     unignore= { "unignore", "listen%s+to" },
     lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
+    karma_up = { "(%S+)%+%+$", "up%s+karma%s+of%s+(%S+)"  },
+    karma_down = { "(%S+)%-%-$", "lower%s+karma%s+of%s+(%S+)" },
+    karma_get  = {
+        "what'?%s-i?s%s+([^%s']+)'s%s+karma", "show%s+([^%s']+)'s%s+karma",
+        "what'?%s-i?s%s+the%s+karma%s+of%s+(%S+)",
+    },
+    karma_reset = {
+        "reset%s+t?h?e?%s-karma%s+of%s+(%S+)", "reset%s+([^%s']+)'s%s+karma",
+        "reset%s+karma%s+f?o?r?%s-(%S+)",
+    },
+    karma_del = {
+        "delete%s+karma%s+of%s+(%S+)", "delete%s+([^%s']+)'s%s+karma",
+    },
     --[[ These aren't implemented yet
     remember= {
         "remind%s+me%s+to%s+([^,%.!%?]+)", "remind%s+me%s+that%s+([^,%.!%?]+)",
