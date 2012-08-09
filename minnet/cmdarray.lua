@@ -62,6 +62,8 @@ cmdlist = {
                 send(chan, u.nick .. ": Say what?")
                 return nil
             end
+            -- This is just for avoiding spamming: 1min quarantine pr. nick
+            if not karma.checktime(chan, u.nick) then return nil end
             local k = karma.mod(subject, chan, 1)
             send(chan, "Total karma is now ".. k ..". Weirdos.")
         end
@@ -74,6 +76,7 @@ cmdlist = {
                 send(chan, u.nick .. ": Say what?")
                 return nil
             end
+            if not karma.checktime(chan, u.nick) then return nil end
             local k = karma.mod(subject, chan, -1)
             send(chan, "Sure. Total karma is ".. k ..", though.")
         end

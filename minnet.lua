@@ -202,6 +202,9 @@ else
         if randCounter > 2400 then
             randCounter = 0
             math.randomseed(os.time())
+            if karma then
+                karma.cleantimes()
+            end
         end
         if rss and rss.feeds[net.name:lower()] then
             rssCounter = rssCounter + 1

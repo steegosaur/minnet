@@ -130,7 +130,7 @@ function rss.read_new(name)
     end
     local newCount = 0
     for i, e in pairs(parsed.entries) do
-        if e.updated_parsed > ( f.updated - rss.get_freq(f) ) then
+        if e.updated_parsed > ( f.updated - rss.get_freq(f) + 20 ) then -- 20s margin
             -- Entry was published after last check; report
             newCount = newCount + 1
             if (f.maxnew and newCount > f.maxnew) or newCount > rss.maxnew then

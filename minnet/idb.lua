@@ -294,7 +294,7 @@ function idb.del_todo(u, chan, id)
     del_stmt:reset()
 end
 
-karma = {}
+karma = { times = {} }
 function karma.get_id(item, chan)
     log("Getting id for '".. item .."' in ".. chan, "internal")
     local ci = idb.get_chanid(chan) -- or idb.new_chanid(chan) Obsolete
@@ -357,4 +357,26 @@ function karma.reset(item, chan)    -- Just pretty, syntactical sugar
     local id = karma.get_id(item, chan)
     karma.set(id, 0)
     log("Reset karma for '".. item .."' in ".. chan, "trivial")
+end
+function karma.checktime(chan, nick)
+    if karma.times[chan] and karma.times[chan][u.nick]
+      and os.difftime(os.time(), karma.times[chan][u.nick]) < 60 then
+        -- Nick has modified a karma within the last minute; ignore
+        return nil
+    else
+        -- Update time and allow karma mod
+        if not karma.times[chan] then karma.times[chan] = {} end
+        karma.times[chan][u.nick] = os.time()
+        return true
+    end
+end
+function karma.cleantimes()
+    for c, t in pairs(karma.times) do
+        for u, time in pairs(t) do
+            if os.difftime(os.time(), time) > 60 then
+                -- Get rid of unnecessary times
+                karma.times[c][u] = nil
+            end
+        end
+    end
 end
