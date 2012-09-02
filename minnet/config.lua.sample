@@ -65,6 +65,16 @@ bot = {
             }
         },
     },
+    mods = {
+        -- Modules to load/use at startup
+        load = {
+            "cmdarray", "cmdvocab", "db", "idb", "hooks", "ctcp",
+            "time", "sdb", "rss"
+        },
+        -- Where are modules stored
+        path = "minnet/",
+        loaded = {}
+    },
     -- Access levels; owner is obligatory and must be lowest number
     levels = {
         owner   = 0,
@@ -126,8 +136,6 @@ levels = {
 }
 verbosity = levels["info"]  -- Set initial value
 
-db    = { file = "users.minnet.db" }
-idb   = { file = "info.minnet.db"  }
 ctcp  = {
     active = {
         version = {},
