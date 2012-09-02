@@ -36,14 +36,6 @@ rss = {
 -- End configuration, begin functions libary
 
 fp = require("feedparser")
--- Check for the needed fetching helper
-do
-    local fetch_helper = rss.fetch_cmd:match("^(%S+)")
-    if io.popen("which " .. fetch_helper):read("*a") == "" then
-        log(fetch_helper .. " not found", "error")
-    end
-    if net then rss.init() end
-end
 
 function rss.init() -- Called during bot init, because we need the net.name
     for _, f in ipairs(rss.feeds[net.name:lower()]) do
@@ -52,6 +44,15 @@ function rss.init() -- Called during bot init, because we need the net.name
     rss.dir = logdir .."/".. net.name .."/.rss"
     check_create_dir(rss.dir)
     rss.read_times()
+end
+
+-- Check for the needed fetching helper
+do
+    local fetch_helper = rss.fetch_cmd:match("^(%S+)")
+    if io.popen("which " .. fetch_helper):read("*a") == "" then
+        log(fetch_helper .. " not found", "error")
+    end
+    if net then rss.init() end
 end
 
 -- Main functions
@@ -86,9 +87,9 @@ function rss.update_feeds()
             -- Either hasn't been updated, or was updated and should be again
             log("Fetching feed " .. f.name, "debug")
             rss.fetch_feed(f.url, f.name)
-            rss.read_new(f.name)            -- Check for new entries and report
             f.updated = os.time()           -- Update the timestamp
             rss.save_times()
+            rss.read_new(f.name)            -- Check for new entries and report
         else
             log("Feed " .. f.name .. " not ripe; skipping..", "debug")
         end
