@@ -1,10 +1,12 @@
 #!/usr/bin/env lua
--- db.lua - info database functions file for minnet
+-- idb.lua - info database functions file for minnet
 -- Copyright Stæld Lakorv, 2011-2012 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
 require("lsqlite3")
+idb = { file = "info.minnet.db" }
+infodb = sqlite3.open(idb.file) -- The user info database
 
 -- idb.check(): Check whether network table exists at startup
 function idb.check()
@@ -125,19 +127,32 @@ function idb.new_chanid(chan, u)
         if u then db.error(u, errmsg) else log(errmsg, "error") end
     else
         log("Added channel ".. chan .." to chans list in IDB", "info")
+        -- Now that the chan is added, go back and try fetching it once more
         return idb.get_chanid(chan)
     end
 end
 
 -- idb.get_nickid(): get the nickid of specified nick using unique chanid
-function idb.get_nickid(chanid, nick)
+function idb.get_nickid(chanid, nick, nocreate)
     nick = nick:lower()
     for result in infodb:nrows("SELECT * FROM nicks WHERE chanid = " ..
       chanid .. " AND nick = '" .. nick .. "';") do
         return result.nickid
     end
-    -- Again, if this executes, there's no nickid.
-    return nil
+    -- If this is for a request about someone else, don't create a new entry
+    if nocreate then return nil end
+    local ins_stmt = infodb:prepare([[INSERT INTO nicks (nick, chanid) VALUES
+        ($n, $cid)]])
+    ins_stmt:bind_names({ n = nick, cid = chanid })
+    if ins_stmt:step() ~= sqlite3.DONE then
+        local errmsg = "Could not add nick ".. nick .." to nick list: " ..
+            infodb:errcode() .."-".. infodb:errmsg()
+        log(errmsg, "error")
+    else
+        log("Added nick " .. nick .. " to IDB", "trivial")
+        -- Now that it's added, fetch the id from the db again
+        return idb.get_nickid(chanid, nick, true)
+    end
 end
 
 -- idb.get_field(): fetch a given piece of stored data from the nicks table
@@ -162,29 +177,11 @@ function idb.set_data(u, chan, nick, field, value)
     local chan_id   -- Make sure it's defined in a broad enough scope
     chan = chan:lower()
     chan_id = idb.get_chanid(chan)
-    --[[ Obsolete
-    if not chan_id then
-        -- If we're here, there is no chanid for this channel yet; fix that!
-        chan_id = idb.new_chanid(chan, u)
-    end --]]
     -- So we definitely have a chan_id. Now we need a nick_id
-    local nick_id
-    nick_id = idb.get_nickid(chan_id, nick)
+    local nick_id = idb.get_nickid(chan_id, nick)
     if not nick_id then
-        -- Seems we're dealing with a new person - better add them
-        local nick_count = db.countrows(infodb, "nicks")
-        nick_id = nick_count + 1
-        -- Add nick and check for success
-        if infodb:exec("INSERT INTO nicks (nickid, nick, chanid) VALUES (" ..
-          nick_id .. ", '" .. nick:lower() .. "', " ..
-          chan_id .. ");") ~= sqlite3.OK then
-            db.error(u, "Could not add " .. nick .. " to the nicklist: " ..
-                infodb:errcode() .. " - " .. infodb:errmsg())
-            return nil
-        else
-            log("Added nick " .. nick:lower() .. " to nicklist in the IDB " ..
-                "as no. " .. nick_id, "info")
-        end
+        db.error(u, "Could not get the nick id for your nick!")
+        return
     end
     -- Next we need to know if the specified column exists. Sanitise and check.
     field = field:lower()
@@ -215,7 +212,7 @@ end
 -- idb.set_field(): populate a field in the nicks table, IDB
 function idb.set_field(nick_id, field, value)
     if field == "nickid" or field == "nick" or field == "chanid" or
-      field == "todo" then
+      field == "todo" then  -- These are prohibited
         return 1
     end
     local upd_stmt = infodb:prepare("UPDATE nicks SET \"" .. field ..

@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
--- minnet.lua 0.7.7 - the unuseful lua irc bot
+-- minnet.lua 0.7.8 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 --
 -- This file is part of Minnet
@@ -11,7 +11,7 @@
 --
 -- Minnet is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 -- GNU General Public License for more details.
 --
 -- You should have received a copy of the GNU General Public License
@@ -27,18 +27,12 @@ require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
 -- Minnet's modules:
 require("minnet.config")
 require("minnet.funcs")
-require("minnet.db")
-require("minnet.idb")
-require("minnet.ctcp")
-require("minnet.hooks")
 require("minnet.logging")
-require("minnet.rss")
-require("minnet.time")     -- Time functionality
-require("minnet.cmdarray") -- The command functions
-require("minnet.cmdvocab") -- The command recognition vocabulary
+-- The modules defined in config:
+for i, mod in ipairs(bot.mods.load) do
+    loadmod(mod)
+end
 
-udb = sqlite3.open(db.file)     -- The user auth database
-infodb = sqlite3.open(idb.file) -- The user info database
 bot.start = os.time()
 math.randomseed(os.time())
 create_help()
@@ -143,6 +137,7 @@ else
     logs[syslog] = io.open(syslog, "a+")    -- Open syslog for writing
 
     -- Check that the databases are ok and ready, or do what's necessary to fix
+    -- TODO: This should somehow be modularised and moved to db.lua and idb.lua
     db.check()
     idb.check()
     db.ucheck()
