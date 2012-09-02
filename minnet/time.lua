@@ -12,6 +12,9 @@ time.wdays = {  -- Days of the week, Sun first; used with os.date("*t").wday
     long  = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
         "Saturday" }
 }
+time.expressions = {
+    yesterday = "-1d", tomorrow = "+1d", today = "+0d"
+}
 time.timezones = {
     GMT = "+0", UTC = "+0", WET = "+0",
     BST = "+1", CET = "+1", DFT = "+1", IST = "+1", WAT = "+1", WEDT = "+1",
@@ -55,7 +58,7 @@ function time.get_current(m)
     if not m then return os.date("*t"), os.date("%z") end
     local now, tz
     local nonnum = false
-    local mod = { text = m:match("([%+%-]%d%d?:?%d?%d?)") }
+    local mod = { text = m:match("([%+%-][%d:hmd]+)") }
     if not mod.text then
         for zone, value in pairs(time.timezones) do
             if m:match("%W" .. zone) then
@@ -71,14 +74,20 @@ function time.get_current(m)
     end
     if mod.text then
         mod.op = mod.text:match("^([%+%-])")    -- Add or subtract?
-        mod.h = tonumber(mod.text:match("^%p(%d%d?)"))      -- Hours
-        mod.m = tonumber(mod.text:match("^%p%d%d:?(%d%d)")) -- Minutes
+        mod.d = tonumber(mod.text:match("^%p(%d+)d"))       -- Days
+        mod.h = tonumber(mod.text:match("%d-d?%s-(%d%d?)")) -- Hours
+        mod.m = tonumber(mod.text:match("%d%d:?(%d%d)"))    -- Minutes
         mod.vars = { day = 1, month = 1, year = 1970 }      -- 0 seconds
 
-        -- Modifiers for hour and minute
-        if mod.op == "+" then
+        -- Modifiers for day, hour and minute
+        if mod.d and mod.op == "+" then
+            mod.vars.day = mod.vars.day - mod.d
+        elseif mod.d and mod.op == "-" then
+            mod.vars.day = mod.vars.day + mod.d
+        end
+        if mod.h and mod.op == "+" then
             mod.vars.hour = 1 - mod.h
-        elseif mod.op == "-" then
+        elseif mod.h and mod.op == "-" then
             mod.vars.hour = 1 + mod.h
         end
         if mod.m and mod.op == "+" then
@@ -100,7 +109,7 @@ end
 
 -- time.calculate(): New time calculation algorithm, trying to fix what just
 --+ doesn't work with the previous one, in a simpler way (hopefully)
-function time.calculate(t)
+function time.calculate(t, dump)
     -- t is a time difference as returned by os.difftime();
     --+ on POSIX and Windows systems, this amounts to a seconds count. We take
     --+ advantage of this, and simply count how many weeks, days etc. are in
@@ -125,6 +134,7 @@ function time.calculate(t)
         d.min = d.min + 1
         d.seconds = d.seconds - 60
     end
+    if dump == true then return d end
     local ending = { weeks = "", day = "", hour = "", min = "" }
     for _, unit in ipairs({ "weeks", "day", "hour", "min" }) do
         if d[unit] > 1 then
@@ -175,5 +185,65 @@ function time.calculate(t)
         mins = ""
     end
     return weeks, days, hours, mins
+end
+
+function time.get_date(text)
+    local result, array
+    local now = os.date("*t")
+    local format = "%.4d-%.2d-%.2d"
+    -- Check if it's a known, simple expression
+    for e, mod in pairs(time.expressions) do
+        if text:match(e) then
+            array = time.get_current(mod)
+        end
+    end
+    -- Raw date?
+    local date = text:match("(%d%d%d%d%-%d%d%-%d%d)")
+    if date then return date end
+    -- Weekday based?
+    local weekday = text:match("(%a+day)")
+    if weekday and not array then
+        local futpast
+        local tenses = {
+            past = { "[lp]ast", "previous" },
+            fut = { "next", "coming" }
+        }
+        for tense, words in pairs(tenses) do
+            for _, word in ipairs(words) do
+                if text:match(word .. "%s+%a+day") then
+                    futpast = tense
+                end
+            end
+        end
+        if not futpast then return nil end
+        for number, day in ipairs(time.wdays.long) do
+            if weekday:lower() == day:lower() then
+                local diff = number - now.wday
+                if futpast == "past" then
+                    if diff >= 0 then
+                        diff = diff - 7
+                    elseif diff < -7 then
+                        diff = diff + 7
+                    end
+                elseif futpast == "fut" then
+                    if diff <= 0 then
+                        diff = diff + 7
+                    elseif diff > 7 then
+                        diff = diff - 7
+                    end
+                end
+                local secs = 3600 * 24 * diff
+                local then_time
+                if tense == "past" then
+                    then_time = os.time() - secs
+                else then_time = os.time() + secs end
+                array = os.date("*t", then_time)
+            end
+        end
+    end
+    if array then
+        result = format:format(array.year, array.month, array.day)
+    else result = nil end
+    return result
 end
 -- EOF

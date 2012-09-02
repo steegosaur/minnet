@@ -77,11 +77,32 @@ function desat(m)
     return m
 end
 
+-- depends(): Require some of Minnet's modules (dependencies)
+function depends(t)
+    for _, mod in ipairs(t) do loadmod(mod, true) end
+end
+
+-- loadmod(): Load a module
+function loadmod(mod, startup)
+    if startup and bot.mods.loaded[mod] == true then
+        -- Because if it is already there, we don't need to reload it at boot
+        return
+    end
+    if io.open(bot.mods.path .. mod ..".lua", "r") then
+        log("Loading module " .. mod, "internal")
+        dofile(bot.mods.path .. mod .. ".lua")
+        bot.mods.loaded[mod] = true
+    else
+        log("Could not load module " .. mod, "warn")
+    end
+end
+
 -- reload(): Reload one or more files while running
 function reload(u, chan, file)
     if not file then
         return nil
     end
+    -- TODO: Use array to scale this properly
     if file == "functions"          then file = "funcs"
     elseif file == "configuration"  then file = "config"
     elseif file == "infodb"         then file = "idb"
@@ -93,27 +114,13 @@ function reload(u, chan, file)
       file == "hooks" or file == "config" or file == "cmdvocab" or
       file == "cmdarray" or file == "time" or file == "logging" or
       file == "hacks" or file == "rss" then
-        if assert(io.open("minnet/" .. file .. ".lua", "r")) then
-            dofile("minnet/" .. file .. ".lua")
-        else
-            log("No such file: minnet/" .. file .. ".lua", u, "warn")
-            send(chan, u.nick .. ": Sorry, but I couldn't find the file.")
-            return nil
-        end
-        log("Reloaded " .. file .. ".lua", u, "info")
+        loadmod(file)
         send(chan, u.nick .. ": I reloaded " .. file .. ".lua.")
     elseif file == "commands" then
         local cmdfiles = { "cmdarray", "cmdvocab" }
         for _, file in ipairs(cmdfiles) do
-            if assert(io.open("minnet/" .. file .. ".lua", "r")) then
-                dofile("minnet/" .. file .. ".lua")
-            else
-                log("No such file: minnet/" .. file .. ".lua", u, "warn")
-                send(chan, u.nick .. ": Sorry, but I couldn't find the file.")
-                return nil
-            end
+            loadmod(file)
         end
-        log("Reloaded command files", u, "info")
         send(chan, u.nick .. ": I reloaded the command files.")
     else
         log("Attempt to reload unknown file " .. file .. ".lua", u, "warn")

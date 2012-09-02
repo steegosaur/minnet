@@ -5,6 +5,8 @@
 -- Minnet is released under the GPLv3 - see ../COPYING
 
 require("lsqlite3")
+db = { file = "users.minnet.db" }
+udb = sqlite3.open(db.file)     -- The user auth database
 
 function db.error(u, m)
     log(m, u, "error")
