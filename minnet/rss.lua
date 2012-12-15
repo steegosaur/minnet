@@ -52,7 +52,7 @@ do
     if io.popen("which " .. fetch_helper):read("*a") == "" then
         log(fetch_helper .. " not found", "error")
     end
-    if net then rss.init() end
+    if net and rss.read_times then rss.init() end
 end
 
 -- Main functions
@@ -97,6 +97,7 @@ function rss.update_feeds()
 end
 
 function rss.report(f, e, chan)
+    if check_disabled(chan, "rss") then return end
     local message
     if e.summary then
         message = f.out:format(e.summary:match(f.patt))
@@ -111,7 +112,7 @@ function rss.report(f, e, chan)
             send(c, printout)
         end
     elseif type(chan) == "string" then  -- This is unused but possible;
-        send(chan, printout)            -- For safety, only f.chan is used (not chan)
+        send(chan, printout)            -- For safety, use f.chan instead of chan
     else
         log("Out of cheese - rss target 'chan' not string or table!", "error")
     end
@@ -124,6 +125,14 @@ function rss.read_new(name)
     local f = rss.get_feed(name)
     local xml = file:read("*a")
     local parsed = fp.parse(xml)
+    if not parsed then
+        xml = tostring(xml)
+        if xml:len() > 10 then
+            xml = xml:sub(1, 10) .. "..."
+        end
+        log("No result from parsing xml ('" .. xml .. "')", "warn")
+        return false
+    end
     if parsed.feed.updated_parsed < ( f.updated - rss.get_freq(f) ) then
         -- Not updated since last refresh -> nothing new
         log("Nothing new to report from feed " .. name, "trivial")

@@ -43,6 +43,7 @@ sdb.types = {   -- Predefined studying methods
 -- Command pieces
 bot.commands.sdb_reg = {
     "i?%s-studied%s+(%d+%s*[hm])%l-%s+o?f?%s-(%S+)",
+    "i%s+did%s+(%d+%s*[hm])%l-%s+o?f?%s-(%S+)",
     "record%s+(%d+%s*[hm])%l*%s+o?f?%s-(%S+)"
 }
 cmdlist.sdb_reg = {
@@ -62,7 +63,7 @@ cmdlist.sdb_reg = {
     end
 }
 bot.commands.sdb_selfstats = {
-    "what%s+are%s+my%s+(%S+)%s+stat"
+    "what%s+are%s+my%s+(%S+)%s+stat", "what%s+are%s+my%s+(stats)"
 }
 cmdlist.sdb_selfstats = {
     help = "Want to see some stats on your studies?",
@@ -130,13 +131,13 @@ cmdlist.sdb_selfstats = {
             local last = sdb.determine_last(results)
             if last.type == "NULL" or last.type == nil then last.type = ""
             else last.type = " " .. last.type end
-            if not l.comment or l.comment == "" or l.comment == "NULL" then
-                l.comment = ""
+            if not last.comment or last.comment == "" or last.comment == "NULL" then
+                last.comment = ""
             else
-                l.comment = " [" .. l.comment .. "]"
+                last.comment = " [" .. last.comment .. "]"
             end
             send(chan, u.nick .. ": Stats for " ..
-                outline:format(subj, cat, count/60, last.time/60, last.type, last.date, l.comment))
+                outline:format(subj, cat, count/60, last.time/60, last.type, last.date, last.comment))
         end
     end
 }
