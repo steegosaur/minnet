@@ -124,7 +124,7 @@ cmdlist = {
             end
             if db.check_auth(u, "oper") then
                 local cake = karma.del(subject, chan)
-                if cake == false then
+                if not cake then
                     send(chan, u.nick ..": There is no such item to delete.")
                 else
                     send(chan, u.nick ..": Sure.")
@@ -145,6 +145,16 @@ cmdlist = {
             end
             name = alt or name  -- If we got an alternate, use it
             rss.read_last(name)
+        end
+    },
+    list_feeds = {
+        help = "List all defined feeds for this network",
+        func = function(u, chan, m)
+            if db.check_auth(u, "oper") then
+                rss.list_feeds(chan)
+            else
+                send(chan, msg.notauth)
+            end
         end
     },
     -- time: report the current time (optionally, in a given numerical tz)

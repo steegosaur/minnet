@@ -7,14 +7,14 @@
 -- RSS/Atom feeds configuration
 rss = {
     report_format = "%s: %s - %s: %s (%s)",
-    maxnew = 6,     -- Max number of new entries to report per feed, per update
+    maxnew = 5,     -- Max number of new entries to report per feed, per update
     feeds = {       -- Network names _must_ be lowercase
         illumine = {
             {
             name = "World-wiki",
             url  = "http://staeld.illumine.ch/wiki/index.php?title=Spesial:Siste_endringar&feed=atom",
-            out  = "%s",
-            patt = "^<p>(.-)</p>",
+            out  = "%s",            -- Feed-specific output format
+            patt = "^<p>(.-)</p>",  -- Feed-specific input parsing
             chan = { "#valo" },
             freq = "30m",
             maxnew = 4, -- Same as above, but feed-specific
@@ -22,8 +22,6 @@ rss = {
             {
             name = "Minnet-git",
             url  = "https://github.com/staeld/minnet/commits/serv-dev.atom",
-            out  = "",
-            patt = "",
             chan = { "#valo" },
             freq = "60m",
             maxnew = 3,
@@ -31,29 +29,15 @@ rss = {
         },
     },
     fetch_cmd = "wget -q -O %s '%s'",
+    templates = {
+        wiki = { input = "^<p>(.-)</p>", out = "%s" },
+        git  = { input = "", out = "" },
+    },
 }
 
 -- End configuration, begin functions libary
 
 fp = require("feedparser")
-
-function rss.init() -- Called during bot init, because we need the net.name
-    for _, f in ipairs(rss.feeds[net.name:lower()]) do
-        f.updated = 0
-    end
-    rss.dir = logdir .."/".. net.name .."/.rss"
-    check_create_dir(rss.dir)
-    rss.read_times()
-end
-
--- Check for the needed fetching helper
-do
-    local fetch_helper = rss.fetch_cmd:match("^(%S+)")
-    if io.popen("which " .. fetch_helper):read("*a") == "" then
-        log(fetch_helper .. " not found", "error")
-    end
-    if net and rss.read_times then rss.init() end
-end
 
 -- Main functions
 
@@ -99,6 +83,8 @@ end
 function rss.report(f, e, chan)
     if check_disabled(chan, "rss") then return end
     local message
+    if not f.patt then f.patt = "" end
+    if not f.out  then f.out  = "" end
     if e.summary then
         message = f.out:format(e.summary:match(f.patt))
     elseif e.content then
@@ -165,6 +151,25 @@ function rss.read_last(name)
     local parsed = fp.parse(xml)
     local last = parsed.entries[1]
     rss.report(f, last, f.chan)
+end
+
+function rss.list_feeds(chan)
+    local list = {}
+    local i = 1
+    for _, t in ipairs(rss.feeds[net.name:lower()]) do
+        if not list[i] then
+            list[i] = t.name
+        elseif list[i]:len() + t.name:len() + 2 < 420 then
+            list[i] = list[i] .. ", " .. t.name
+        else
+            i = i + 1
+            list[i] = t.name
+        end
+    end
+    send(chan, "RSS/Atom feeds for this network:")
+    for _, line in ipairs(list) do
+        send(chan, line)
+    end
 end
 
 -- Auxiliary functions
@@ -244,3 +249,22 @@ function rss.strip_html(s)
     -- Presuming we are dealing with plain, unescaped html
     return s:gsub("%b<>", "")
 end
+
+function rss.init() -- Called during bot init, because we need the net.name
+    for _, f in ipairs(rss.feeds[net.name:lower()]) do
+        f.updated = 0
+    end
+    rss.dir = logdir .."/".. net.name .."/.rss"
+    check_create_dir(rss.dir)
+    rss.read_times()
+end
+
+-- Check for the needed fetching helper
+do
+    local fetch_helper = rss.fetch_cmd:match("^(%S+)")
+    if io.popen("which " .. fetch_helper):read("*a") == "" then
+        log(fetch_helper .. " not found", "error")
+    end
+    if net and rss.read_times then rss.init() end
+end
+

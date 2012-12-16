@@ -19,6 +19,7 @@ bot.commands = {
     unload  = { "unload", "remove" },
     reload  = { "reload" },
     rss     = { ".*latest%s+%S-%s-from%s+(%S+)", "read%s+(%S+)", },
+    list_feeds = { "list.*feeds" },
     db      = { "db", "database"  },
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out", "go%s+away" },

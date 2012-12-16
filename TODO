@@ -10,9 +10,9 @@ Todo atm:
     [/] Make test suite for config validation, and call at startup/config load
         Pretty much done; needs testing
     
-    [/] Commands to list RSS feeds and read last entry in a feed
-        Second part done; needs listing
+    [x] Commands to list RSS feeds and read last entry in a feed
     
+    [ ] Move command definitions to the relevant files for true modularity
     [ ] Split config.lua into config.lua and networks.lua
     [ ] Todo list functionality in IDB
 
@@ -72,7 +72,6 @@ Command ideas:
     Bit.ly/etc      Link shortening and title resolution
 
 Wishlist:
-    Provide documentation of what the hell the bloody commands actually do
     D&D functions and database?
     AI :D
 

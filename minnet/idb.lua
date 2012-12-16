@@ -356,14 +356,14 @@ function karma.reset(item, chan)    -- Just pretty, syntactical sugar
     log("Reset karma for '".. item .."' in ".. chan, "trivial")
 end
 function karma.checktime(chan, nick)
-    if karma.times[chan] and karma.times[chan][u.nick]
-      and os.difftime(os.time(), karma.times[chan][u.nick]) < 60 then
+    if karma.times[chan] and karma.times[chan][nick]
+      and os.difftime(os.time(), karma.times[chan][nick]) < 60 then
         -- Nick has modified a karma within the last minute; ignore
         return nil
     else
         -- Update time and allow karma mod
         if not karma.times[chan] then karma.times[chan] = {} end
-        karma.times[chan][u.nick] = os.time()
+        karma.times[chan][nick] = os.time()
         return true
     end
 end

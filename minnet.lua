@@ -2,7 +2,7 @@
 -- minnet.lua 0.7.8 - the unuseful lua irc bot
 -- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
 --
--- This file is part of Minnet
+-- This file is part of Minnet.
 --
 -- Minnet is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
