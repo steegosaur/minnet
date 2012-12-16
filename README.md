@@ -3,6 +3,8 @@
 This should hold some information about the project, what it can do and how to 
 make it do so.
 
+Last edit: 2012-09-03
+
 
 # CONTENTS
 
@@ -103,8 +105,8 @@ where you will also find lua-irc and lua-feedparser.
 Minnet comes with a sample configuration file, located at 
 `minnet/config.lua.sample` - this must be edited before using. It should hold 
 all relevant information about servers and more. It also allows for tweaking 
-and modifying of some aspects of Minnet's behaviour, such as output messages 
-and user access levels.
+and modifying of some aspects of Minnet's behaviour, such as loaded modules,
+output messages and user access levels.
 
 For RSS feeds, the configuration is located at the top of `minnet/rss.lua`, 
 with examples ready to be replaced with your own feeds.
@@ -180,5 +182,7 @@ date.
  karma_*        | Up/down karma of stuff | "!<item>++", "!<item>--", "!<item>?"
  be             | CTCP ACTION            | "be"
  twentytwo_seven| How long since #Utøya? | ".* utøya", ".* oslo", "2011-07-22"
+ sdb_reg        | Record studying        | "i studied", "record"
+ sdb_selfstats  | Own studying stats     | "what are my <subject> stats?"
 ----------------|------------------------|-------------------------------------
 ```

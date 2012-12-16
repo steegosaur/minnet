@@ -1,7 +1,6 @@
 TODO file for Minnet
 
 Todo atm:
-    [x] IDB karma function
     [/] NickServ integration: identify to services if present and configured
         Drafted, needs testing
             TODO: Handle replies from NickServ et al. (avoid looping output)
@@ -41,7 +40,7 @@ General stuff:
 
 
 Command ideas:
-    [ ] Watch dog for admin (notify on channel joins, etc.)
+    [ ] Watchdog for admin (notify on channel joins, etc.)
 
     New purpose: NickServ replacement on own network.
         Ideas:
