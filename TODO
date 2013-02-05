@@ -1,6 +1,8 @@
 TODO file for Minnet
 
 Todo atm:
+    [ ] Check support for Lua 5.2
+
     [/] NickServ integration: identify to services if present and configured
         Drafted, needs testing
             TODO: Handle replies from NickServ et al. (avoid looping output)
@@ -11,7 +13,7 @@ Todo atm:
     
     [x] Commands to list RSS feeds and read last entry in a feed
     
-    [ ] Move command definitions to the relevant files for true modularity
+    [/] Move command definitions to the relevant files for true modularity
     [ ] Split config.lua into config.lua and networks.lua
     [ ] Todo list functionality in IDB
 

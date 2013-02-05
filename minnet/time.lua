@@ -246,4 +246,157 @@ function time.get_date(text)
     else result = nil end
     return result
 end
+
+-- Command plugins
+bot.commands.time = {
+    "what'?%s-i?s%s+.*%s+time", "what'?%s-i?s%s+.*%s+clock", "time",
+    "what%stime'?%s-i?s'?%s-it" }
+bot.commands.uptime = { "how%s+long", "for%s+how%s+long", "what'?s?%s+.*uptime.*", "uptime" }
+bot.commands.timezones = {
+    "what.*timezones", "list.*timezones", "timezone%s+list", "how.*timezones",
+    "which.*timezones" }
+bot.commands.twentytwo_seven = {
+    ".*%sut[øoe]+ya", ".*%soslo", "[howhen]+.*22/7", ".*2011%-07%-22",
+    ".*22nd%s+[of%s]*jul[yi]" }
+
+cmdlist.time = {
+    help = "Want to know what the time is?",
+    func = function(u, chan, m)
+        local response = "%s: The time is currently %.2d:%.2d:%.2d %s, " ..
+            "%s %.4d-%.2d-%.2d."
+        local now, tz = time.get_current(m)
+        if tz == "unknown" then
+            send(chan, u.nick .. ": Sorry, I don't know that timezone.")
+            return nil
+        elseif not now then
+            return nil
+        end
+        send(chan, response:format(u.nick, now.hour, now.min, now.sec, tz,
+            time.wdays.short[now.wday], now.year, now.month, now.day))
+    end
+}
+cmdlist.timezones = {
+    help = "Want a list of the timezones I know?",
+    func = function(u, chan, m)
+        local tzs = time.timezones
+        table.sort(tzs)
+        local list, i = {}, 1
+        for zone in pairs(tzs) do
+            if not list[1] then
+                list[1] = u.nick .. ": The timezones I know are:"
+                i = i + 1
+            end
+            if not list[i] then
+                list[i] = zone
+            elseif list[i] and string.len(list[i] .." ".. zone) < 81 then
+                list[i] = list[i] .. " " .. zone
+            elseif list[i] and string.len(list[i] .." ".. zone) > 80 then
+                i = i + 1
+                list[i] = zone
+            end
+        end
+        log("Outputting timezone list to " .. chan, u, "debug")
+        for i, line in ipairs(list) do
+            send(chan, line)
+        end
+    end
+}
+cmdlist.twentytwo_seven = {
+    help = "The worst tragedy in Norwegian history - how long has it been?",
+    func = function(u, chan, m)
+        local when = {
+            -- Times have been converted to UTC (local time was +2h)
+            year  = 2011,
+            month = 7,
+            day   = 22,
+            oslo  = { hour = 13, min = 26 },
+            utoya = { hour = 15, min = 15 }
+        }
+        m = m:lower()
+        local now = os.time(time.get_current(" UTC"))
+        local incident, incident_time, inc_var
+        if m:match("ut[oøe]+ya") then
+            incident, inc_var = "Utøya", "utoya"
+        elseif ( m:match("oslo") or m:match("norway")) and m:match("bomb") then
+            incident, inc_var = "Oslo",  "oslo"
+        end
+        if incident then
+            incident_time = os.time({ year = when.year, month = when.month,
+                day = when.day, hour = when[inc_var].hour,
+                min = when[inc_var].min })
+            local diff = os.difftime(now, incident_time)
+            local weeks, days, hours, mins = time.calculate(diff)
+            local re_pattern = "%s: It has been %s%s%s%s since the %s " ..
+                "attack, which occured at %.4d-%.2d-%.2d, %.2d:%.2d UTC."
+            local response = re_pattern:format(u.nick, weeks, days, hours,
+                mins, incident, when.year, when.month, when.day,
+                when[inc_var].hour, when[inc_var].min)
+            send(chan, response)
+        else
+            send(chan, u.nick .. ": Pardon, what did you say?")
+        end
+    end
+}
+cmdlist.uptime = {
+    help = "Report uptime of server or connection.",
+    func = function(u, chan, m)
+        m = m:lower()
+        if
+         (
+          (
+           m:match("online") or m:match("%s+up[%s%p]+") or
+           m:match("uptime") or m:match("connected") or m:match("running")
+          ) and
+          (
+           m:match("you") or m:match("ya%s") or m:match("yer%s")
+          ) and not
+          ( m:match("system") or m:match("computer") or m:match("server") )
+         )
+        then
+            local diff = os.difftime(os.time(), bot.start)
+            local weeks, days, hours, mins = time.calculate(diff)
+            if weeks == "" and days == "" and hours == "" and mins == "" then
+                send(chan, u.nick .. ": I just got online!")
+            else
+                send(chan, u.nick .. ": I've been online for " ..
+                    weeks .. days .. hours .. mins .. ".")
+            end
+        elseif
+         (
+          (
+           m:match("%s+up[%s%p]+") or m:match("uptime") or m:match("online") or m:match("running")
+          ) and
+          (
+           m:match("system") or m:match("server") or m:match("computer") or
+           m:match("host")
+          )
+         )
+        then
+            local r = { "system", "server", "computer" }
+            local sysword = r[math.random(1, #r)]
+            -- Read standard GNU/Linux uptime file
+            -- TODO: Make this cross-platform by implementing Windows alternative too?
+            local uptime_file = io.open("/proc/uptime")
+            if not uptime_file then
+                log("/proc/uptime unavailable, skipping uptime reporting", "trivial")
+                send(chan, "Sorry, but I couldn't find the uptime.")
+                return nil
+            end
+            local utime = uptime_file:read()
+            uptime_file:close()
+            utime = tonumber(utime:match("^(%d+)%.%d%d%s+"))
+            local weeks, days, hours, mins = time.calculate(utime)
+            if weeks == "" and days == "" and hours == "" and mins == "" then
+                send(chan, u.nick .. ": It was just booted!")
+            else
+                send(chan, u.nick .. ": The " .. sysword .. " went up " ..
+                    weeks .. days .. hours .. mins .. " ago.")
+            end
+        else
+            send(chan, "Err, what?")
+            log("Could not recognise enough keywords for uptime command, ignoring", "trivial")
+        end
+    end
+}
+
 -- EOF

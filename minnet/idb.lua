@@ -377,3 +377,238 @@ function karma.cleantimes()
         end
     end
 end
+
+-- Karma command plugins
+bot.commands.karma_up   = { "(%S+)%+%+$", "up%s+karma%s+of%s+(%S+)"     }
+bot.commands.karma_down = { "(%S+)%-%-$", "lower%s+karma%s+of%s+(%S+)"  }
+bot.commands.karma_get  = {
+    "what'?%s-i?s%s+([^%s']+)'s%s+karma", "show%s+([^%s']+)'s%s+karma",
+    "what'?%s-i?s%s+the%s+karma%s+of%s+(%S+)" }
+bot.commands.karma_reset = {
+    "reset%s+t?h?e?%s-karma%s+of%s+(%S+)", "reset%s+([^%s']+)'s%s+karma",
+    "reset%s+karma%s+f?o?r?%s-(%S+)" }
+bot.commands.karma_del   = {
+    "delete%s+karma%s+of%s+(%S+)", "delete%s+([^%s']+)'s%s+karma" }
+
+cmdlist.karma_up = {
+    help = "Say, what do you like anyway?",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, u.nick .. ": Say what?")
+            return nil
+        end
+        -- This is just for avoiding spamming: 1min quarantine pr. nick
+        if not karma.checktime(chan, u.nick) then return nil end
+        local k = karma.mod(subject, chan, 1)
+        send(chan, "Total karma is now ".. k ..". Weirdos.")
+    end
+}
+cmdlist.karma_down = {
+    help = "So tell me, what don't you like?",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, u.nick .. ": Say what?")
+            return nil
+        end
+        if not karma.checktime(chan, u.nick) then return nil end
+        local k = karma.mod(subject, chan, -1)
+        send(chan, "Sure. Total karma is ".. k ..", though.")
+    end
+}
+cmdlist.karma_get = {
+    help = "What do the others think of it, you say?",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, u.nick .. ": Say what?")
+            return nil
+        end
+        local k = karma.get(subject, chan)
+        if not k then
+            send(chan, u.nick .. ": That has no karma yet.")
+            return
+        end
+        local reply = "%s: Karma for %s is %d."
+        send(chan, reply:format(u.nick, subject, k))
+    end
+}
+cmdlist.karma_reset = {
+    help = "Reset an item's karma value.",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, u.nick .. ": You what?")
+            return nil
+        end
+        if db.check_auth(u, "oper") then
+            karma.reset(item, chan)
+            send(chan, u.nick ..": Fix'd.")
+        else
+            send(chan, "No cheating!")
+        end
+    end
+}
+cmdlist.karma_del = {
+    help = "Delete an item from the karma database.",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, "Uh?")
+            return nil
+        end
+        if db.check_auth(u, "oper") then
+            local cake = karma.del(subject, chan)
+            if not cake then
+                send(chan, u.nick ..": There is no such item to delete.")
+            else
+                send(chan, u.nick ..": Sure.")
+            end
+        else
+            send(chan, "Sorry, no cheating.")
+        end
+    end
+}
+cmdlist.karma_get = {
+    help = "What do the others think of it, you say?",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, u.nick .. ": Say what?")
+            return nil
+        end
+        local k = karma.get(subject, chan)
+        if not k then
+            send(chan, u.nick .. ": That has no karma yet.")
+            return
+        end
+        local reply = "%s: Karma for %s is %d."
+        send(chan, reply:format(u.nick, subject, k))
+    end
+}
+cmdlist.karma_reset = {
+    help = "Reset an item's karma value.",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, u.nick .. ": You what?")
+            return nil
+        end
+        if db.check_auth(u, "oper") then
+            karma.reset(item, chan)
+            send(chan, u.nick ..": Fix'd.")
+        else
+            send(chan, "No cheating!")
+        end
+    end
+}
+cmdlist.karma_del = {
+    help = "Delete an item from the karma database.",
+    func = function(u, chan, m, catch)
+        local subject = m:match(catch):lower()
+        if not subject then
+            send(chan, "Uh?")
+            return nil
+        end
+        if db.check_auth(u, "oper") then
+            local cake = karma.del(subject, chan)
+            if not cake then
+                send(chan, u.nick ..": There is no such item to delete.")
+            else
+                send(chan, u.nick ..": Sure.")
+            end
+        else
+            send(chan, "Sorry, no cheating.")
+        end
+    end
+}
+
+-- General IDB command plugins
+bot.commands.idb_get = {
+    "what%'?%s-i?s%s+(my)%s+(.-)[%.,%?!]", "get%s+(%S+)%'?s?%s+(.-)[%.%?,!]",
+    "what%'?%s-i?s%s+([^%s%']+)%'s%s+(.-)%p-$",
+    "tell%s+me%s.*(%S+)%'s%s-i?s?%s+(.-)[%.%?,!]",
+    "tell%s+me%s.*%s(my)%s-i?s?%s+(.-)[%.%?,!]",
+    "give%s+me%s+.*(%S+)%'s%s+i?s?%s-(.-)[%.%?,!]" }
+bot.commands.idb_set = {
+    "set%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$", "my%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$" }
+
+cmdlist.idb_set = {
+    help = "Set user information.",
+    func = function(u, chan, m, catch)
+        local field, value = m:match(catch)
+        log("idb_set triggered: field == " .. tostring(field) ..
+            "; value == " .. tostring(value) .. "; catch == " .. catch,
+            u, "internal")
+        if not field then
+            send(chan, "Sorry, I didn't get that.. what was it again?")
+            return nil
+        elseif not value then
+            send(chan, "What did you say your " .. field .. " was?")
+            return nil
+        end
+        field, value = field:gsub("%s+$", ""), value:gsub("%s+$", "")
+        idb.set_data(u, chan, u.nick, field, value)
+    end
+}
+cmdlist.idb_get = {
+    help = "Want to know something about someone?",
+    func = function(u, chan, m, catch)
+        local selfcheck
+        local nick, field = m:match(catch)
+        field = field:gsub("%s+$", "")
+        local logmsg = "idb_get triggered: nick == %s; field == %s; catch == %s"
+        log(logmsg:format(tostring(nick), tostring(field), catch), u, "internal")
+        if not nick then
+            send(chan, "Huh? Who did you say?")
+            return nil
+        elseif not field then
+            send(chan, "Uhm, say what?")
+            return nil
+        end
+        if nick == "my" then selfcheck = true end
+        idb.get_data(u, chan, nick, field, selfcheck)
+    end
+}
+
+-- Todo list command plugins
+--[[ Not implemented
+bot.commands.remember ={
+    "remind%s+me%s+to%s+([^,%.!%?]+)", "remind%s+me%s+that%s+([^,%.!%?]+)",
+    "remember%s+that%s+([^,%.!%?]+)",  "todo%s+add:?%s+(.+)$",
+    "add%s+todo:?%s+(.-)%p?$",         "todo%s+new:?%s+(.-)%p$",
+    "add%s+(.+)%s+to%s+my%s+todo" }
+bot.commands.remind = {
+    "what.+%smy%s+todo.*(%d*)", "remind%s+me.*(%d*)", "todo%s+(%d*)",
+    "read%s.*todo%s*(%d*)",     "todo%s+get%s-(%d*)", "todo%s+read%s-(%d*)" }
+bot.commands.forget = {
+    "delete%s.-todo.-(%d+)", "forget%s.-(%d+)", "todo%s+delete%s.-(%d+)",
+    "todo%s+forget%s.-(%d+)" }
+
+cmdlist.remember = {
+    help = "Got anything you want me to remember?",
+    func = function(u, chan, m, catch)
+        local note = m:match(catch)
+        log("remember triggered: catch == " .. catch, u, "internal")
+        if not note then
+            send(chan, "Eh, say what?")
+            return nil
+        end
+        idb.set_todo(u, chan, note)
+    end
+}
+cmdlist.remind = {
+    help = "So you forgot, eh?",
+    func = function(u, chan, m, catch)
+        local item = m:match(catch)
+        log("remind triggered: catch == " .. catch, u, "internal")
+        if not item then
+            send(chan, "I don't think you told me about that.")
+            return nil
+        end
+        idb.get_todo(u, chan, item)
+    end
+}
+--]]
+-- EOF

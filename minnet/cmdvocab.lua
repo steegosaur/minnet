@@ -18,76 +18,21 @@ bot.commands = {
     load    = { "load", "reload%s.*hook" },
     unload  = { "unload", "remove" },
     reload  = { "reload" },
-    rss     = { ".*latest%s+%S-%s-from%s+(%S+)", "read%s+(%S+)", },
-    list_feeds = { "list.*feeds" },
-    db      = { "db", "database"  },
     join    = { "join", "go%s+to" },
     part    = { "part", "get%s+out", "go%s+away" },
     ignore  = { "ignore", "disregard" },
     unignore= { "unignore", "listen%s+to" },
     lignore = { "list%s.*ignore", "who'?[sre]-%s.*ignore" },
-    karma_up = { "(%S+)%+%+$", "up%s+karma%s+of%s+(%S+)"  },
-    karma_down = { "(%S+)%-%-$", "lower%s+karma%s+of%s+(%S+)" },
-    karma_get  = {
-        "what'?%s-i?s%s+([^%s']+)'s%s+karma", "show%s+([^%s']+)'s%s+karma",
-        "what'?%s-i?s%s+the%s+karma%s+of%s+(%S+)",
-    },
-    karma_reset = {
-        "reset%s+t?h?e?%s-karma%s+of%s+(%S+)", "reset%s+([^%s']+)'s%s+karma",
-        "reset%s+karma%s+f?o?r?%s-(%S+)",
-    },
-    karma_del = {
-        "delete%s+karma%s+of%s+(%S+)", "delete%s+([^%s']+)'s%s+karma",
-    },
-    --[[ These aren't implemented yet
-    remember= {
-        "remind%s+me%s+to%s+([^,%.!%?]+)", "remind%s+me%s+that%s+([^,%.!%?]+)",
-        "remember%s+that%s+([^,%.!%?]+)", "todo%s+add:?%s+(.+)$",
-        "add%s+todo:?%s+(.-)%p?$", "todo%s+new:?%s+(.-)%p$",
-        "add%s+(.+)%s+to%s+my%s+todo"
-    },
-    remind  = {
-        "what.+%smy%s+todo.*(%d*)", "remind%s+me.*(%d*)", "todo%s+(%d*)",
-        "todo%s+read%s-(%d*)", "todo%s+get%s-(%d*)", "read%s.*todo%s*(%d*)"
-    },
-    forget  = {
-        "delete%s.-todo.-(%d+)", "forget%s.-(%d+)", "todo%s+delete%s.-(%d+)",
-        "todo%s+forget%s.-(%d+)"
-    }, --]]
-    identify= { "identify", "i'?%s-a?m" },
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
     topic   = { "set%s+.*topic%s+[to:]%s+(.+)$", "[new]-%s-topic:?%s+(.+)$" },
     enfunc  = { "enable.*function", "enable.*command" },
     disfunc = { "disable.*function", "disable.*command" },
-    -- The IDB catches are special: the () catches aid in extracting info
-    idb_set = {
-        "set%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$",
-        "my%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$"
-    },
-    idb_get = {
-        -- Reverse syntax disabled at the moment; not implemented yet
-        --"get%s+t?h?e?%s-(.-)%s+of%s+(%S+)",
-        --"what%'?%s-i?s%s+t?h?e?%s+(.-)%s+of%s+(%S+)",
-        "what%'?%s-i?s%s+([^%s%']+)%'s%s+(.-)%p-$",
-        "what%'?%s-i?s%s+(my)%s+(.-)[%.,%?!]",
-        "get%s+(%S+)%'?s?%s+(.-)[%.%?,!]",
-        "tell%s+me%s.*(%S+)%'s%s-i?s?%s+(.-)[%.%?,!]",
-        "tell%s+me%s.*%s(my)%s-i?s?%s+(.-)[%.%?,!]",
-        "give%s+me%s+.*(%S+)%'s%s+i?s?%s-(.-)[%.%?,!]",
-    },
     belong  = { "belong.*%sme", ".*%sme%s.*%sown%s+you", ".*%si%s.*own%s+you" },
     owner   = {
         "who.*'?i?s%s+y[aoue]+r.*%s+owner", "who.*%sowns?%s+y[aoue]+",
         "be%s+mine", "be%s+my"
-    },
-    uptime  = {
-        "how%s+long", "for%s+how%s+long", "what'?s?%s+.*uptime.*", "uptime"
-    },
-    time    = {
-        "what'?%s-i?s%s+.*%s+time", "what'?%s-i?s%s+.*%s+clock",
-        "what%stime'?%s-i?s'?%s-it", "time"
     },
     disable = {
         "shut%s-up", "shaddap", "keep%s+quiet", "be%s+quiet", "stay%s+quiet",
@@ -102,14 +47,6 @@ bot.commands = {
     reidentify = {
         "talk%s+[towih]+%s+nickserv", "go%s+identify", "nickserv",
         "re%-?identify"
-    },
-    timezones = {
-        "what.*timezones", "list.*timezones", "timezone%s+list",
-        "how.*timezones", "which.*timezones"
-    },
-    twentytwo_seven = {
-        ".*%sut[øoe]+ya", ".*%soslo", "[howhen]+.*22/7", ".*2011%-07%-22",
-        ".*22nd%s+[of%s]*jul[yi]"
     },
     greet  = {  -- FIXME: This is a very suboptimal solution;
                 --+ These patterns are now duplicated in cmdvocab and cmdarray

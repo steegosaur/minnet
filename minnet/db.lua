@@ -4,7 +4,8 @@
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
-require("lsqlite3")
+local sqlite3 = require("lsqlite3")
+
 db = { file = "users.minnet.db" }
 udb = sqlite3.open(db.file)     -- The user auth database
 
@@ -235,7 +236,7 @@ function db.show_user(u, name)
     send(u.nick, "Nick:            " .. user.nick)
     send(u.nick, "Current nick:    " .. user.cur_nick)
     send(u.nick, "Access level:    " .. user.level)
-    socket.sleep(0.7)
+    socket.sleep(1)
     send(u.nick, "Hostmask:        " .. user.host)
     send(u.nick, "Email address:   " .. user.email)
     send(u.nick, "Password hash:   " .. user.passhash)
@@ -289,14 +290,13 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
             log("No email specified for user " .. nick, "trivial")
             email = ""
         end
-        if nick:match("%%")  then nick  = nick:gsub("%%", "")   end
+        if nick:match("%%")  then nick  = nick:gsub("%%",  "")  end
         if level:match("%%") then level = level:gsub("%%", "")  end
-        if host:match("%%")  then host  = host:gsub("%%", "")   end
+        if host:match("%%")  then host  = host:gsub("%%",  "")  end
         if email and email:match("%%") then email = email:gsub("%%", "") end
         if email and not email:match("[^!%?,]+@%S+%.%S+") then
             send("That's not a valid email address.")
-            log("Attempted to " .. mode .. " user with invalid email",
-                u, "trivial")
+            log("Attempted to ".. mode .." user with invalid email", u, "trivial")
             return nil
         end
 
@@ -304,7 +304,7 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
         local cur_nick = nick
 
         if mode == "add" then
-            if ( not host ) or host == "" then
+            if ( not host )     or host     == "" then
                 forgot(u, "host")
                 return nil
             end
@@ -312,7 +312,7 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
                 forgot(u, "password")
                 return nil
             end
-            if ( not level ) or level == "" then
+            if ( not level )    or level    == "" then
                 forgot(u, "level")
                 return nil
             end
@@ -346,22 +346,22 @@ function db.set_data(u, mode, nick, level, host, passhash, email, otkcheck)
             if ( not passhash ) or passhash == "" then
                 passhash = db.get_user(nick).passhash
             end
-            if ( not host ) or host == "" then
+            if ( not host )     or host     == "" then
                 host = db.get_user(nick).host
             end
-            if ( not level ) or level == "" then
+            if ( not level )    or level    == "" then
                 level = db.get_user(nick).level
             end
-            local mod_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET nick=$nick, level=$level, host=$host, passhash=$pass, email=$email WHERE nick = $nick")
+            local mod_stmt = udb:prepare("UPDATE ".. net.name:lower() .." SET nick=$nick, level=$level, host=$host, passhash=$pass, email=$email WHERE nick = $nick")
             mod_stmt:bind_names({ nick = nick, level = level, host = host,
                 pass = passhash, email = email })
 
             if mod_stmt:step() ~= sqlite3.DONE then
-                db.error(u, "Could not insert user info: " .. udb:errcode() .. " - " .. udb:errmsg())
+                db.error(u, "Could not insert user info: ".. udb:errcode() .." - ".. udb:errmsg())
             else
                 log("Modified fields nick, level, host, passhash, email (" ..
-                    nick .. ", " .. level .. ", " .. host .. ", " .. passhash ..
-                    ", " .. email .. ") for user " .. nick .. " on net " .. net.name, u, "info")
+                    nick ..", ".. level ..", ".. host ..", ".. passhash ..", "..
+                    email ..") for user ".. nick .." on net ".. net.name, u, "info")
                 send(u.nick, "Got it.")
             end
             mod_stmt:reset()
@@ -381,12 +381,10 @@ function db.upd_user(u, cur_nick, nick, host)
         upd_stmt:bind_names({ cur_nick = cur_nick, host = host, nick = nick })
 
         if upd_stmt:step() ~= sqlite3.DONE then
-            db.error(u, "Could not update user info: " .. udb:errcode() ..
-                " - " .. udb:errmsg())
+            db.error(u, "Could not update user info: ".. udb:errcode() .." - ".. udb:errmsg())
         else
             log("Updated user with fields nick, cur_nick, host (" .. nick ..
-                ", " .. cur_nick .. ", " .. host .. ") on net " .. net.name,
-                u, "info")
+                ", ".. cur_nick ..", ".. host ..") on net ".. net.name, u, "info")
             send(u.nick, "Right, sorry about that. I'll try to remember next time.")
         end
         upd_stmt:reset()
@@ -405,13 +403,13 @@ function db.set_user(u, mode, val)
         if not val then
             send(u.nick, "You forgot telling me your email address.")
         else
-            local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET email=$email WHERE cur_nick=$nick")
+            local upd_stmt = udb:prepare("UPDATE ".. net.name:lower() .." SET email=$email WHERE cur_nick=$nick")
             upd_stmt:bind_names({ email = val, nick = u.nick })
 
             if upd_stmt:step() ~= sqlite3.DONE then
-                db.error(u, "Could not update user data: " .. udb:errcode() .. " - " .. udb:errmsg())
+                db.error(u, "Could not update user data: ".. udb:errcode() .." - ".. udb:errmsg())
             else
-                log("Updated user " .. u.nick .. " on net " .. net.name .. " with new email " .. val, u, "info")
+                log("Updated user ".. u.nick .." on net ".. net.name .." with new email ".. val, u, "info")
                 send(u.nick, "Got it.")
             end
             upd_stmt:reset()
@@ -422,12 +420,12 @@ function db.set_user(u, mode, val)
         else
             local val = passgen(val)
             -- Could this be abused? cf. cur_nick - someone could steal a nick..? TODO: Add host for security.
-            local upd_stmt = udb:prepare("UPDATE " .. net.name:lower() .. " SET passhash=$pass WHERE cur_nick=$nick")
+            local upd_stmt = udb:prepare("UPDATE ".. net.name:lower() .." SET passhash=$pass WHERE cur_nick=$nick")
             upd_stmt:bind_names({ pass = val, nick = u.nick })
             if upd_stmt:step() ~= sqlite3.DONE then
-                db.error(u, "Could not update user data: " .. udb:errcode() .. " - " .. udb:errmsg())
+                db.error(u, "Could not update user data: ".. udb:errcode() .." - ".. udb:errmsg())
             else
-                log("Updated user " .. u.nick .. " on net " .. net.name .. " with new password.", u, "info")
+                log("Updated user ".. u.nick .." on net ".. net.name .." with new password.", u, "info")
                 send(u.nick, "Got it.")
             end
             upd_stmt:reset()
@@ -436,5 +434,132 @@ function db.set_user(u, mode, val)
         send(u.nick, "Uhm, sorry - I can either set your password or your email. Which did you want to change?")
     end
 end
+
+-- Command plugins
+bot.commands.db       = { "database", "db" }
+bot.commands.identify = { "identify", "i'?%s-a?m" }
+
+cmdlist.identify = {
+    help = "Identify yourself to validate your access level.",
+    func = function(u, chan, m, catch)
+    -- Syntax: identify nick password
+        local args = m:lower()
+        args = args:match(catch .. "%s+(.*)") or ""
+        -- Get rid of human-input nonsense (might invalidate certain nicks)
+        args = args:gsub("^me%p?%s+",   "")
+        if     args:match("^for%s+%S+") then
+            args = args:gsub("^for%s+", "")
+        elseif args:match("^as%s+%S+")  then
+            args = args:gsub("^as%s+",  "")
+        end
+        args = args:gsub("^the%s+",  "")
+        args = args:gsub("^user%s+", "")
+        if     args:match("^called%p?%s+%S+") then
+            args = args:gsub("^called%p?%s+", "")
+        elseif args:match("^named%p?%s+%S+")  then
+            args = args:gsub("^named%p?%s+",  "")
+        end
+        local name = args:match("^(".. nick_patt ..")") -- Capture the name
+        if not name then
+            send(u.nick, "You forgot telling me your name.")
+            return nil
+        end
+        args = args:gsub("^".. name:gsub("(%p)", "%%%1") .."%p?%s*", "")
+        if args:match("^with%s+%S+") then
+            args = args:gsub("with%s+",  "")
+        end
+        args = args:gsub("^the%s+",      "")
+        args = args:gsub("^password%s+", "")
+        args = args:gsub("^is%s+",       "")
+        local passwd = args:match("^(%S+)")
+        if not passwd then
+            send(u.nick, "You forgot the password.")
+            return nil
+        end
+        db.ident_user(u, name, passwd)
+    end
+}
+-- FIXME: Ugliest piece of code north of Quebec
+cmdlist.db = {
+    help = "Manage the database and carry out related operations; see " ..
+        "'db help' for more information.",
+    func = function(u, chan, m, catch)
+        if chan:match("^" .. cprefix) then
+            send(chan, "I can't let you do database operations in a " ..
+                "channel, sorry.")
+            return nil
+        end
+        local arg = m:match(catch .. "%s+(.*)") or ""
+        -- Catch what db operation we're doing:
+        local cmd = arg:match("^%s-(%S+)") or ""
+        -- Catch the arguments for the db operation:
+        local arg = arg:match("^" .. cmd .. "%s-(%S+.*)") or ""
+
+        if cmd == "mod" or cmd == "add" then
+            -- Just bloody fix this inefficiency please? FIXME: INEFFICIENT
+            -- (Possibly, try using catches and %n)
+            arg   = arg:gsub("^the%s+", "")
+            arg   = arg:gsub("^user%s+", "")
+            local nick  = arg:match("^(%S+)") or ""
+            nick  = nick:gsub("(%p)", "%%%1")
+            local level = arg:match("^" .. nick .. "%s+(%S+)") or ""
+            level = level:gsub("(%p)", "%%%1")
+            local host  = arg:match("^" .. nick .. "%s+" .. level ..
+                "%s+(%S+)") or ""
+            host  = host:gsub("(%p)", "%%%1")
+            local passhash = arg:match("^" .. nick .. "%s+" .. level ..
+                "%s+" .. host .. "%s+(%S+)") or ""
+            local email = arg:match("^" .. nick .. "%s+" .. level ..
+                "%s+" .. host .. "%s+" .. passhash .. "%s+(%S+)") or ""
+            email = email:gsub("(%p)", "%%%1")
+            local passhash  = passgen(passhash)
+            db.set_data(u, cmd, nick, level, host, passhash, email)
+        elseif cmd == "otk" then
+            local key = arg:match("(%d+)")
+            if key then
+                db.check_otk(u, key)
+            end
+        elseif cmd == "remove" or cmd == "delete" then
+            arg = arg:gsub("^%S+%s+", "")
+            arg = arg:gsub("^the%s+", "")
+            arg = arg:gsub("^user%s+", "")
+            local name = arg:match("^(%S+)")
+            if not name then
+                send(u.nick, "I'm sorry, I didn't seem to catch the " ..
+                    "username. Could you please say that again?")
+                return nil
+            end
+            db.rem_user(u, name)
+        elseif cmd == "get" then
+            arg = arg:gsub("user%s+", "")
+            arg = arg:gsub("info[rmation]-%s+", "")
+            arg = arg:gsub("on%s+", "")
+            arg = arg:gsub("about%s+", "")
+            local name = arg:match("(%S+)")
+            db.show_user(u, name)
+        elseif cmd == "set" then
+            arg = arg:gsub("^my%s+", "")
+            arg = arg:gsub("%s+to%s+", " ")
+            local mode, value = arg:match("^(%S+)%s+(%S+)")
+            db.set_user(u, mode, value)
+        --[[ Bugged:
+        elseif cmd == "flush" then
+            local isauth = db.flush(udb, u)
+            if isauth then db.flush(idb, u) end    -- Avoid double notauth --]]
+        elseif cmd == "help" then
+            send(chan, "Syntax: db (set|get|mod|add)")
+            send(chan, "Add and mod are admin-level, and take NICK, " ..
+                "LEVEL, HOST, PASSWORD and EMAIL, separated by spaces. " ..
+                "All but NICK and LEVEL are voluntary for mod.")
+            send(chan, "Get needs NICK, and shows the registered " ..
+                "information for that nick.")
+            send(chan, "Set needs MODE and VALUE. It allows you to set " ..
+                "your email and password.")
+        else
+            send(chan, "I don't know what you meant I should do with " ..
+                "the database. Maybe you need some help?")
+        end
+    end
+}
 
 -- EOF

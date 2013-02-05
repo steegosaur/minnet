@@ -16,15 +16,27 @@ rss = {
             out  = "%s",            -- Feed-specific output format
             patt = "^<p>(.-)</p>",  -- Feed-specific input parsing
             chan = { "#valo" },
-            freq = "30m",
+            freq = "180m",
             maxnew = 4, -- Same as above, but feed-specific
             },
             {
             name = "Minnet-git",
             url  = "https://github.com/staeld/minnet/commits/serv-dev.atom",
             chan = { "#valo" },
-            freq = "60m",
+            freq = "120m",
             maxnew = 3,
+            },
+            {
+            name = "RuuviTracker-git",
+            url  = "https://github.com/RuuviTracker/ruuvitracker_fw/commits/master.atom",
+            chan = { "#valo" },
+            freq = "120m",
+            },
+            {
+            name = "luaruuvi-git",
+            url  = "https://github.com/staeld/lua-ruuvi/commits/master.atom",
+            chan = { "#valo" },
+            freq = "30m",
             },
         },
     },
@@ -37,7 +49,35 @@ rss = {
 
 -- End configuration, begin functions libary
 
-fp = require("feedparser")
+local fp = require("feedparser")
+
+-- The command recognition plugin
+bot.commands.rss        = { ".*latest%s+%S-%s-from%s+(%S+)", "read%s+(%S+)" }
+bot.commands.list_feeds = { "list.*feeds" }
+
+cmdlist.rss = {
+    help = "Read the last entry from a newsfeed",
+    func = function(u, chan, m, catch)
+        local name = m:match(catch)
+        local has, alt = rss.has_feed(name)
+        if not has then
+            send(chan, "Sorry, I don't have that cached.")
+            return
+        end
+        name = alt or name  -- If we got an alternate, use it
+        rss.read_last(name)
+    end
+}
+cmdlist.list_feeds = {
+    help = "List all defined feeds for this network",
+    func = function(u, chan, m)
+        if db.check_auth(u, "oper") then
+            rss.list_feeds(chan)
+        else
+            send(chan, msg.notauth)
+        end
+    end
+}
 
 -- Main functions
 

@@ -19,15 +19,17 @@
 
 -- {{{ Init
 -- Libraries we depend on:
-require("irc")      -- Base irc lib
-require("socket")   -- Base socket networking lib
-require("lsqlite3") -- lsqlite3 for database
-require("crypto")   -- openssl for password protection
-require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
+irc     = require("irc")      -- Base irc lib
+socket  = require("socket")   -- Base socket networking lib
+sqlite3 = require("lsqlite3") -- lsqlite3 for database
+crypto  = require("crypto")   -- openssl for password protection
+lfs     = require("lfs")      -- luafilesystem for easier fs interaction (logs etc)
+
 -- Minnet's modules:
 require("minnet.config")
 require("minnet.funcs")
 require("minnet.logging")
+
 -- The modules defined in config:
 for i, mod in ipairs(bot.mods.load) do
     loadmod(mod)
