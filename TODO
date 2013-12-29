@@ -3,6 +3,7 @@ TODO file for Minnet
 Todo atm:
     [ ] Check support for Lua 5.2
 
+    [ ] Personal RSS tracker/reader (RSS via IRC)
     [/] NickServ integration: identify to services if present and configured
         Drafted, needs testing
             TODO: Handle replies from NickServ et al. (avoid looping output)

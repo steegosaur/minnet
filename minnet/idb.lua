@@ -393,7 +393,7 @@ bot.commands.karma_del   = {
 cmdlist.karma_up = {
     help = "Say, what do you like anyway?",
     func = function(u, chan, m, catch)
-        local subject = m:match(catch):lower()
+        local subject = m:lower():match(catch)
         if not subject then
             send(chan, u.nick .. ": Say what?")
             return nil
@@ -407,7 +407,7 @@ cmdlist.karma_up = {
 cmdlist.karma_down = {
     help = "So tell me, what don't you like?",
     func = function(u, chan, m, catch)
-        local subject = m:match(catch):lower()
+        local subject = m:lower():match(catch)
         if not subject then
             send(chan, u.nick .. ": Say what?")
             return nil
@@ -420,7 +420,7 @@ cmdlist.karma_down = {
 cmdlist.karma_get = {
     help = "What do the others think of it, you say?",
     func = function(u, chan, m, catch)
-        local subject = m:match(catch):lower()
+        local subject = m:lower():match(catch)
         if not subject then
             send(chan, u.nick .. ": Say what?")
             return nil
@@ -437,7 +437,7 @@ cmdlist.karma_get = {
 cmdlist.karma_reset = {
     help = "Reset an item's karma value.",
     func = function(u, chan, m, catch)
-        local subject = m:match(catch):lower()
+        local subject = m:lower():match(catch)
         if not subject then
             send(chan, u.nick .. ": You what?")
             return nil
@@ -453,7 +453,7 @@ cmdlist.karma_reset = {
 cmdlist.karma_del = {
     help = "Delete an item from the karma database.",
     func = function(u, chan, m, catch)
-        local subject = m:match(catch):lower()
+        local subject = m:lower():match(catch)
         if not subject then
             send(chan, "Uh?")
             return nil
@@ -473,7 +473,7 @@ cmdlist.karma_del = {
 cmdlist.karma_get = {
     help = "What do the others think of it, you say?",
     func = function(u, chan, m, catch)
-        local subject = m:match(catch):lower()
+        local subject = m:lower():match(catch)
         if not subject then
             send(chan, u.nick .. ": Say what?")
             return nil
@@ -526,13 +526,13 @@ cmdlist.karma_del = {
 
 -- General IDB command plugins
 bot.commands.idb_get = {
-    "what%'?%s-i?s%s+(my)%s+(.-)[%.,%?!]", "get%s+(%S+)%'?s?%s+(.-)[%.%?,!]",
-    "what%'?%s-i?s%s+([^%s%']+)%'s%s+(.-)%p-$",
-    "tell%s+me%s.*(%S+)%'s%s-i?s?%s+(.-)[%.%?,!]",
-    "tell%s+me%s.*%s(my)%s-i?s?%s+(.-)[%.%?,!]",
-    "give%s+me%s+.*(%S+)%'s%s+i?s?%s-(.-)[%.%?,!]" }
+    "[Ww]hat%'?%s-i?s%s+(my)%s+(.-)[%.,%?!]", "[Gg]et%s+(%S+)%'?s?%s+(.-)[%.%?,!]",
+    "[Ww]hat%'?%s-i?s%s+([^%s%']+)%'s%s+(.-)%p-$",
+    "[Tt]ell%s+me%s.*(%S+)%'s%s-i?s?%s+(.-)[%.%?,!]",
+    "[Tt]ell%s+me%s.*%s(my)%s-i?s?%s+(.-)[%.%?,!]",
+    "[Gg]ive%s+me%s+.*(%S+)%'s%s+i?s?%s-(.-)[%.%?,!]" }
 bot.commands.idb_set = {
-    "set%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$", "my%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$" }
+    "[Ss]et%s+my%s+([^%.,%?]+)to%s+(.-)[%.%?!]-$", "[Mm]y%s+([%w%s]+)%sis%s+(.-)[%.%?!]-$" }
 
 cmdlist.idb_set = {
     help = "Set user information.",

@@ -207,7 +207,7 @@ else
             rssCounter = rssCounter + 1
             if rssCounter > 100 then -- Only refresh every n-th cycle (roughly ½s)
                 rssCounter = 0
-                rss.update_feeds()
+                rss.update_public_feeds()
             end
         end
         conn:think()        -- The black magic stuff

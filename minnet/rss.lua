@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 -- rss.lua - rss-related functions for minnet
--- Copyright Stæld Lakorv, 2012 <staeld@illumine.ch>
+-- Copyright Stæld Lakorv, 2012-2013 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -45,6 +45,7 @@ rss = {
         wiki = { input = "^<p>(.-)</p>", out = "%s" },
         git  = { input = "", out = "" },
     },
+    dir = logdir .. "/_rss"
 }
 
 -- End configuration, begin functions libary
@@ -103,19 +104,33 @@ function rss.fetch_feed(url, name)
     end
 end
 
-function rss.update_feeds()
-    for i, f in ipairs(rss.feeds[net.name:lower()]) do
-        local length = rss.get_freq(f)
-        if ( not f.updated or os.difftime(os.time(), f.updated) >= length )
-          or not rss.has_feed(f.name) then
-            -- Either hasn't been updated, or was updated and should be again
-            log("Fetching feed " .. f.name, "debug")
-            rss.fetch_feed(f.url, f.name)
-            f.updated = os.time()           -- Update the timestamp
-            rss.save_times()
-            rss.read_new(f.name)            -- Check for new entries and report
-        else
-            log("Feed " .. f.name .. " not ripe; skipping..", "debug")
+function rss.update_feed(f)
+    local length = rss.get_freq(f)
+    if ( not f.updated or os.difftime(os.time(), f.updated) >= length )
+      or not rss.has_feed(f.name) then
+        -- Either hasn't been updated, or is due for updating again
+        log("Fetching feed " .. f.name, "debug")
+        rss.fetch_feed(f.url, f.name)
+        f.updated = os.time()   -- Update timestamp
+        rss.save_times()
+        rss.read_new(f)         -- Check for and report new entries
+    else
+        log("Feed " .. f.name .. " not due for update; skipping…", "debug")
+    end
+end
+function rss.update_public_feeds()
+    for _, f in ipairs(rss.feeds[net.name:lower()]) do
+        rss.update_feed(f)
+    end
+end
+function rss.update_private_feeds()
+    local feed_list = {}
+    for row in somedb:nrows("SELECT * FROM feeds;") do
+        table.insert(feed_list, row)
+    end
+    for _, feed in ipairs(feed_list) do
+        if feed.active == true then
+            rss.update_feed(feed)
         end
     end
 end
@@ -144,11 +159,17 @@ function rss.report(f, e, chan)
     end
 end
 
-function rss.read_new(name)
-    local path = rss.dir .. "/".. name
+function rss.read_new(feed)
+    local unique_name
+    if feed.isPrivate then
+        unique_name = feed.id .. "_" .. feed.name
+    else
+        unique_name = feed.name
+    end
+    local path = rss.dir .. "/" .. unique_name
     local file = io.open(path, "r")
     if not file then return false end
-    local f = rss.get_feed(name)
+    local f = rss.get_feed(unique_name)
     local xml = file:read("*a")
     local parsed = fp.parse(xml)
     if not parsed then
@@ -176,7 +197,7 @@ function rss.read_new(name)
                 end
                 break
             end
-            log("Entry " ..i.. " of feed " ..name.. " new; reporting", "trivial")
+            log("Entry ".. i .." of feed ".. name .." new; reporting", "trivial")
             rss.report(f, e, f.chan)
         end
     end
@@ -228,7 +249,7 @@ function rss.has_feed(nom)
 end
 function rss.get_feed(name) -- Takes feed name, returns feed's table
     for i, f in ipairs(rss.feeds[net.name:lower()]) do
-        if f.name == name then return f end
+        if f.name:lower() == name:lower() then return f end
     end
     log("No feed with name ".. name .."; providing substitute", "warn")
     return rss.feeds[net.name:lower()][1] -- Return first feed as fallback
