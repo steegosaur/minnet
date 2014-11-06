@@ -190,7 +190,7 @@ else
     log("Successfully connected to network, awaiting commands.", "info")
     log("", "info")
 
-    rss.init()        -- Ready the rss functionality
+    if rss then rss.init() end  -- Ready the rss functionality
     local randCounter = 0
     local rssCounter  = 0
     while true do
@@ -198,14 +198,14 @@ else
         randCounter = randCounter + 1
         if randCounter > 2400 then
             randCounter = 0
-            math.randomseed(os.time())
+            math.randomseed(os.time() + math.random())
             if karma then
                 karma.cleantimes()
             end
         end
         if rss and rss.feeds[net.name:lower()] then
             rssCounter = rssCounter + 1
-            if rssCounter > 100 then -- Only refresh every n-th cycle (roughly ½s)
+            if rssCounter > 200 then -- Only refresh every n-th cycle (roughly ½s)
                 rssCounter = 0
                 rss.update_public_feeds()
             end

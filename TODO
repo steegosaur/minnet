@@ -1,28 +1,25 @@
 TODO file for Minnet
 
 Todo atm:
-    [ ] Check support for Lua 5.2
+    [ ] Auto-leave empty channels
 
     [ ] Personal RSS tracker/reader (RSS via IRC)
-    [/] NickServ integration: identify to services if present and configured
-        Drafted, needs testing
-            TODO: Handle replies from NickServ et al. (avoid looping output)
-    [/] Command for (re-)identifying with NickServ
-        Move startup code into cmdarray and call from there upon startup
     [/] Make test suite for config validation, and call at startup/config load
         Pretty much done; needs testing
     
+    [x] NickServ integration: identify to services if present and configured
+    [x] Command for (re-)identifying with NickServ
     [x] Commands to list RSS feeds and read last entry in a feed
     
     [/] Move command definitions to the relevant files for true modularity
     [ ] Split config.lua into config.lua and networks.lua
-    [ ] Todo list functionality in IDB
+    [/] Todo list functionality in IDB
 
 
 General stuff:
     Self-status check (if isop())
-        Set topic (access: oper)
-        Flood protection - warn then kick (then ban?)
+        Set topic
+        Flood protection
 
     THINK: Is it better to let the config decide what fields can be set in the
         info database, or should people be allowed to set virtually any field?

@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 -- rss.lua - rss-related functions for minnet
--- Copyright Stæld Lakorv, 2012-2013 <staeld@illumine.ch>
+-- Copyright Stæld Lakorv, 2012-2014 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -11,32 +11,39 @@ rss = {
     feeds = {       -- Network names _must_ be lowercase
         illumine = {
             {
+            name = "Metadata",
+            url  = "http://rift.illumine.ch/meta/feed.atom",
+            chan = { "#valo" },
+            freq = "30m",
+            },
+            {
             name = "World-wiki",
             url  = "http://staeld.illumine.ch/wiki/index.php?title=Spesial:Siste_endringar&feed=atom",
             out  = "%s",            -- Feed-specific output format
             patt = "^<p>(.-)</p>",  -- Feed-specific input parsing
             chan = { "#valo" },
-            freq = "180m",
+            freq = "10m",
             maxnew = 4, -- Same as above, but feed-specific
             },
             {
             name = "Minnet-git",
             url  = "https://github.com/staeld/minnet/commits/serv-dev.atom",
             chan = { "#valo" },
-            freq = "120m",
+            freq = "240m",
             maxnew = 3,
             },
+            --[[
             {
             name = "RuuviTracker-git",
             url  = "https://github.com/RuuviTracker/ruuvitracker_fw/commits/master.atom",
             chan = { "#valo" },
             freq = "120m",
-            },
+            }, --]]
             {
             name = "luaruuvi-git",
             url  = "https://github.com/staeld/lua-ruuvi/commits/master.atom",
             chan = { "#valo" },
-            freq = "30m",
+            freq = "240m",
             },
         },
     },
@@ -147,7 +154,7 @@ function rss.report(f, e, chan)
     end
     message = message or ""     -- Fallback in case something went bork
     message = rss.strip_html(message)
-    local printout = rss.report_format:format(f.name, e.author, e.title, message, e.link)
+    local printout = rss.report_format:format(f.name, ( e.author or "system" ), e.title, message, e.link)
     if type(chan) == "table" then
         for _, c in ipairs(chan) do
             send(c, printout)
@@ -175,19 +182,19 @@ function rss.read_new(feed)
     if not parsed then
         xml = tostring(xml)
         if xml:len() > 10 then
-            xml = xml:sub(1, 10) .. "..."
+            xml = xml:sub(1, 10) .. "…"
         end
         log("No result from parsing xml ('" .. xml .. "')", "warn")
         return false
     end
-    if parsed.feed.updated_parsed < ( f.updated - rss.get_freq(f) ) then
+    if parsed.feed.updated_parsed and parsed.feed.updated_parsed < ( f.updated - rss.get_freq(f) ) then
         -- Not updated since last refresh -> nothing new
-        log("Nothing new to report from feed " .. name, "trivial")
+        log("Nothing new to report from feed " .. feed.name, "trivial")
         return
     end
     local newCount = 0
     for i, e in pairs(parsed.entries) do
-        if e.updated_parsed > ( f.updated - rss.get_freq(f) + 20 ) then -- 20s margin
+        if e.updated_parsed > ( f.updated - rss.get_freq(f) ) then
             -- Entry was published after last check; report
             newCount = newCount + 1
             if (f.maxnew and newCount > f.maxnew) or newCount > rss.maxnew then
@@ -197,7 +204,7 @@ function rss.read_new(feed)
                 end
                 break
             end
-            log("Entry ".. i .." of feed ".. name .." new; reporting", "trivial")
+            log("Entry ".. i .." of feed ".. f.name .." new; reporting", "trivial")
             rss.report(f, e, f.chan)
         end
     end
@@ -210,6 +217,7 @@ function rss.read_last(name)
     if not file then return false end
     local xml = file:read("*a")
     local parsed = fp.parse(xml)
+    if not parsed then log("No proper result from xml parsing", "warn") return false end
     local last = parsed.entries[1]
     rss.report(f, last, f.chan)
 end

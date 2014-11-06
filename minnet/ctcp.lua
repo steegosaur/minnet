@@ -98,4 +98,3 @@ function ctcp.read(l)
     --]]
     end
 end
-

@@ -13,7 +13,7 @@
 bot.commands = {
     say     = { "say"  },
     help    = { "help" },
-    set     = { "set%s+[^mwch]" },
+    set     = { "set%s+%w+%s+%w-%s-to%s+(.+)$", "set%s+the%s+%w+%s+%w-%s-to+%s+(.+)$" },
     areyou  = { "are%s+you%s+(.*)", "do", "does", "will" },
     load    = { "load", "reload%s.*hook" },
     unload  = { "unload", "remove" },
@@ -26,7 +26,7 @@ bot.commands = {
     reseed  = { "reseed", "reset%s+the%s+crypto.-seed" },
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
-    topic   = { "set%s+.*topic%s+[to:]%s+(.+)$", "[new]-%s-topic:?%s+(.+)$" },
+    topic   = { "[Nn]ew%s+topic:?%s+(.+)$", "[Tt]opic:?%s+(.+)$" },
     enfunc  = { "enable.*function", "enable.*command" },
     disfunc = { "disable.*function", "disable.*command" },
     belong  = { "belong.*%sme", ".*%sme%s.*%sown%s+you", ".*%si%s.*own%s+you" },

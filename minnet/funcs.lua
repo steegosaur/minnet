@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- funcs.lua - functions file for minnet
--- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
+-- Copyright Stæld Lakorv, 2010-2014 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -181,13 +181,23 @@ function sendRaw(str)
     conn:send(str)
 end
 
-function sendNotice(nick, str)
+function sendNotice(chan, str)
     -- Wrapper function for sending notices
     -- Mostly used for ctcp replies
     if type(chan) == "table" then
         if chan.nick then chan = chan.nick end
     end
-    sendRaw("NOTICE " .. nick .. " :" .. str)
+    conn:sendNotice(chan, str)
+end
+
+function get_topic(chan)
+    conn:topic(chan)
+    return topics[chan] or ""
+end
+function set_topic(chan, topic)
+    local str = "TOPIC %s :%s"
+    str = str:format(chan, topic)
+    sendRaw(str)
 end
 
 function check_user(nick) -- Whois function to check if a user exists
@@ -266,6 +276,9 @@ function wit(u, chan, m) -- Main hook function for reacting to commands
     -- Check if user is ignored
     if is_ignored(u, chan) then
         log("Ignoring user on channel " .. chan, u, "internal")
+        return nil
+    elseif net.services and u.nick:lower() == net.services.nickserv.servnick:lower() then
+        log("Received mumblemumble from NickServ", "trivial")
         return nil
     end
     -- Check if bot's name is mentioned in one of two recognised ways

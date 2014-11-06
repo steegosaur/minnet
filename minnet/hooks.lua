@@ -1,9 +1,17 @@
 #!/usr/bin/env lua
 -- hooks.lua - hook register for Minnet
--- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
+-- Copyright Stæld Lakorv, 2010-2014 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 hooks = {
+    {   -- Hook for storing and updating topics of joined channels
+        event   = "OnTopic",
+        name    = "topic",
+        action  = function(chan, topic)
+            log("Registered topic of channel " .. chan, "trivial")
+            topics[chan] = topic
+        end
+    },
     {   -- Hook for replying to "don't worry, be happy" lines
         event   = "OnChat",
         name    = "happy",

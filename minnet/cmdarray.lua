@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- cmdarray.lua - command file for minnet
--- Copyright Stæld Lakorv, 2010-2012 <staeld@illumine.ch>
+-- Copyright Stæld Lakorv, 2010-2014 <staeld@illumine.ch>
 -- This file is part of Minnet.
 -- Minnet is released under the GPLv3 - see ../COPYING
 
@@ -9,9 +9,38 @@
 --+ definition, thus enabling re-use of portions or wholes of the code.
 
 cmdlist = {
+    topic = {
+        help = "Have the topic more to your liking.",
+        func = function(u, chan, m, catch)
+            if not db.check_auth(u, "oper") then
+                send(u.nick, msg.notauth)
+                return nil
+            end
+            log("Setting new topic on " .. chan, u, "trivial")
+            local for_channel = m:lower():match("topic%s+(#%w+):?")
+            local new_topic = m:match(catch)
+            if for_channel then new_topic = new_topic:gsub(for_channel .. ":?", "", 1) end
+            set_topic(for_channel or chan, new_topic)
+        end
+    },
+    topic_edit = {
+        help = "Edit the current topic by means of Lua patterns.",
+        func = function(u, chan, m, catch)
+            if not db.check_auth(u, "oper") then
+                send(u.nick, msg.notauth)
+                return nil
+            end
+            log("Editing topic on " .. chan, u, "trivial")
+            local for_channel = m:lower():match("topic%s+(#%w+):?")
+            local pattern, newstring = m:match(catch)
+            local old_topic = get_topic(chan)
+            local new_topic = old_topic:gsub(pattern, newstring)
+            set_topic(chan, new_topic)
+        end
+    },
     -- reidentify: (re-)identify with nickserv (must be configured)
     reidentify = {
-        help = "Have me re-identify with that NickServ guy",
+        help = "Have me re-identify with that NickServ guy.",
         func = function(u, chan, m, _, startup)
             -- The extra 'startup' argument is for identifying with nickserv
             --+ at startup, so we don't disallow it
@@ -22,13 +51,14 @@ cmdlist = {
             -- First check that we even know of some NickServ on here
             if net.services and net.services.nickserv.enabled == true then
                 -- Check if NickServ exists and has correct hostmask
-                local q = conn:whois(net.services.nickserv.servnick)
+                local q = conn:whois(net.services.nickserv.servnick).userinfo
                 if q then
-                    if q.host and
-                      ( net.services.hostmask == "" or q.host == net.services.hostmask ) then
+                    local host = q[4]
+                    if host and
+                      ( net.services.hostmask == "" or host == net.services.hostmask ) then
                         send(net.services.nickserv.servnick,
                             "IDENTIFY " .. net.services.nickserv.passwd)
-                        log("Identified with NickServ", q, "info")
+                        log("Identified with NickServ", { nick = net.services.nickserv.servnick, host = host, username = "" }, "info")
                         if not startup then
                             send(chan, "Calm down, " .. u.nick .. ", I did. Sheesh.")
                         end
@@ -336,20 +366,21 @@ cmdlist = {
     },
     -- set: set variables
     set = {
-        help = "Set variables.",
-        func = function(u, chan, m)
-            if not db.check_auth(u, "admin") then
-                log("Received unauthorised command: " .. m, u, "warn")
-                send(u.nick, msg.notauth)
-                return nil
-            end
+        help = "Set stuff, define things.",
+        func = function(u, chan, m, catch)
+            local _m = m
             m = m:lower()
-            arg = getarg(m)
+            local arg = getarg(m)
             arg = arg:gsub("%s*the%s+", "", 1)
             local cmd = arg:match("^(%a+)")
             local arg = getarg(arg)
             if cmd == "logging" or cmd:match("^verbos") or
               cmd:match("^debug") or cmd:match("^output") then
+                if not db.check_auth(u, "admin") then
+                    log("Received unauthorised command: " .. m, u, "warn")
+                    send(u.nick, msg.notauth)
+                    return nil
+                end
                 arg = arg:gsub("%s*the%s+",   "")
                 arg = arg:gsub("%s*level%s*", "")
                 arg = arg:gsub("%s*to%s+",    "")
@@ -367,6 +398,8 @@ cmdlist = {
                     log("No verbosity level specified", u, "debug")
                     send(chan, u.nick .. ": Set it to what?")
                 end
+            elseif cmd == "topic" then
+                cmdlist.topic.func(u, chan, _m, catch)
             else
                 log("User did not specify anything to set", u, "debug")
                 send(chan, u.nick .. ": Set what?")
