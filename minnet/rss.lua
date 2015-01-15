@@ -14,7 +14,7 @@ rss = {
             name = "Metadata",
             url  = "http://rift.illumine.ch/meta/feed.atom",
             chan = { "#valo" },
-            freq = "30m",
+            freq = "15m",
             },
             {
             name = "World-wiki",
@@ -219,6 +219,11 @@ function rss.read_last(name)
     local parsed = fp.parse(xml)
     if not parsed then log("No proper result from xml parsing", "warn") return false end
     local last = parsed.entries[1]
+    if not last then
+        log("Got no ‘last’ entry from xml parsing", "warn")
+        -- send(f.chan, "Couldn't retrieve last entry from the feed.")
+        return false
+    end
     rss.report(f, last, f.chan)
 end
 

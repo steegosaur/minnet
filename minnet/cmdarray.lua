@@ -30,12 +30,16 @@ cmdlist = {
                 send(u.nick, msg.notauth)
                 return nil
             end
-            log("Editing topic on " .. chan, u, "trivial")
-            local for_channel = m:lower():match("topic%s+(#%w+):?")
-            local pattern, newstring = m:match(catch)
-            local old_topic = get_topic(chan)
+            local for_chan, pattern, newstring = m:match(catch)
+            if not newstring then
+                -- There were only two args given, so we need to do some shifting to the left
+                pattern, newstring = for_chan, pattern
+                for_chan = chan
+            end
+            local old_topic = get_topic(for_chan)
             local new_topic = old_topic:gsub(pattern, newstring)
-            set_topic(chan, new_topic)
+            log("Editing topic on " .. for_chan, u, "trivial")
+            set_topic(for_chan, new_topic)
         end
     },
     -- reidentify: (re-)identify with nickserv (must be configured)

@@ -14,7 +14,7 @@ bot.commands = {
     say     = { "say"  },
     help    = { "help" },
     set     = { "set%s+%w+%s+%w-%s-to%s+(.+)$", "set%s+the%s+%w+%s+%w-%s-to+%s+(.+)$" },
-    areyou  = { "are%s+you%s+(.*)", "do", "does", "will" },
+    areyou  = { "are", "do", "does", "will", "am", "can", "could" },
     load    = { "load", "reload%s.*hook" },
     unload  = { "unload", "remove" },
     reload  = { "reload" },
@@ -27,6 +27,8 @@ bot.commands = {
     quit    = { "shut%s+down", "quit", "disconnect", "die", "go%s+die" },
     version = { "version", "ctcp%s+version", "ask%s+for%s+.*version.*from" },
     topic   = { "[Nn]ew%s+topic:?%s+(.+)$", "[Tt]opic:?%s+(.+)$" },
+    -- topic_edit: intended like ‘edit topic: ^(.-:) %w+ | @ %1 newword’, uses Lua string patterns
+    topic_edit = { "[Ee]dit%s+topic%s+(#%w+):?%s*(.*)%s@@%s(.*)$", "[Ee]dit%s+topic:?%s+(.*)%s@@%s(.*)$" },
     enfunc  = { "enable.*function", "enable.*command" },
     disfunc = { "disable.*function", "disable.*command" },
     belong  = { "belong.*%sme", ".*%sme%s.*%sown%s+you", ".*%si%s.*own%s+you" },
